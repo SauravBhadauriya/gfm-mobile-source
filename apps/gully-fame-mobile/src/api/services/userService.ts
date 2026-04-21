@@ -1,0 +1,251 @@
+import apiClient from '../axios';
+import { ApiResponse } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://103.194.228.68:3552/v1/api/';
+
+// ==================== Type Definitions ====================
+
+export interface User {
+  _id: string;
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile?: string;
+  role: string;
+  status?: string;
+  kycStatus?: 'pending' | 'approved' | 'rejected' | 'completed';
+  profileImage?: string;
+  bio?: string;
+  dob?: string;
+  gender?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any;
+}
+
+export interface KycStatus {
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  rejectionReason?: string;
+  documents?: any[];
+  submittedAt?: string;
+  reviewedAt?: string;
+  [key: string]: any;
+}
+
+export interface UserEarning {
+  id: string;
+  type: string;
+  amount: number;
+  description?: string;
+  createdAt: string;
+  [key: string]: any;
+}
+
+export interface WalletBalance {
+  balance: number;
+  totalEarnings?: number;
+  totalTips?: number;
+  [key: string]: any;
+}
+
+// ==================== API Functions ====================
+
+export async function getCurrentUser(): Promise<ApiResponse<User>> {
+  try {
+    console.log('[userService] GET Current User');
+    
+    const response = await apiClient.get<any>('user/profile');
+    const responseData = response.data as any;
+
+    if (responseData.code === 1 && responseData.data) {
+      const userData = responseData.data.user || responseData.data;
+      const user: User = {
+        ...userData,
+        id: userData.id || userData._id,
+      };
+
+      console.log('[userService] GET Current User - Success:', user);
+      return {
+        success: true,
+        data: user,
+        message: responseData.message || 'User profile fetched successfully',
+      };
+    }
+
+    return {
+      success: false,
+      message: responseData.message || 'Failed to fetch user profile',
+      error: 'API returned unsuccessful response',
+      data: undefined,
+    };
+  } catch (error: any) {
+    console.error('[userService] GET Current User error:', error.message);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Network error occurred',
+      error: error.message || 'Network error',
+      data: undefined,
+    };
+  }
+}
+
+export async function getUserKycStatus(): Promise<ApiResponse<KycStatus>> {
+  try {
+    console.log('[userService] GET User KYC Status');
+    
+    // Get current user ID from storage
+    const userId = await AsyncStorage.getItem('userId');
+    
+    if (!userId) {
+      return {
+        success: false,
+        message: 'User ID not found',
+        error: 'NO_USER_ID',
+        data: undefined,
+      };
+    }
+
+    const response = await apiClient.get<any>(`user/kyc`);
+    const responseData = response.data as any;
+
+    if (responseData.code === 1 && responseData.data) {
+      const kyc: KycStatus = responseData.data.kyc || responseData.data;
+
+      console.log('[userService] GET User KYC Status - Success:', kyc);
+      return {
+        success: true,
+        data: kyc,
+        message: responseData.message || 'KYC status fetched successfully',
+      };
+    }
+
+    return {
+      success: false,
+      message: responseData.message || 'Failed to fetch KYC status',
+      error: 'API returned unsuccessful response',
+      data: undefined,
+    };
+  } catch (error: any) {
+    console.error('[userService] GET User KYC Status error:', error.message);
+    
+    // KYC might not exist yet, return pending status
+    if (error.response?.status === 404) {
+      return {
+        success: true,
+        data: {
+          status: 'pending',
+        } as KycStatus,
+        message: 'No KYC submission found',
+      };
+    }
+    
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Network error occurred',
+      error: error.message || 'Network error',
+      data: undefined,
+    };
+  }
+}
+
+export async function getUserEarnings(): Promise<ApiResponse<UserEarning[]>> {
+  try {
+    console.log('[userService] GET User Earnings');
+    
+    const response = await apiClient.get<any>('user/earnings');
+    const responseData = response.data as any;
+
+    if (responseData.code === 1 && responseData.data) {
+      let earnings: UserEarning[] = [];
+      
+      if (Array.isArray(responseData.data)) {
+        earnings = responseData.data;
+      } else if (Array.isArray(responseData.data.items)) {
+        earnings = responseData.data.items;
+      } else if (Array.isArray(responseData.data.earnings)) {
+        earnings = responseData.data.earnings;
+      }
+
+      console.log('[userService] GET User Earnings - Success:', earnings.length, 'items');
+      return {
+        success: true,
+        data: earnings,
+        message: responseData.message || 'Earnings fetched successfully',
+      };
+    }
+
+    return {
+      success: false,
+      message: responseData.message || 'Failed to fetch earnings',
+      error: 'API returned unsuccessful response',
+      data: [],
+    };
+  } catch (error: any) {
+    console.error('[userService] GET User Earnings error:', error.message);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Network error occurred',
+      error: error.message || 'Network error',
+      data: [],
+    };
+  }
+}
+
+export async function getWalletBalance(): Promise<ApiResponse<WalletBalance>> {
+  try {
+    console.log('[userService] GET Wallet Balance');
+    
+    const response = await apiClient.get<any>('user/wallet');
+    const responseData = response.data as any;
+
+    if (responseData.code === 1 && responseData.data) {
+      const wallet: WalletBalance = {
+        balance: responseData.data.balance || responseData.data.totalBalance || 0,
+        totalEarnings: responseData.data.totalEarnings || 0,
+        totalTips: responseData.data.totalTips || 0,
+        ...responseData.data,
+      };
+
+      console.log('[userService] GET Wallet Balance - Success:', wallet);
+      return {
+        success: true,
+        data: wallet,
+        message: responseData.message || 'Wallet balance fetched successfully',
+      };
+    }
+
+    return {
+      success: false,
+      message: responseData.message || 'Failed to fetch wallet balance',
+      error: 'API returned unsuccessful response',
+      data: {
+        balance: 0,
+        totalEarnings: 0,
+        totalTips: 0,
+      },
+    };
+  } catch (error: any) {
+    console.error('[userService] GET Wallet Balance error:', error.message);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || 'Network error occurred',
+      error: error.message || 'Network error',
+      data: {
+        balance: 0,
+        totalEarnings: 0,
+        totalTips: 0,
+      },
+    };
+  }
+}
+
+export const userService = {
+  getCurrentUser,
+  getUserKycStatus,
+  getUserEarnings,
+  getWalletBalance,
+};
+
+

@@ -1,0 +1,1177 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+  Platform,
+  Image,
+  Animated,
+  PanResponder,
+  Modal,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Path, Circle } from "react-native-svg";
+import { ChatListItem, chatService } from "@api/services/chatService";
+import { BackIcon } from "@/icons";
+import { convertDateToChatTimePassed } from "@/utils/convertDateToChatTimePassed";
+
+const getDimensions = () => Dimensions.get("window");
+
+interface ChatItem {
+  id: string;
+  name: string;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  isOnline: boolean;
+  avatar: any;
+  chat_user_id: string;
+}
+
+export default function InboxScreen() {
+  const [activeTab, setActiveTab] = useState<"All" | "Archived">("All");
+  const [dimensions, setDimensions] = useState(getDimensions());
+  const insets = useSafeAreaInsets();
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const [allChatsList, setAllChatsList] = useState<ChatItem[]>([]);
+  const [archivedChatsList, setArchivedChatsList] = useState<ChatItem[]>([]);
+  const swipeAnimations = useRef<{ [key: string]: Animated.Value }>({});
+  const [selectedChats, setSelectedChats] = useState<string[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Listen for dimension changes (orientation, split screen, etc.)
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Fetch chat list from API
+  useEffect(() => {
+    const fetchChatList = async () => {
+      try {
+        setLoading(true);
+        console.log("[InboxScreen] Fetching chat list...");
+
+        const response = await chatService.getChatList();
+
+        if (response.success && response.data) {
+          // Transform API chat list to UI format
+          const chatList: ChatListItem[] = response.data.chatlist || [];
+          console.log(
+            "[InboxScreen] Raw chat list from API: ",
+            JSON.stringify(chatList, null, 2),
+          );
+
+          const transformedChats: ChatItem[] = chatList.map((chat) => {
+            const chatUserId = chat.chatter_user_id;
+            return {
+              id: chatUserId,
+              chat_user_id: chatUserId,
+              name: `User ${chatUserId.slice(-4)}`,
+              lastMessage: chat.latest_message,
+              timestamp: convertDateToChatTimePassed(chat.last_message_time),
+              unreadCount: 0,
+              isOnline: false,
+              avatar: require("@assets/images/user1.png"),
+            };
+          });
+
+          setAllChatsList(transformedChats);
+          console.log("[InboxScreen] Loaded", transformedChats.length, "chats");
+        } else {
+          console.error(
+            "[InboxScreen] Failed to fetch chat list:",
+            response.message,
+          );
+          // Keep empty list on error
+          setAllChatsList([]);
+        }
+      } catch (error: any) {
+        console.error("[InboxScreen] Error fetching chat list:", error);
+        setAllChatsList([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChatList();
+  }, []);
+
+  // Animate slide when tab changes
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: activeTab === "All" ? 0 : 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  }, [activeTab]);
+
+  // Responsive scaling functions based on current dimensions
+  const scale = (size: number) => (dimensions.width / 375) * size;
+  const scaleVertical = (size: number) => (dimensions.height / 812) * size;
+  const getFontSize = (size: number) => {
+    const scaled = scale(size);
+    return Math.max(scaled, size * 0.8);
+  };
+
+  // Responsive styles based on screen size
+  const isSmallScreen = dimensions.width < 375;
+  const tabMargin = isSmallScreen ? scale(20) : scale(50);
+
+  const currentChats = activeTab === "All" ? allChatsList : archivedChatsList;
+
+  // Initialize swipe animations for each chat
+  useEffect(() => {
+    currentChats.forEach((chat) => {
+      if (!swipeAnimations.current[chat.id]) {
+        swipeAnimations.current[chat.id] = new Animated.Value(0);
+      }
+    });
+  }, [currentChats]);
+
+  // Refresh chat list when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchChatList = async () => {
+        try {
+          const response = await chatService.getChatList();
+          if (response.success && response.data) {
+            const chatList = response.data.chatlist || [];
+            const transformedChats: ChatItem[] = chatList.map((chat) => {
+              const chatUserId = chat.chatter_user_id;
+              return {
+                id: chatUserId,
+                chat_user_id: chatUserId,
+                name: `User ${chatUserId.slice(-4)}`,
+                lastMessage: chat.latest_message,
+                timestamp: convertDateToChatTimePassed(chat.last_message_time),
+                unreadCount: 0,
+                isOnline: false,
+                avatar: require("@assets/images/user1.png"),
+              };
+            });
+            setAllChatsList(transformedChats);
+          }
+        } catch (error) {
+          console.error("[InboxScreen] Error refreshing chat list:", error);
+        }
+      };
+      fetchChatList();
+    }, []),
+  );
+
+  // Archive chat function
+  const handleArchive = (chatId: string) => {
+    const chat = allChatsList.find((c) => c.id === chatId);
+    if (chat) {
+      // Animate out
+      Animated.timing(
+        swipeAnimations.current[chatId] || new Animated.Value(0),
+        {
+          toValue: dimensions.width,
+          duration: 300,
+          useNativeDriver: true,
+        },
+      ).start(() => {
+        setAllChatsList(allChatsList.filter((c) => c.id !== chatId));
+        setArchivedChatsList([...archivedChatsList, chat]);
+        // Reset animation
+        if (swipeAnimations.current[chatId]) {
+          swipeAnimations.current[chatId].setValue(0);
+        }
+      });
+    }
+  };
+
+  // Unarchive chat function
+  const handleUnarchive = (chatId: string) => {
+    const chat = archivedChatsList.find((c) => c.id === chatId);
+    if (chat) {
+      // Animate out
+      Animated.timing(
+        swipeAnimations.current[chatId] || new Animated.Value(0),
+        {
+          toValue: -dimensions.width,
+          duration: 300,
+          useNativeDriver: true,
+        },
+      ).start(() => {
+        setArchivedChatsList(archivedChatsList.filter((c) => c.id !== chatId));
+        setAllChatsList([...allChatsList, chat]);
+        // Reset animation
+        if (swipeAnimations.current[chatId]) {
+          swipeAnimations.current[chatId].setValue(0);
+        }
+      });
+    }
+  };
+
+  // Create PanResponder for swipe gesture (works in both tabs)
+  const createPanResponder = (chatId: string) => {
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (evt, gestureState) => {
+        const swipeThreshold = 150;
+        if (Math.abs(gestureState.dx) > Math.abs(gestureState.dy)) {
+          const dx = gestureState.dx;
+          // Allow swipe in both directions with slower movement
+          if (dx > -swipeThreshold && dx < swipeThreshold) {
+            // Slow down the swipe by dividing by a factor
+            swipeAnimations.current[chatId]?.setValue(dx * 0.6);
+          }
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        const swipeThreshold = 80;
+        if (Math.abs(gestureState.dx) > swipeThreshold) {
+          if (activeTab === "All") {
+            // Archive the chat (swipe left or right)
+            handleArchive(chatId);
+          } else {
+            // Unarchive the chat (swipe left or right)
+            handleUnarchive(chatId);
+          }
+        } else {
+          // Reset position
+          Animated.spring(
+            swipeAnimations.current[chatId] || new Animated.Value(0),
+            {
+              toValue: 0,
+              useNativeDriver: true,
+              tension: 50,
+              friction: 7,
+            },
+          ).start();
+        }
+      },
+    });
+  };
+
+  // Create responsive styles
+  const responsiveStyles = {
+    headerContainer: {
+      ...styles.headerContainer,
+      paddingTop: Math.max(insets.top, scale(20)),
+      paddingBottom: scaleVertical(20),
+      borderBottomLeftRadius: scale(30),
+      borderBottomRightRadius: scale(30),
+    },
+    header: {
+      ...styles.header,
+      paddingHorizontal: scale(12),
+      paddingTop: Platform.OS === "ios" ? scaleVertical(8) : scaleVertical(12),
+      paddingBottom: scaleVertical(12),
+      gap: scale(12),
+    },
+    headerButton: {
+      ...styles.headerButton,
+      width: scale(32),
+      height: scale(32),
+      minWidth: scale(32),
+      minHeight: scale(32),
+    },
+    headerTitle: {
+      ...styles.headerTitle,
+      fontSize: getFontSize(22),
+    },
+    tabsContainer: {
+      ...styles.tabsContainer,
+      marginHorizontal: tabMargin,
+      paddingHorizontal: scale(6),
+      gap: scale(8),
+      borderRadius: scale(12),
+      marginTop: scaleVertical(8),
+      marginBottom: scaleVertical(8),
+    },
+    tab: {
+      ...styles.tab,
+      paddingVertical: scaleVertical(10),
+      paddingHorizontal: scale(6),
+      borderRadius: scale(12),
+      minHeight: scale(36),
+    },
+    tabText: {
+      ...styles.tabText,
+      fontSize: getFontSize(13),
+    },
+    scrollContent: {
+      ...styles.scrollContent,
+      paddingHorizontal: scale(12),
+      paddingTop: scaleVertical(16),
+      paddingBottom: scaleVertical(30),
+    },
+    chatItem: {
+      ...styles.chatItem,
+      borderRadius: scale(12),
+      padding: scale(12),
+      backgroundColor: "#EFEFEF",
+      borderWidth: 1,
+      borderColor: "#E0E0E0",
+    },
+    avatarContainer: {
+      ...styles.avatarContainer,
+      width: scale(50),
+      height: scale(50),
+      borderRadius: scale(25),
+      marginRight: scale(12),
+    },
+    avatar: {
+      width: scale(50),
+      height: scale(50),
+      borderRadius: scale(25),
+    },
+    onlineIndicator: {
+      ...styles.onlineIndicator,
+      width: scale(12),
+      height: scale(12),
+      borderRadius: scale(6),
+      borderWidth: scale(2),
+      right: scale(0),
+      bottom: scale(0),
+    },
+    chatContent: {
+      ...styles.chatContent,
+      flex: 1,
+    },
+    chatName: {
+      ...styles.chatName,
+      fontSize: getFontSize(14),
+      marginBottom: scaleVertical(2),
+    },
+    chatMessage: {
+      ...styles.chatMessage,
+      fontSize: getFontSize(12),
+      lineHeight: scale(16),
+    },
+    chatTimestamp: {
+      ...styles.chatTimestamp,
+      fontSize: getFontSize(10),
+    },
+    unreadBadge: {
+      ...styles.unreadBadge,
+      minWidth: scale(18),
+      height: scale(18),
+      borderRadius: scale(9),
+      paddingHorizontal: scale(5),
+    },
+    unreadBadgeText: {
+      ...styles.unreadBadgeText,
+      fontSize: getFontSize(9),
+    },
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#3C2610" />
+
+      {/* Header with curved bottom */}
+      <View style={responsiveStyles.headerContainer}>
+        <View style={responsiveStyles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={responsiveStyles.headerButton}
+          >
+            <BackIcon color="#EC9A15" />
+          </TouchableOpacity>
+          <Text
+            style={responsiveStyles.headerTitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {isSelectionMode ? `${selectedChats.length} selected` : "Chats"}
+          </Text>
+          <TouchableOpacity
+            style={responsiveStyles.headerButton}
+            onPress={() => {
+              if (isSelectionMode) {
+                setIsSelectionMode(false);
+                setSelectedChats([]);
+              } else {
+                setShowMenu(true);
+              }
+            }}
+          >
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <Circle cx="12" cy="5" r="1.5" fill="#fff" />
+              <Circle cx="12" cy="12" r="1.5" fill="#fff" />
+              <Circle cx="12" cy="19" r="1.5" fill="#fff" />
+            </Svg>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs */}
+        <View style={responsiveStyles.tabsContainer}>
+          {/* Animated sliding background */}
+          <Animated.View
+            style={[
+              styles.slidingIndicator,
+              {
+                top: 0,
+                left: scale(6),
+                borderRadius: scale(12),
+                height: "100%",
+                transform: [
+                  {
+                    translateX: slideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [
+                        0,
+                        (dimensions.width -
+                          tabMargin * 2 -
+                          scale(6) * 2 -
+                          scale(8)) /
+                          2 +
+                          scale(8),
+                      ],
+                    }),
+                  },
+                ],
+                width:
+                  (dimensions.width - tabMargin * 2 - scale(6) * 2 - scale(8)) /
+                  2,
+              },
+            ]}
+          />
+          <TouchableOpacity
+            style={responsiveStyles.tab}
+            onPress={() => setActiveTab("All")}
+          >
+            <Text
+              style={[
+                responsiveStyles.tabText,
+                activeTab === "All" && styles.tabTextActive,
+              ]}
+            >
+              All
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={responsiveStyles.tab}
+            onPress={() => setActiveTab("Archived")}
+          >
+            <Text
+              style={[
+                responsiveStyles.tabText,
+                activeTab === "Archived" && styles.tabTextActive,
+              ]}
+            >
+              Archived
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Chat List */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#EC9A15" />
+          <Text style={styles.loadingText}>Loading chats...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={responsiveStyles.scrollContent}
+        >
+          {currentChats.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No chats yet. Start a conversation!
+              </Text>
+            </View>
+          ) : (
+            currentChats.map((chat) => {
+              const panResponder = createPanResponder(chat.id);
+              const swipeX =
+                swipeAnimations.current[chat.id] || new Animated.Value(0);
+
+              // Arrow animation logic:
+              // Swipe right (dx > 0) → show right arrow on right side
+              // Swipe left (dx < 0) → show left arrow on left side
+
+              // Right arrow (shows when swiping right - dx > 0)
+              const rightArrowOpacity = swipeX.interpolate({
+                inputRange: [0, 30, 90],
+                outputRange: [0, 0.5, 1],
+                extrapolate: "clamp",
+              });
+
+              // Left arrow (shows when swiping left - dx < 0)
+              const leftArrowOpacity = swipeX.interpolate({
+                inputRange: [-90, -30, 0],
+                outputRange: [1, 0.5, 0],
+                extrapolate: "clamp",
+              });
+
+              // Right arrow animation (slides in from right)
+              const rightArrowTranslateX = swipeX.interpolate({
+                inputRange: [0, 30, 90],
+                outputRange: [20, 10, 0],
+                extrapolate: "clamp",
+              });
+
+              // Left arrow animation (slides in from left)
+              const leftArrowTranslateX = swipeX.interpolate({
+                inputRange: [-90, -30, 0],
+                outputRange: [0, -10, -20],
+                extrapolate: "clamp",
+              });
+
+              return (
+                <View
+                  key={chat.id}
+                  style={{
+                    marginBottom: scaleVertical(10),
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Left archive background (shows when swiping left - dx < 0) */}
+                  {activeTab === "All" && (
+                    <Animated.View
+                      style={[
+                        styles.archiveBackground,
+                        styles.archiveBackgroundLeft,
+                        {
+                          opacity: leftArrowOpacity,
+                          transform: [{ translateX: leftArrowTranslateX }],
+                        },
+                      ]}
+                      pointerEvents="none"
+                    >
+                      <Svg
+                        width={24}
+                        height={24}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <Path
+                          d="M19 12H5M12 5l-7 7 7 7"
+                          stroke="#FFFFFF"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
+                    </Animated.View>
+                  )}
+
+                  {/* Right archive background (shows when swiping right - dx > 0) */}
+                  {activeTab === "All" && (
+                    <Animated.View
+                      style={[
+                        styles.archiveBackground,
+                        styles.archiveBackgroundRight,
+                        {
+                          opacity: rightArrowOpacity,
+                          transform: [{ translateX: rightArrowTranslateX }],
+                        },
+                      ]}
+                      pointerEvents="none"
+                    >
+                      <Svg
+                        width={24}
+                        height={24}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <Path
+                          d="M5 12h14M12 5l7 7-7 7"
+                          stroke="#FFFFFF"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
+                    </Animated.View>
+                  )}
+
+                  {/* Unarchive background for Archived tab */}
+                  {activeTab === "Archived" && (
+                    <>
+                      <Animated.View
+                        style={[
+                          styles.archiveBackground,
+                          styles.archiveBackgroundLeft,
+                          {
+                            opacity: leftArrowOpacity,
+                            transform: [{ translateX: leftArrowTranslateX }],
+                          },
+                        ]}
+                        pointerEvents="none"
+                      >
+                        <Svg
+                          width={24}
+                          height={24}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <Path
+                            d="M19 12H5M12 5l-7 7 7 7"
+                            stroke="#FFFFFF"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </Svg>
+                      </Animated.View>
+                      <Animated.View
+                        style={[
+                          styles.archiveBackground,
+                          styles.archiveBackgroundRight,
+                          {
+                            opacity: rightArrowOpacity,
+                            transform: [{ translateX: rightArrowTranslateX }],
+                          },
+                        ]}
+                        pointerEvents="none"
+                      >
+                        <Svg
+                          width={24}
+                          height={24}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <Path
+                            d="M5 12h14M12 5l7 7-7 7"
+                            stroke="#FFFFFF"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </Svg>
+                      </Animated.View>
+                    </>
+                  )}
+
+                  <Animated.View
+                    style={[
+                      {
+                        transform: [{ translateX: swipeX }],
+                      },
+                    ]}
+                    {...panResponder.panHandlers}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        responsiveStyles.chatItem,
+                        isSelectionMode &&
+                          selectedChats.includes(chat.id) &&
+                          styles.chatItemSelected,
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (isSelectionMode) {
+                          if (selectedChats.includes(chat.id)) {
+                            setSelectedChats(
+                              selectedChats.filter((id) => id !== chat.id),
+                            );
+                          } else {
+                            setSelectedChats([...selectedChats, chat.id]);
+                          }
+                        } else {
+                          // Navigate to chat with chat_user_id
+                          router.push({
+                            pathname: "/(main)/chat/[id]",
+                            params: {
+                              id: chat.chat_user_id || chat.id,
+                              name: chat.name,
+                            },
+                          });
+                        }
+                      }}
+                      onLongPress={() => {
+                        if (!isSelectionMode) {
+                          setIsSelectionMode(true);
+                          setSelectedChats([chat.id]);
+                        }
+                      }}
+                    >
+                      {isSelectionMode && (
+                        <View style={styles.selectionRadio}>
+                          <View
+                            style={[
+                              styles.radioButton,
+                              selectedChats.includes(chat.id) &&
+                                styles.radioButtonSelected,
+                            ]}
+                          >
+                            {selectedChats.includes(chat.id) && (
+                              <View style={styles.radioButtonInner} />
+                            )}
+                          </View>
+                        </View>
+                      )}
+                      <View style={responsiveStyles.avatarContainer}>
+                        <Image
+                          source={chat.avatar}
+                          style={responsiveStyles.avatar}
+                          resizeMode="cover"
+                        />
+                        {chat.isOnline && (
+                          <View style={responsiveStyles.onlineIndicator} />
+                        )}
+                      </View>
+                      <View style={responsiveStyles.chatContent}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: scaleVertical(4),
+                          }}
+                        >
+                          <Text
+                            style={responsiveStyles.chatName}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {chat.name}
+                          </Text>
+                          <Text style={responsiveStyles.chatTimestamp}>
+                            {chat.timestamp}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            style={responsiveStyles.chatMessage}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {chat.lastMessage}
+                          </Text>
+                          {chat.unreadCount > 0 && (
+                            <View style={responsiveStyles.unreadBadge}>
+                              <Text style={responsiveStyles.unreadBadgeText}>
+                                {chat.unreadCount}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  </Animated.View>
+                </View>
+              );
+            })
+          )}
+          <View style={{ height: scaleVertical(40) }} />
+        </ScrollView>
+      )}
+
+      {/* Three Dots Menu Modal */}
+      <Modal
+        visible={showMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMenu(false)}
+        >
+          <View style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
+                setIsSelectionMode(true);
+              }}
+            >
+              <Text style={styles.menuItemText}>Select Chats</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
+                Alert.alert(
+                  "Delete All",
+                  "Are you sure you want to delete all chats?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => {
+                        setAllChatsList([]);
+                        setArchivedChatsList([]);
+                      },
+                    },
+                  ],
+                );
+              }}
+            >
+              <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                Delete All
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
+                Alert.alert("Report", "Report feature coming soon!");
+              }}
+            >
+              <Text style={styles.menuItemText}>Report</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Selection Mode Actions */}
+      {isSelectionMode && selectedChats.length > 0 && (
+        <View style={styles.selectionActions}>
+          <TouchableOpacity
+            style={styles.selectionActionButton}
+            onPress={() => {
+              Alert.alert("Delete", `Delete ${selectedChats.length} chat(s)?`, [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => {
+                    setAllChatsList(
+                      allChatsList.filter((c) => !selectedChats.includes(c.id)),
+                    );
+                    setArchivedChatsList(
+                      archivedChatsList.filter(
+                        (c) => !selectedChats.includes(c.id),
+                      ),
+                    );
+                    setSelectedChats([]);
+                    setIsSelectionMode(false);
+                  },
+                },
+              ]);
+            }}
+          >
+            <Text style={styles.selectionActionText}>Delete</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.selectionActionButton}
+            onPress={() => {
+              Alert.alert("Block", `Block ${selectedChats.length} user(s)?`, [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Block",
+                  style: "destructive",
+                  onPress: () => {
+                    setAllChatsList(
+                      allChatsList.filter((c) => !selectedChats.includes(c.id)),
+                    );
+                    setArchivedChatsList(
+                      archivedChatsList.filter(
+                        (c) => !selectedChats.includes(c.id),
+                      ),
+                    );
+                    setSelectedChats([]);
+                    setIsSelectionMode(false);
+                  },
+                },
+              ]);
+            }}
+          >
+            <Text style={styles.selectionActionText}>Block</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.selectionActionButton}
+            onPress={() => {
+              Alert.alert("Report", `Report ${selectedChats.length} user(s)?`, [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Report",
+                  style: "destructive",
+                  onPress: () => {
+                    Alert.alert("Report", "Report feature coming soon!");
+                    setSelectedChats([]);
+                    setIsSelectionMode(false);
+                  },
+                },
+              ]);
+            }}
+          >
+            <Text style={styles.selectionActionText}>Report</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  headerContainer: {
+    backgroundColor: "#3C2610",
+    overflow: "hidden",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  headerButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+    textAlign: "left",
+    fontFamily: Platform.select({
+      ios: "Rubik_700Bold",
+      android: "Rubik_700Bold",
+      default: "Rubik_700Bold",
+    }),
+    flex: 1,
+    flexShrink: 1,
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(234,176,75,38)",
+  },
+  tab: {
+    flex: 1,
+    borderWidth: 0,
+    borderColor: "#3C2610",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  slidingIndicator: {
+    position: "absolute",
+    backgroundColor: "#EC9A15",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    zIndex: 0,
+  },
+  tabText: {
+    color: "#FFFFFF",
+    fontFamily: Platform.select({
+      ios: "Rubik_500Medium",
+      android: "Rubik_500Medium",
+      default: "Rubik_500Medium",
+    }),
+    textAlign: "center",
+  },
+  tabTextActive: {
+    color: "#FFFFFF",
+    fontFamily: Platform.select({
+      ios: "Rubik_700Bold",
+      android: "Rubik_700Bold",
+      default: "Rubik_700Bold",
+    }),
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    // Responsive values set in component
+  },
+  chatItem: {
+    flexDirection: "row",
+    backgroundColor: "#EFEFEF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    width: "100%",
+  },
+  avatarContainer: {
+    position: "relative",
+    flexShrink: 0,
+  },
+  avatar: {
+    // Responsive values set in component
+  },
+  onlineIndicator: {
+    position: "absolute",
+    backgroundColor: "#4CAF50",
+    borderColor: "#FFFFFF",
+  },
+  chatContent: {
+    // Responsive values set in component
+  },
+  chatName: {
+    color: "#000000",
+    fontFamily: Platform.select({
+      ios: "Rubik_700Bold",
+      android: "Rubik_700Bold",
+      default: "Rubik_700Bold",
+    }),
+  },
+  chatMessage: {
+    color: "#828282",
+    fontFamily: Platform.select({
+      ios: "Rubik_400Regular",
+      android: "Rubik_400Regular",
+      default: "Rubik_400Regular",
+    }),
+    flex: 1,
+  },
+  chatTimestamp: {
+    color: "#828282",
+    fontFamily: Platform.select({
+      ios: "Rubik_400Regular",
+      android: "Rubik_400Regular",
+      default: "Rubik_400Regular",
+    }),
+  },
+  unreadBadge: {
+    backgroundColor: "#EC9A15",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  unreadBadgeText: {
+    color: "#FFFFFF",
+    fontFamily: Platform.select({
+      ios: "Rubik_700Bold",
+      android: "Rubik_700Bold",
+      default: "Rubik_700Bold",
+    }),
+    textAlign: "center",
+  },
+  archiveBackground: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 100,
+    backgroundColor: "#EC9A15",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  archiveBackgroundLeft: {
+    left: 0,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  archiveBackgroundRight: {
+    right: 0,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  chatItemSelected: {
+    backgroundColor: "#E8F4FD",
+    borderColor: "#EC9A15",
+    borderWidth: 2,
+  },
+  selectionRadio: {
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#72777A",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioButtonSelected: {
+    borderColor: "#EC9A15",
+    backgroundColor: "#EC9A15",
+  },
+  radioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#fff",
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  menuContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === "ios" ? 34 : 20,
+  },
+  menuItem: {
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: "#000",
+    fontWeight: "500",
+  },
+  menuItemDanger: {
+    color: "#FF3B30",
+  },
+  selectionActions: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "#EC9A15",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+    paddingBottom: Platform.OS === "ios" ? 34 : 20,
+  },
+  selectionActionButton: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  selectionActionText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    paddingTop: 40,
+  },
+  loadingText: {
+    color: "#72777A",
+    fontSize: 14,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  emptyText: {
+    color: "#72777A",
+    fontSize: 14,
+    textAlign: "center",
+  },
+});

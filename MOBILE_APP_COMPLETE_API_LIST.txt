@@ -1,0 +1,600 @@
+==========================================
+MOBILE APP - COMPLETE API REQUIREMENTS
+==========================================
+
+This document provides a comprehensive list of ALL APIs needed for the mobile app,
+analyzed from actual app codebase and admin panel integration requirements.
+
+Total APIs Required: 84 endpoints
+
+==========================================
+AUTHENTICATION & USER MANAGEMENT (11 APIs)
+==========================================
+
+✅ POST /auth/register
+   Body: { firstName, lastName, mobile, email, password, role }
+   Returns: { token, txnId, user }
+
+✅ POST /auth/login
+   Body: { userId, viaPassword, password? }
+   Returns: { token, txnId, user }
+
+✅ POST /auth/login/social
+   Body: { googleId?, appleId?, email, firstName, lastName, device_token, device_type }
+   Returns: { token, user }
+
+✅ POST /auth/verifyOtp
+   Body: { txnId, otp }
+   Returns: { token, userId, user }
+
+✅ POST /auth/resendOtp
+   Body: { userId }
+   Returns: { txnId }
+
+✅ POST /auth/forgot-password
+   Body: { userId }
+   Returns: { message }
+
+✅ PUT /auth/reset-password
+   Body: { password }
+   Returns: { message }
+
+✅ PUT /user/change-password
+   Body: { currentPassword, newPassword }
+   Returns: { message }
+
+✅ GET /user/profile
+   Returns: { id, email, firstName, lastName, mobile, role, profileImage, bio, gender, dob, ... }
+
+✅ PUT /user/profile
+   Body: { firstName?, lastName?, email?, mobile?, bio?, profileImage?, gender?, dob?, role? }
+   Returns: { message, data }
+   Note: After update, triggers KYC auto-verification check
+
+❌ GET /user/notifications
+   Query: { page?, limit?, read? }
+   Returns: { items: [{ id, title, message, type, read, createdAt, linkUrl? }], total }
+
+==========================================
+USER DATA & KYC (4 APIs)
+==========================================
+
+✅ GET /user/kyc
+   Returns: { status, rejectionReason?, documents?, submittedAt?, reviewedAt? }
+   Note: Returns { status: 'pending' } if 404 (KYC not submitted yet)
+
+✅ GET /user/earnings
+   Returns: { items: [{ id, type, amount, description, createdAt }], total }
+
+✅ GET /user/wallet
+   Returns: { balance, totalEarnings, totalTips }
+
+❌ GET /user/wallet/transactions
+   Query: { type?: 'CREDIT' | 'DEBIT', page?, limit? }
+   Returns: { items: [{ id, type, amount, description, balance, createdAt }], total }
+
+==========================================
+CATEGORIES (1 API) - MUST BE PUBLIC
+==========================================
+
+❌ GET /categories
+   Query: { page?, limit? }
+   Note: MUST BE AUTH-FREE (Public access, NOT /admin/categories)
+   Returns: { items: [{ id, name, icon?, image? }], total }
+   IMPORTANT: Change from /admin/categories to /categories (public endpoint)
+
+==========================================
+COMPETITIONS (11 APIs) - CRITICAL
+==========================================
+
+--- COMPETITION LISTING (Public - No Auth Required) ---
+❌ GET /competitions
+   Query: { status?, category?, page?, limit?, search? }
+   Returns: { items: [Competition], total }
+   Note: Fetches competitions created in admin panel
+
+❌ GET /competitions/upcoming
+   Query: { page?, limit? }
+   Returns: { items: [Competition], total }
+
+❌ GET /competitions/live
+   Query: { page?, limit? }
+   Returns: { items: [Competition], total }
+
+❌ GET /competitions/past
+   Query: { page?, limit? }
+   Returns: { items: [Competition], total }
+
+--- COMPETITION DETAILS ---
+❌ GET /competitions/{id}
+   Returns: { id, title, description, rules, status, startDate, endDate, prizeAmount, entryFee, category, bannerImage, sponsorId, sponsorName, sponsorLogo, participants, entries, registered, viewers, winners?, ... }
+
+--- COMPETITION PARTICIPATION ---
+❌ POST /competitions/{id}/join
+   Body: { userId }
+   Returns: { message, competitionId, joinedAt, status }
+   Note: Validates KYC for UPCOMING competitions, no KYC required for LIVE
+
+❌ GET /competitions/{id}/participants
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, entryCount, totalVotes, rank, joinedAt }], total }
+
+❌ GET /competitions/{id}/leaderboard
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, totalVotes, entryCount, rank }], total }
+
+❌ GET /competitions/{id}/winners
+   Returns: { items: [{ id, userId, userName, userImage, rank, prizeAmount, coinsAwarded }] }
+
+--- COMPETITION ENTRIES (REELS) ---
+❌ POST /competitions/{id}/entries
+   Body: FormData { video, thumbnail?, caption?, category? }
+   Returns: { message, entryId, reelId }
+   Note: Uploads reel as competition entry
+
+❌ GET /competitions/{id}/entries
+   Query: { userId?, page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, videoUrl, thumbnailUrl, caption, votes, createdAt }], total }
+
+==========================================
+REELS/CONTENT (15 APIs) - CRITICAL
+==========================================
+
+--- REEL MANAGEMENT ---
+❌ POST /reels/upload
+   Body: FormData { video, thumbnail?, caption?, category?, competitionId?, makePublic?, allowMentions?, enableTips? }
+   Returns: { message, reelId, videoUrl, thumbnailUrl }
+   Note: AI/ML auto-moderation happens on backend
+
+❌ GET /reels
+   Query: { userId?, competitionId?, category?, page?, limit?, status? }
+   Returns: { items: [{ id, userId, userName, userImage, videoUrl, thumbnailUrl, caption, votes, views, likes, comments, shares, saves, tips, status, createdAt }], total }
+
+❌ GET /reels/{id}
+   Returns: { id, userId, userName, userImage, videoUrl, thumbnailUrl, caption, votes, views, likes, comments, shares, saves, tips, status, createdAt, ... }
+
+❌ PUT /reels/{id}
+   Body: { caption?, thumbnail?, category? }
+   Returns: { message }
+
+❌ DELETE /reels/{id}
+   Returns: { message }
+
+--- SAVED & DOWNLOADED REELS ---
+❌ GET /user/saved-reels
+   Query: { page?, limit? }
+   Returns: { items: [Reel], total }
+   Note: Returns reels user has saved
+
+❌ GET /user/downloaded-reels
+   Query: { page?, limit? }
+   Returns: { items: [Reel], total }
+   Note: Returns reels user has downloaded
+
+❌ POST /reels/{id}/download
+   Returns: { message, downloadUrl }
+   Note: Initiates reel download, tracks download count
+
+--- REEL INTERACTIONS ---
+❌ POST /reels/{id}/like
+   Body: { userId }
+   Returns: { message, likes, isLiked }
+
+❌ POST /reels/{id}/unlike
+   Body: { userId }
+   Returns: { message, likes, isLiked }
+
+❌ POST /reels/{id}/save
+   Body: { userId }
+   Returns: { message, isSaved }
+
+❌ POST /reels/{id}/unsave
+   Body: { userId }
+   Returns: { message, isSaved }
+
+❌ POST /reels/{id}/share
+   Body: { userId, platform? }
+   Returns: { message, shareUrl, shares }
+
+❌ GET /reels/{id}/comments
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, comment, createdAt, replies? }], total }
+
+❌ POST /reels/{id}/comments
+   Body: { comment, parentCommentId? }
+   Returns: { message, commentId }
+
+==========================================
+PAYMENTS (2 APIs)
+==========================================
+
+✅ POST /payments/create-order
+   Body: { amount, currency, receipt?, notes: { competitionId?, competitionName?, userId? } }
+   Returns: { orderId, amount, currency }
+
+✅ POST /payments/verify
+   Body: { razorpay_payment_id, razorpay_order_id, razorpay_signature }
+   Returns: { verified, orderId, paymentId }
+
+==========================================
+APP BRANDING & CMS (8 APIs)
+==========================================
+
+✅ GET /public/logo
+   Returns: { logoUrl }
+
+✅ GET /public/splash
+   Returns: { splashImageUrl, images? }
+
+✅ GET /app-config/splash-onboarding
+   Returns: { logoUrl, splashScreens?, onboardingScreens? }
+
+✅ GET /app-config/onboarding
+   Returns: { items: [{ screenNumber, backgroundImageUrl, title, subtitle }] }
+
+✅ GET /admin/termAndCondition
+   Returns: { content } or { termsAndConditions }
+
+✅ GET /admin/aboutUs
+   Returns: { content } or { aboutUs }
+
+✅ GET /admin/privacyPolicy
+   Returns: { content } or { privacyPolicy }
+
+✅ GET /admin/competitionRules
+   Returns: { content } or { competitionRules }
+
+==========================================
+BANNERS (1 API)
+==========================================
+
+❌ GET /banners
+   Query: { status?, page?, limit? }
+   Note: Public endpoint (not /admin/banners)
+   Returns: { items: [{ id, title, imageUrl, linkUrl?, status, order, startDate?, endDate? }], total }
+
+==========================================
+SOCIAL FEATURES (8 APIs)
+==========================================
+
+--- FOLLOW/UNFOLLOW ---
+❌ POST /user/{userId}/follow
+   Returns: { message, isFollowing: true }
+
+❌ POST /user/{userId}/unfollow
+   Returns: { message, isFollowing: false }
+
+❌ GET /user/{userId}/followers
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, followedAt }], total }
+
+❌ GET /user/{userId}/following
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, followedAt }], total }
+
+--- TIPS/COINS ---
+❌ POST /user/{userId}/tip
+   Body: { amount, message? }
+   Returns: { message, transactionId }
+   Note: Updates sender's wallet (debit) and receiver's wallet (credit)
+   Note: Updates earnings in admin panel automatically
+
+❌ GET /user/{userId}/tips-received
+   Query: { page?, limit? }
+   Returns: { items: [{ id, fromUserId, fromUserName, amount, message, createdAt }], total }
+
+❌ GET /user/{userId}/tips-sent
+   Query: { page?, limit? }
+   Returns: { items: [{ id, toUserId, toUserName, amount, message, createdAt }], total }
+
+❌ GET /user/{userId}/profile
+   Query: { includeStats?: true }
+   Returns: { id, email, firstName, lastName, mobile, role, profileImage, bio, gender, dob, followersCount, followingCount, reelsCount, totalEarnings, ... }
+
+==========================================
+NOTIFICATIONS (4 APIs)
+==========================================
+
+❌ GET /user/notifications
+   Query: { page?, limit?, read?, type? }
+   Returns: { items: [{ id, title, message, type, read, createdAt, linkUrl?, data? }], total }
+   Types: 'COMPETITION', 'WINNER', 'FOLLOW', 'TIP', 'COMMENT', 'LIKE', 'SYSTEM'
+
+❌ PUT /user/notifications/{id}/read
+   Returns: { message }
+
+❌ PUT /user/notifications/read-all
+   Returns: { message }
+
+❌ PUT /user/notifications/settings
+   Body: { competitionNotifications?, winnerNotifications?, followNotifications?, tipNotifications?, commentNotifications?, likeNotifications? }
+   Returns: { message }
+
+==========================================
+SEARCH & DISCOVERY (3 APIs)
+==========================================
+
+❌ GET /search
+   Query: { q, type?: 'user' | 'competition' | 'reel', page?, limit? }
+   Returns: { users: [], competitions: [], reels: [], total }
+
+❌ GET /trending
+   Query: { type?: 'reels' | 'competitions' | 'users', page?, limit? }
+   Returns: { items: [], total }
+
+❌ GET /user/{userId}/reels
+   Query: { page?, limit?, status? }
+   Returns: { items: [Reel], total }
+
+==========================================
+REPORTS (1 API)
+==========================================
+
+❌ POST /reports
+   Body: { type: 'USER' | 'CONTENT' | 'COMPETITION', reportedItemId, reason, description? }
+   Returns: { message, reportId }
+   Note: Creates report visible in admin panel
+
+==========================================
+REFERRAL SYSTEM (2 APIs)
+==========================================
+
+❌ GET /user/referral-code
+   Returns: { referralCode, referralLink, totalReferrals, totalEarnings }
+   Note: Returns user's unique referral code and stats
+
+❌ POST /user/referral/claim
+   Body: { referralCode }
+   Returns: { message, bonusCoins }
+   Note: User claims referral bonus when they sign up with a code
+   Note: Referrer gets coins when someone uses their code
+
+==========================================
+COMMUNITIES (4 APIs)
+==========================================
+
+❌ GET /communities
+   Query: { page?, limit?, status? }
+   Returns: { items: [{ id, name, imageUrl, memberCount, postCount, isHot?, comingSoon? }], total }
+
+❌ GET /communities/{id}
+   Returns: { id, name, imageUrl, description, memberCount, postCount, rules, createdAt }
+
+❌ POST /communities/{id}/join
+   Returns: { message, joinedAt }
+
+❌ POST /communities/{id}/posts
+   Body: { text, images?, video?, communityId }
+   Returns: { message, postId }
+   Note: Creates post in community feed
+
+==========================================
+WALLET & TRANSACTIONS (5 APIs)
+==========================================
+
+✅ GET /user/wallet
+   Returns: { balance, totalEarnings, totalTips }
+
+❌ GET /user/wallet/transactions
+   Query: { type?: 'CREDIT' | 'DEBIT', page?, limit? }
+   Returns: { items: [{ id, type, amount, description, balance, createdAt, competitionId?, competitionName? }], total }
+
+❌ POST /user/wallet/withdraw
+   Body: { amount, bankDetails: { accountNumber, ifscCode, accountHolderName, bankName }, withdrawalMethod: 'bank' | 'upi', upiId? }
+   Returns: { message, transactionId, status: 'PENDING' }
+   Note: Creates withdrawal request visible in admin panel
+
+❌ GET /user/wallet/withdraw-history
+   Query: { page?, limit? }
+   Returns: { items: [{ id, amount, status, bankDetails, requestedAt, processedAt? }], total }
+
+❌ POST /user/wallet/add-coins
+   Body: { amount, paymentMethod: 'razorpay' | 'card', orderId? }
+   Returns: { message, transactionId, orderId? }
+   Note: Adds coins to wallet via payment gateway
+
+==========================================
+CHAT/MESSAGING (8 APIs)
+==========================================
+
+❌ GET /chat/conversations
+   Query: { page?, limit? }
+   Returns: { items: [{ id, userId, userName, userImage, lastMessage, timestamp, unreadCount, isOnline }], total }
+
+❌ GET /chat/conversations/archived
+   Query: { page?, limit? }
+   Returns: { items: [Conversation], total }
+
+❌ GET /chat/{userId}/messages
+   Query: { page?, limit?, before? }
+   Returns: { items: [{ id, text, isSent, time, reactions?, replyTo? }], total }
+
+❌ POST /chat/{userId}/messages
+   Body: { text, replyToId? }
+   Returns: { message, messageId }
+
+❌ POST /chat/messages/{messageId}/reaction
+   Body: { emoji }
+   Returns: { message }
+
+❌ DELETE /chat/messages/{messageId}
+   Returns: { message }
+
+❌ POST /chat/messages/{messageId}/forward
+   Body: { userIds: string[] }
+   Returns: { message, forwardedCount }
+
+❌ PUT /chat/conversations/{userId}/archive
+   Body: { archived: boolean }
+   Returns: { message }
+
+==========================================
+EARNINGS & WINNINGS FLOW (3 APIs)
+==========================================
+
+--- AUTOMATIC EARNINGS (Backend handles) ---
+Note: When admin declares winners via POST /admin/competitions/{id}/declare-winners:
+- Backend automatically creates earnings records
+- Coins are added to user wallets
+- Earnings visible in app via GET /user/earnings
+- Earnings visible in admin via GET /admin/earnings
+
+❌ GET /user/earnings
+   Returns: { items: [{ id, type, amount, description, competitionId?, competitionName?, createdAt }], total }
+   Types: 'COMPETITION_WIN', 'TIP_RECEIVED', 'REFERRAL', etc.
+
+❌ GET /user/winnings
+   Query: { page?, limit? }
+   Returns: { items: [{ id, competitionId, competitionName, rank, prizeAmount, coinsAwarded, awardedAt }], total }
+
+❌ GET /user/competition-history
+   Query: { status?: 'joined' | 'won' | 'participated', page?, limit? }
+   Returns: { items: [{ id, competitionId, competitionName, status, joinedAt, result? }], total }
+
+==========================================
+DATA FLOW: APP ↔ ADMIN PANEL
+==========================================
+
+1. COMPETITIONS:
+   Admin creates → POST /admin/competitions
+   App fetches → GET /competitions (public, no auth)
+   App joins → POST /competitions/{id}/join
+   App uploads entry → POST /competitions/{id}/entries
+   Admin views participants → GET /admin/competitions/{id}/participants
+   Admin declares winners → POST /admin/competitions/{id}/declare-winners
+   Backend auto-creates earnings → User wallet updated
+   App shows earnings → GET /user/earnings
+
+2. EARNINGS:
+   User wins competition → Backend auto-creates earnings
+   User receives tip → POST /user/{userId}/tip → Backend creates earnings
+   App shows earnings → GET /user/earnings
+   Admin views earnings → GET /admin/earnings
+
+3. USER DETAILS:
+   User updates profile → PUT /user/profile
+   Backend saves → User data updated
+   Admin views user → GET /admin/users/{id}
+
+4. KYC:
+   User completes steps → PUT /user/profile (with bio, profileImage, etc.)
+   Frontend auto-verifies → Checks all steps complete
+   Backend updates status → KYC status = 'completed'
+   Admin views KYC → GET /admin/users/{id}/kyc
+
+5. REELS:
+   User uploads reel → POST /reels/upload
+   Backend AI/ML moderation → Auto-approve/reject
+   Approved reels visible → GET /reels
+   Admin views reels → GET /admin/reels (if needed)
+
+6. REPORTS:
+   User reports → POST /reports
+   Backend creates report → Visible in admin
+   Admin views → GET /admin/reports
+   Admin resolves → PUT /admin/reports/{id}/status
+
+7. WITHDRAWALS:
+   User requests → POST /user/wallet/withdraw
+   Backend creates request → Status: 'PENDING'
+   Admin processes → (Manual process in admin)
+   User views history → GET /user/wallet/withdraw-history
+
+==========================================
+SUMMARY BY CATEGORY
+==========================================
+
+✅ IMPLEMENTED: 24 APIs
+❌ MISSING: 60 APIs
+
+Breakdown:
+- Authentication: 10/11 (91%)
+- User Data & KYC: 3/4 (75%)
+- Categories: 0/1 (0% - needs public endpoint)
+- Competitions: 0/11 (0% - CRITICAL)
+- Reels/Content: 0/15 (0% - CRITICAL)
+- Payments: 2/2 (100%)
+- App Branding & CMS: 8/8 (100%)
+- Banners: 0/1 (0%)
+- Social Features: 0/8 (0%)
+- Notifications: 0/4 (0%)
+- Search & Discovery: 0/3 (0%)
+- Reports: 0/1 (0%)
+- Wallet Transactions: 1/5 (20%)
+- Chat/Messaging: 0/8 (0%)
+- Earnings & Winnings: 1/3 (33%)
+- Referral System: 0/2 (0%)
+- Communities: 0/4 (0%)
+
+==========================================
+PRIORITY IMPLEMENTATION ORDER
+==========================================
+
+🔴 PHASE 1 - CRITICAL (Week 1):
+   1. Categories API (public endpoint)
+   2. Competition APIs (11 APIs)
+   3. Reel APIs (15 APIs - includes saved/downloaded)
+   Total: 27 APIs
+
+🟡 PHASE 2 - HIGH PRIORITY (Week 2):
+   4. Social Features (8 APIs)
+   5. Notifications (4 APIs)
+   6. Wallet Transactions (4 APIs - includes add coins)
+   7. Earnings & Winnings (2 APIs)
+   8. Referral System (2 APIs)
+   Total: 20 APIs
+
+🟢 PHASE 3 - MEDIUM PRIORITY (Week 3):
+   9. Chat/Messaging (8 APIs)
+   10. Search & Discovery (3 APIs)
+   11. Communities (4 APIs)
+   12. Banners (1 API)
+   13. Reports (1 API)
+   Total: 17 APIs
+
+==========================================
+SPECIAL NOTES
+==========================================
+
+1. CATEGORIES API:
+   - Currently uses /admin/categories (requires auth)
+   - MUST change to /categories (public, no auth)
+   - Backend needs to make this endpoint public
+
+2. COMPETITION FLOW:
+   - Admin creates competition → Status: CREATED/UPCOMING
+   - Admin approves → Status: LIVE
+   - App fetches LIVE competitions → Shows in app
+   - User joins → POST /competitions/{id}/join
+   - User uploads entry → POST /competitions/{id}/entries
+   - Admin declares winners → Coins auto-distributed
+   - Earnings auto-created → Visible in app and admin
+
+3. REEL MODERATION:
+   - User uploads → POST /reels/upload
+   - Backend AI/ML processes → Auto-approve/reject
+   - Approved reels → Status: APPROVED, visible in app
+   - Rejected reels → Status: REJECTED, not visible
+   - No admin intervention needed
+
+4. EARNINGS AUTO-UPDATE:
+   - Competition win → Backend auto-creates earnings
+   - Tip received → Backend auto-creates earnings
+   - Both visible in app (GET /user/earnings) and admin (GET /admin/earnings)
+
+5. KYC AUTO-VERIFICATION:
+   - User completes all steps → Frontend checks
+   - Frontend calls PUT /user/profile → Backend saves
+   - Frontend triggers auto-verify → Backend updates KYC status
+   - Admin can view → GET /admin/users/{id}/kyc
+
+6. CHAT FEATURES:
+   - Send message → POST /chat/{userId}/messages
+   - Delete message → DELETE /chat/messages/{messageId}
+   - Forward message → POST /chat/messages/{messageId}/forward
+   - Archive conversation → PUT /chat/conversations/{userId}/archive
+
+==========================================
+END OF DOCUMENT
+==========================================
+

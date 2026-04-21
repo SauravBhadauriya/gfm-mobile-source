@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Gully Fame",
+    "slug": "gully-fame-mobile",
+    "owner": "avi70",
+    "scheme": "gullyfame",
+    "android": {
+      "package": "com.gullyfame.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e9044990-7b9b-4ed2-b36c-c9ed9e7bfdfc"
+      }
+    }
+  }
+}

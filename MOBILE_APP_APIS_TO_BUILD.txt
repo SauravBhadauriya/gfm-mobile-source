@@ -1,0 +1,427 @@
+==========================================
+MOBILE APP - APIs TO BUILD
+==========================================
+
+Total APIs Required: 66
+APIs Already Implemented: 24
+APIs Need to Build: 42
+
+==========================================
+APIs NEED TO BUILD (42)
+==========================================
+
+CATEGORIES (1 API)
+
+GET /categories
+Query Parameters: page, limit
+Returns: Array of category objects with id, name, icon, image
+
+Explanation: The mobile app displays categories on the home screen and category detail pages. Currently, the app tries to fetch categories from the admin endpoint which requires authentication. This causes issues for users who are not logged in or have expired tokens. We need a public categories endpoint that anyone can access without authentication. This allows users to browse categories and competitions by category before logging in, improving user experience and reducing authentication-related errors.
+
+COMPETITIONS (12 APIs)
+
+GET /competitions
+Query Parameters: status, category, page, limit, search
+Returns: List of competitions with all details
+
+Explanation: This is the main endpoint for fetching competitions in the mobile app. Users need to see all available competitions on the competitions listing screen. The app filters competitions by status (upcoming, live, past) and allows searching by category or keyword. This endpoint must be public so users can browse competitions without logging in. Competitions created in the admin panel should automatically appear here when their status changes to live.
+
+GET /competitions/upcoming
+Query Parameters: page, limit
+Returns: List of upcoming competitions
+
+Explanation: The app has a dedicated screen for upcoming competitions where users can see competitions that are about to start. Users can join these competitions, but they must complete KYC verification first. This endpoint helps users discover new competitions they can participate in.
+
+GET /competitions/live
+Query Parameters: page, limit
+Returns: List of live competitions
+
+Explanation: Live competitions are currently active and accepting entries. Users can view these competitions, vote on entries, and see leaderboards. Unlike upcoming competitions, users do not need KYC verification to view or vote in live competitions. This endpoint powers the live competitions screen in the app.
+
+GET /competitions/past
+Query Parameters: page, limit
+Returns: List of past competitions
+
+Explanation: Past competitions show historical competitions that have ended. Users can view winners, see final leaderboards, and check their own participation history. This endpoint is used in the past competitions screen and competition history feature.
+
+GET /competitions/{id}
+Returns: Single competition with full details
+
+Explanation: When a user taps on a competition card, they need to see complete details including rules, prizes, dates, entry fee, participants count, and other information. This endpoint provides all the data needed to display the competition detail screen. It is used in upcoming, live, and past competition detail screens.
+
+POST /competitions/{id}/join
+Body: userId
+Returns: Join status and confirmation
+
+Explanation: When a user wants to participate in an upcoming competition, they must join it first. This endpoint creates a participation record and validates that the user has completed KYC verification. If KYC is not complete, the join request is rejected. After joining, users can upload their competition entries.
+
+GET /competitions/{id}/participants
+Query Parameters: page, limit
+Returns: List of participants with their details
+
+Explanation: Users want to see who else is participating in a competition. This endpoint lists all participants, showing their profile information, entry count, and current ranking. It helps users understand the competition level and see their competitors.
+
+GET /competitions/{id}/leaderboard
+Query Parameters: page, limit
+Returns: Leaderboard with rankings and vote counts
+
+Explanation: During live competitions, users can see real-time leaderboards showing who is winning based on votes. This endpoint provides ranked list of participants with their vote counts, helping users understand the competition standings and make informed voting decisions.
+
+GET /competitions/{id}/winners
+Returns: List of winners with their ranks and prizes
+
+Explanation: After a competition ends and winners are declared by the admin, users need to see who won. This endpoint shows the winners with their ranks, prize amounts, and coins awarded. It is displayed on past competition detail screens.
+
+POST /competitions/{id}/entries
+Body: FormData with video, thumbnail, caption, category
+Returns: Entry created confirmation
+
+Explanation: After joining a competition, users upload their video entries. This endpoint handles the video upload, creates an entry record linked to the competition, and processes the video for moderation. The uploaded entry becomes visible in the competition's entry list and can receive votes.
+
+GET /competitions/{id}/entries
+Query Parameters: userId, page, limit
+Returns: List of competition entries
+
+Explanation: Users need to see all entries submitted for a competition. This endpoint lists all entries with video thumbnails, captions, vote counts, and participant information. Users can browse entries, watch videos, and vote on them. Filtering by userId allows users to see only their own entries.
+
+POST /competitions/{id}/entries/{entryId}/vote
+Body: userId
+Returns: Vote confirmation and updated vote count
+
+Explanation: Users can vote on competition entries during live competitions. This endpoint records the vote, increments the vote count for the entry, and tracks voting history to prevent duplicate votes. Users can vote once per day per competition. The vote count is used to determine rankings in the leaderboard. This is essential for the competition voting system.
+
+REELS/CONTENT (15 APIs)
+
+POST /reels/upload
+Body: FormData with video, thumbnail, caption, category, competitionId, makePublic, allowMentions, enableTips
+Returns: Reel created with video URL and thumbnail
+
+Explanation: Users create and upload reels through the camera and upload screens. This endpoint handles video upload, generates thumbnails, processes the video for AI/ML moderation, and creates the reel record. The backend automatically moderates content and sets the reel status to approved or rejected. Reels can be linked to competitions or posted independently.
+
+GET /reels
+Query Parameters: userId, competitionId, category, page, limit, status
+Returns: List of reels with all interaction data
+
+Explanation: The home screen, reel feed, and category pages display reels to users. This endpoint provides a paginated list of reels with all necessary data including likes, comments, shares, saves, and tips. Filtering options allow users to see reels from specific users, competitions, or categories. Only approved reels are returned.
+
+GET /reels/{id}
+Returns: Single reel with complete details
+
+Explanation: When users tap on a reel to view it in detail, they need complete information including all interactions, comments, and metadata. This endpoint provides everything needed to display the reel viewer screen with full functionality.
+
+PUT /reels/{id}
+Body: caption, thumbnail, category
+Returns: Update confirmation
+
+Explanation: Users can edit their uploaded reels to update captions, change thumbnails, or modify categories. This endpoint allows users to update reel information after upload, giving them control over their content.
+
+DELETE /reels/{id}
+Returns: Delete confirmation
+
+Explanation: Users need the ability to delete their reels if they no longer want them visible. This endpoint removes the reel from the system, making it inaccessible to other users. Deleted reels are removed from all feeds and user profiles.
+
+POST /reels/{id}/like
+Body: userId
+Returns: Updated like count and status
+
+Explanation: Users can like reels to show appreciation. This endpoint records the like, increments the like count, and returns the updated status so the UI can reflect the change immediately. The like action is used throughout the app in reel viewers and feeds.
+
+POST /reels/{id}/unlike
+Body: userId
+Returns: Updated like count and status
+
+Explanation: Users can unlike reels they previously liked. This endpoint removes the like record, decrements the count, and updates the status. This provides users with the ability to change their mind about likes.
+
+POST /reels/{id}/save
+Body: userId
+Returns: Save status confirmation
+
+Explanation: Users can save reels to view later in their saved section. This endpoint creates a save record linking the user to the reel, allowing them to access it from their profile's saved reels screen. Saved reels help users bookmark content they want to revisit.
+
+POST /reels/{id}/unsave
+Body: userId
+Returns: Unsave confirmation
+
+Explanation: Users can remove reels from their saved collection. This endpoint deletes the save record, removing the reel from the user's saved list. This gives users control over their saved content.
+
+POST /reels/{id}/share
+Body: userId, platform
+Returns: Share URL and updated share count
+
+Explanation: Users can share reels on social media platforms or within the app. This endpoint generates a shareable URL, tracks the share action, and increments the share count. Sharing helps content go viral and increases app engagement.
+
+GET /reels/{id}/comments
+Query Parameters: page, limit
+Returns: List of comments with replies
+
+Explanation: Users can view and read comments on reels. This endpoint provides paginated comments with user information, timestamps, and nested replies. Comments help users engage with content creators and discuss the content.
+
+POST /reels/{id}/comments
+Body: comment, parentCommentId
+Returns: Comment created confirmation
+
+Explanation: Users can add comments to reels to express their thoughts or ask questions. This endpoint creates the comment record, links it to the reel and optionally to a parent comment for replies. Comments enable social interaction and engagement.
+
+GET /user/saved-reels
+Query Parameters: page, limit
+Returns: List of saved reels
+
+Explanation: Users have a saved reels screen where they can view all reels they have saved. This endpoint retrieves all reels that the user has saved, allowing them to easily access their bookmarked content. This feature improves user experience by letting users curate their favorite content.
+
+GET /user/downloaded-reels
+Query Parameters: page, limit
+Returns: List of downloaded reels
+
+Explanation: Users can download reels to watch offline. This endpoint lists all reels the user has downloaded, showing them in the downloads screen. Downloaded reels are stored locally but this endpoint helps track which reels were downloaded and when.
+
+POST /reels/{id}/download
+Returns: Download URL for the reel video
+
+Explanation: When users want to download a reel for offline viewing, this endpoint provides a direct download URL. The backend tracks download counts and ensures proper video format for download. This feature allows users to save content for later viewing without internet connection.
+
+BANNERS (1 API)
+
+GET /banners
+Query Parameters: status, page, limit
+Returns: List of active banners
+
+Explanation: The app displays promotional banners on the home screen and other key screens. This endpoint provides active banners with images, links, and display order. Banners are used for promotions, announcements, and featured content. This must be a public endpoint so banners are visible to all users.
+
+SOCIAL FEATURES (8 APIs)
+
+POST /user/{userId}/follow
+Returns: Follow status confirmation
+
+Explanation: Users can follow other users to see their content in their feed. This endpoint creates a follow relationship, updates follower and following counts, and sends notifications. Following enables users to build their network and stay updated with creators they like.
+
+POST /user/{userId}/unfollow
+Returns: Unfollow confirmation
+
+Explanation: Users can unfollow users they previously followed. This endpoint removes the follow relationship and updates counts accordingly. This gives users control over their feed and who they follow.
+
+GET /user/{userId}/followers
+Query Parameters: page, limit
+Returns: List of followers
+
+Explanation: Users want to see who follows them. This endpoint lists all users following the specified user, showing their profile information. This is displayed on user profile screens and helps users understand their audience.
+
+GET /user/{userId}/following
+Query Parameters: page, limit
+Returns: List of users being followed
+
+Explanation: Users want to see who they are following. This endpoint lists all users that the specified user follows. This helps users manage their following list and discover new content through their network.
+
+POST /user/{userId}/tip
+Body: amount, message
+Returns: Tip transaction confirmation
+
+Explanation: Users can send tips to content creators as a way to support them. This endpoint processes the tip payment, deducts coins from the sender's wallet, adds coins to the receiver's wallet, creates an earnings record for the receiver, and sends notifications. Tips are a key monetization feature that rewards creators.
+
+GET /user/{userId}/tips-received
+Query Parameters: page, limit
+Returns: List of tips received
+
+Explanation: Content creators want to see all tips they have received. This endpoint lists all tips with sender information, amounts, and messages. This helps creators track their earnings and see who supports them.
+
+GET /user/{userId}/tips-sent
+Query Parameters: page, limit
+Returns: List of tips sent
+
+Explanation: Users want to track tips they have sent to others. This endpoint lists all tips the user has sent, showing recipient information and amounts. This helps users keep track of their spending and support given to creators.
+
+GET /user/{userId}/profile
+Query Parameters: includeStats
+Returns: User profile with optional statistics
+
+Explanation: When viewing another user's profile, the app needs complete profile information including stats like follower count, following count, reel count, and total earnings. This endpoint provides all necessary data to display user profiles for both participants and fans. The includeStats parameter allows fetching additional statistics when needed.
+
+USER BLOCKING (2 APIs)
+
+POST /user/{userId}/block
+Returns: Block status confirmation
+
+Explanation: Users need the ability to block other users who are harassing them, sending unwanted messages, or behaving inappropriately. This endpoint creates a block relationship, preventing the blocked user from viewing the blocker's profile, sending messages, or interacting with their content. Blocked users cannot see the blocker's reels, comments, or profile. This is essential for user safety and platform moderation.
+
+POST /user/{userId}/unblock
+Returns: Unblock confirmation
+
+Explanation: Users can unblock users they previously blocked if they change their mind. This endpoint removes the block relationship, restoring normal interaction capabilities. This gives users control over their blocking list and allows them to manage their safety settings.
+
+NOTIFICATIONS (5 APIs)
+
+GET /user/notifications
+Query Parameters: page, limit, read, type
+Returns: List of notifications
+
+Explanation: Users need to see all their notifications including competition updates, winner announcements, new followers, tips received, comments, likes, rank boosts, daily challenges, rap battle invites, upcoming events, profile updates, competition results, payment confirmations, and system messages. This endpoint provides paginated notifications with all details needed to display them in the notifications screen. Filtering by read status and type helps users manage their notifications. Notification types include: COMPETITION_UPDATE, WINNER_ANNOUNCEMENT, NEW_FOLLOWER, TIP_RECEIVED, COMMENT, LIKE, RANK_BOOST, DAILY_CHALLENGE, RAP_BATTLE_INVITE, UPCOMING_EVENT, PROFILE_UPDATE, COMPETITION_RESULT, PAYMENT_SUCCESS, SYSTEM_MESSAGE.
+
+PUT /user/notifications/{id}/read
+Returns: Mark as read confirmation
+
+Explanation: When users view a notification, it should be marked as read. This endpoint updates the notification status, allowing the app to show unread counts and filter read notifications. This improves user experience by helping users track which notifications they have seen.
+
+PUT /user/notifications/read-all
+Returns: Mark all as read confirmation
+
+Explanation: Users can mark all notifications as read at once instead of individually. This endpoint updates all unread notifications for the user, providing a convenient way to clear the notification list. This is a common feature in social apps.
+
+PUT /user/notifications/settings
+Body: competitionNotifications, winnerNotifications, followNotifications, tipNotifications, commentNotifications, likeNotifications, rankBoostNotifications, dailyChallengeNotifications, rapBattleNotifications, upcomingEventNotifications, profileUpdateNotifications, paymentNotifications, systemNotifications
+Returns: Settings updated confirmation
+
+Explanation: Users want to control which types of notifications they receive. This endpoint allows users to enable or disable specific notification types, giving them control over their notification preferences. This reduces notification fatigue and improves user satisfaction. Users can toggle notifications for competitions, winners, follows, tips, comments, likes, rank boosts, daily challenges, rap battles, upcoming events, profile updates, payments, and system messages.
+
+GET /user/notifications/unread-count
+Returns: Unread notification count
+
+Explanation: The app displays a badge on the notifications icon showing the number of unread notifications. This endpoint provides the total count of unread notifications, allowing the app to display the badge without fetching all notifications. This improves performance and user experience.
+
+SEARCH & DISCOVERY (3 APIs)
+
+GET /search
+Query Parameters: q, type (user/competition/reel), page, limit
+Returns: Search results across users, competitions, and reels
+
+Explanation: Users need to search for other users, competitions, and reels. This endpoint provides unified search functionality that searches across all content types. Users can find people to follow, competitions to join, and reels to watch. Search is a fundamental feature for content discovery.
+
+GET /trending
+Query Parameters: type (reels/competitions/users), page, limit
+Returns: Trending items
+
+Explanation: Users want to discover trending content, competitions, and popular users. This endpoint provides trending items based on engagement metrics like views, likes, and participation. Trending content helps users discover what's popular and keeps the app engaging.
+
+GET /user/{userId}/reels
+Query Parameters: page, limit, status
+Returns: List of reels by the user
+
+Explanation: When viewing a user's profile, users want to see all reels created by that user. This endpoint lists all reels for a specific user, allowing profile visitors to browse their content. Filtering by status allows showing only approved reels or all reels including pending ones.
+
+REPORTS (1 API)
+
+POST /reports
+Body: type (USER/CONTENT/COMPETITION/CHAT), reportedItemId, reason, description
+Returns: Report created confirmation
+
+Explanation: Users need to report inappropriate content, users, competitions, or chat conversations. This endpoint creates a report record that is visible in the admin panel for review. Reports help maintain platform safety and allow admins to take action against violations. This is essential for content moderation and user safety.
+
+WALLET & TRANSACTIONS (4 APIs)
+
+GET /user/wallet/transactions
+Query Parameters: type (CREDIT/DEBIT), page, limit
+Returns: List of wallet transactions
+
+Explanation: Users need to see their complete transaction history including earnings, tips received, tips sent, competition entry fees, withdrawals, and coin purchases. This endpoint provides a detailed transaction log showing all wallet activity with descriptions, amounts, dates, and balances. This is displayed in the coins screen and helps users track their financial activity.
+
+POST /user/wallet/withdraw
+Body: amount, bankDetails (accountNumber, ifscCode, accountHolderName, bankName), withdrawalMethod (bank/upi), upiId
+Returns: Withdrawal request created with transaction ID
+
+Explanation: Users can withdraw their earned coins to their bank account or UPI. This endpoint creates a withdrawal request with status PENDING, which is then visible in the admin panel for processing. The withdrawal feature allows users to convert their virtual coins into real money, which is a key monetization feature. Admins process these requests manually.
+
+GET /user/wallet/withdraw-history
+Query Parameters: page, limit
+Returns: List of withdrawal requests
+
+Explanation: Users want to track their withdrawal requests and see their status (pending, processed, rejected). This endpoint provides the complete withdrawal history, helping users understand when their money will be available. This builds trust and transparency in the withdrawal process.
+
+POST /user/wallet/add-coins
+Body: amount, paymentMethod (razorpay/card), orderId
+Returns: Coins added confirmation with transaction ID
+
+Explanation: Users can purchase coins using payment gateways like Razorpay or credit/debit cards. This endpoint processes the payment, verifies the transaction, and adds coins to the user's wallet. The "Add Coins" button in the coins screen uses this endpoint. This is a revenue-generating feature that allows users to buy coins for tips, entry fees, or other in-app purchases.
+
+CHAT/MESSAGING (9 APIs)
+
+GET /chat/conversations
+Query Parameters: page, limit
+Returns: List of conversations with last message and unread count
+
+Explanation: Users have an inbox screen showing all their chat conversations. This endpoint provides a list of all conversations with the other user's information, last message preview, timestamp, and unread message count. This powers the inbox screen and helps users see all their active conversations.
+
+GET /chat/conversations/archived
+Query Parameters: page, limit
+Returns: List of archived conversations
+
+Explanation: Users can archive conversations they want to hide from the main inbox. This endpoint retrieves archived conversations, allowing users to access old chats when needed. Archiving helps users organize their inbox and focus on active conversations.
+
+GET /chat/{userId}/messages
+Query Parameters: page, limit, before
+Returns: List of messages in the conversation
+
+Explanation: When users open a chat conversation, they need to see all messages. This endpoint provides paginated messages with text, timestamps, sent/received status, reactions, and reply information. The "before" parameter allows loading older messages for infinite scroll. This powers the chat detail screen.
+
+POST /chat/{userId}/messages
+Body: text, replyToId
+Returns: Message sent confirmation
+
+Explanation: Users send messages in chat conversations. This endpoint creates the message record, delivers it to the recipient, updates conversation metadata, and sends push notifications. This is the core functionality of the chat feature, enabling real-time communication between users.
+
+POST /chat/messages/{messageId}/reaction
+Body: emoji
+Returns: Reaction added confirmation
+
+Explanation: Users can add emoji reactions to messages (like, love, laugh, etc.) similar to WhatsApp. This endpoint records the reaction, allowing users to express emotions without typing. Reactions make conversations more engaging and expressive.
+
+DELETE /chat/messages/{messageId}
+Returns: Message deleted confirmation
+
+Explanation: Users can delete messages they sent, removing them from the conversation for both users. This endpoint marks the message as deleted, allowing users to correct mistakes or remove unwanted messages. This is a standard chat feature that users expect.
+
+POST /chat/messages/{messageId}/forward
+Body: userIds array
+Returns: Forward confirmation with count
+
+Explanation: Users can forward messages to other users, sharing interesting content or conversations. This endpoint creates copies of the message in other conversations, allowing users to share messages easily. Forwarding is a common chat feature that improves communication.
+
+PUT /chat/conversations/{userId}/archive
+Body: archived boolean
+Returns: Archive status updated
+
+Explanation: Users can archive or unarchive conversations to organize their inbox. This endpoint updates the archive status, hiding or showing conversations in the main inbox. Archiving helps users manage their chat list and focus on important conversations.
+
+POST /chat/{userId}/block
+Returns: Block user confirmation
+
+Explanation: Users can block other users directly from the chat screen to prevent them from sending messages. This endpoint creates a block relationship, preventing the blocked user from sending messages or viewing the blocker's profile. When a user is blocked from chat, they are also blocked from all other interactions. This is essential for user safety and preventing harassment through messaging.
+
+EARNINGS & WINNINGS (2 APIs)
+
+GET /user/winnings
+Query Parameters: page, limit
+Returns: List of competition wins with prizes
+
+Explanation: Users want to see all competitions they have won, including their rank, prize amount, and coins awarded. This endpoint provides a dedicated list of wins, separate from general earnings. This helps users track their achievements and see their success in competitions. Winners are automatically created when admins declare winners in competitions.
+
+GET /user/competition-history
+Query Parameters: status (joined/won/participated), page, limit
+Returns: List of competitions user participated in
+
+Explanation: Users have a history screen showing all competitions they have joined, participated in, or won. This endpoint provides the complete competition participation history with status, dates, and results. This helps users track their competition journey and see their progress over time.
+
+==========================================
+SPECIAL NOTES
+==========================================
+
+1. Categories API must be public endpoint /categories, not /admin/categories. Currently causes authentication errors.
+
+2. Competition flow: Admin creates competition via admin panel, app fetches via GET /competitions (public), user joins via POST /competitions/{id}/join, user uploads entry via POST /competitions/{id}/entries, admin declares winners via admin panel, backend auto-creates earnings records.
+
+3. Reel moderation: User uploads via POST /reels/upload, backend AI/ML processes and auto-approves/rejects, approved reels visible, rejected reels hidden.
+
+4. Earnings auto-update: Competition win creates earnings automatically, tip received creates earnings automatically, both visible in app and admin panel.
+
+5. KYC auto-verification: User completes all steps, frontend checks completion, backend updates KYC status to completed.
+
+6. Wallet API GET /user/wallet is already implemented and returns balance, totalEarnings, totalTips.
+
+7. User profile must include bio and three-word description fields. Refer to the "Own Profile" screen in Figma for the exact format.
+
+8. Block functionality: When a user blocks another user (either from profile or chat), the blocked user cannot see the blocker's content, send messages, or interact in any way. Blocked users are hidden from the blocker's feed and search results.
+
+9. Notification types: The system must support all notification types including COMPETITION_UPDATE, WINNER_ANNOUNCEMENT, NEW_FOLLOWER, TIP_RECEIVED, COMMENT, LIKE, RANK_BOOST, DAILY_CHALLENGE, RAP_BATTLE_INVITE, UPCOMING_EVENT, PROFILE_UPDATE, COMPETITION_RESULT, PAYMENT_SUCCESS, and SYSTEM_MESSAGE.
+
+10. Community and Referral features are NOT included in this API list as they are not implemented in the mobile app.
+
+==========================================
+END OF DOCUMENT
+==========================================

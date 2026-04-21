@@ -1,0 +1,777 @@
+================================================================================
+GULLY FAME - CREATOR LINKEDIN FEATURE
+COMPLETE REQUIREMENTS DOCUMENT
+================================================================================
+
+Document Version: 1.0
+Date: 2024
+Feature: Professional Creator Profile & Networking System
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1. Overview
+2. Admin/Backend Requirements
+3. Mobile App Requirements
+4. Database Schema Requirements
+5. API Endpoints Required
+6. UI/UX Guidelines
+7. Monetization Features
+8. Technical Specifications
+
+================================================================================
+1. OVERVIEW
+================================================================================
+
+PURPOSE:
+Build a professional networking platform for creators within Gully Fame,
+similar to LinkedIn but focused on talent, credibility, and work history.
+
+KEY PRINCIPLES:
+- Professional, calm, and credible (NOT social media-like)
+- Focus on talent and work history
+- No public comments feed
+- No follower-count obsession
+- No entertainment algorithm
+
+TARGET USERS:
+- Creators (musicians, dancers, comedians, etc.)
+- Brands/Recruiters (verified accounts)
+- Event organizers
+
+================================================================================
+2. ADMIN/BACKEND REQUIREMENTS
+================================================================================
+
+2.1 PROFILE MANAGEMENT SYSTEM
+------------------------------
+✓ Create/Update Creator Profile API
+  - Verified name & creator ID
+  - Talent category (music, dance, comedy, etc.)
+  - Location (city, state, country)
+  - Language preferences
+  - Professional bio (rich text support)
+  - Profile picture & cover image
+  - Contact information (optional, privacy-controlled)
+
+✓ Portfolio Management API
+  - Add/Edit/Delete portfolio items
+  - Support for:
+    * Video links (YouTube, Vimeo, etc.)
+    * Image galleries
+    * External website links
+    * Project descriptions
+  - Portfolio item ordering/priority
+
+✓ Talent Score™ Calculation System
+  - Read-only score (calculated automatically)
+  - Factors to consider:
+    * Competition wins/rankings
+    * Work history quality
+    * Certifications earned
+    * Profile completeness
+    * Engagement metrics (professional only)
+  - Score update triggers
+  - Score history tracking
+
+✓ Certifications & Badges System
+  - Admin can create badge types
+  - Assign badges to creators
+  - Badge verification process
+  - Badge display on profile
+  - Badge expiration (if applicable)
+
+✓ Work History Management API
+  - Add/Edit/Delete work history entries
+  - Fields:
+    * Job title/role
+    * Company/Event name
+    * Start date & end date
+    * Description
+    * Location
+    * Verification status
+  - Work history verification workflow
+  - Reference system (optional)
+
+✓ Availability Status System
+  - Status types: Available, Busy, Not Available
+  - Custom availability messages
+  - Calendar integration (future)
+  - Status update notifications
+
+2.2 NETWORKING SYSTEM
+---------------------
+✓ Connection/Follow System API
+  - Send connection request
+  - Accept/Reject connection requests
+  - Connection status tracking
+  - Mutual connections display
+  - Connection removal
+
+✓ Search & Filter API
+  - Search by:
+    * Talent category
+    * City/Location
+    * Talent Score range
+    * Availability status
+    * Keywords (name, bio, skills)
+  - Advanced filters:
+    * Verified status
+    * Account type (Creator/Brand/Recruiter)
+    * Language
+    * Work history keywords
+  - Search result ranking:
+    * Relevance
+    * Talent Score
+    * Profile completeness
+    * Featured status (premium)
+
+✓ Verified Accounts System
+  - Brand account verification
+  - Recruiter account verification
+  - Verification badge display
+  - Verification request workflow
+  - Verification status management
+
+✓ Direct Messaging API
+  - Message request system
+  - Creator approval workflow
+  - Send message (after approval)
+  - Message threads
+  - Read receipts
+  - Message notifications
+  - Block/Report functionality
+
+2.3 MONETIZATION SYSTEM
+------------------------
+✓ Premium Profile Subscription
+  - Subscription tiers
+  - Payment processing
+  - Subscription management
+  - Premium feature access:
+    * Enhanced profile visibility
+    * Advanced analytics
+    * Priority in search results
+    * Custom profile themes
+
+✓ Brand Access Paywall
+  - Brand account registration
+  - Payment processing
+  - Access level management
+  - Brand dashboard features
+
+✓ Featured Search Results
+  - Featured profile system
+  - Payment processing
+  - Featured placement management
+  - Featured duration tracking
+
+2.4 ADMIN DASHBOARD FEATURES
+-----------------------------
+✓ Creator Profile Management
+  - View all creator profiles
+  - Edit/Update profiles
+  - Verify profiles
+  - Suspend/Activate profiles
+
+✓ Badge & Certification Management
+  - Create badge types
+  - Assign badges
+  - Remove badges
+  - Badge analytics
+
+✓ Verification Management
+  - Review verification requests
+  - Approve/Reject verifications
+  - Manage verified accounts
+
+✓ Work History Verification
+  - Review work history entries
+  - Verify work history
+  - Flag suspicious entries
+
+✓ Analytics Dashboard
+  - User engagement metrics
+  - Search analytics
+  - Connection statistics
+  - Revenue metrics
+
+✓ Content Moderation
+  - Review reported profiles
+  - Review reported messages
+  - Suspend/ban accounts
+  - Content flagging system
+
+================================================================================
+3. MOBILE APP REQUIREMENTS
+================================================================================
+
+3.1 CREATOR PROFILE SCREENS
+----------------------------
+✓ Enhanced Profile Screen
+  - Header section:
+    * Cover image
+    * Profile picture
+    * Verified badge
+    * Creator ID display
+  - Basic Info section:
+    * Name (verified)
+    * Talent category badge
+    * Location & language
+    * Availability status
+  - Professional Bio section:
+    * Rich text display
+    * Edit button (for own profile)
+  - Talent Score™ section:
+    * Score display (large, prominent)
+    * Score breakdown (optional)
+    * Score history graph (optional)
+  - Portfolio section:
+    * Grid/list view toggle
+    * Portfolio items with thumbnails
+    * Click to view full item
+    * Add/Edit/Delete (for own profile)
+  - Certifications & Badges section:
+    * Badge grid display
+    * Badge details on tap
+  - Work History section:
+    * Timeline view
+    * Work entry cards
+    * Expandable details
+    * Add/Edit/Delete (for own profile)
+  - Action buttons:
+    * Connect/Message (for other profiles)
+    * Edit Profile (for own profile)
+    * Share Profile
+
+✓ Profile Edit Screen
+  - Form sections:
+    * Basic information
+    * Professional bio (rich text editor)
+    * Location & language
+    * Availability status
+    * Contact information
+  - Portfolio management:
+    * Add new portfolio item
+    * Edit existing items
+    * Reorder items
+    * Delete items
+  - Work history management:
+    * Add work entry
+    * Edit work entry
+    * Delete work entry
+  - Save/Cancel buttons
+  - Validation & error handling
+
+✓ Portfolio Item Detail Screen
+  - Full item display
+  - Video/image viewer
+  - Description
+  - External link button
+  - Share option
+
+✓ Work History Entry Screen
+  - Entry details
+  - Verification status
+  - Edit/Delete (for own entries)
+
+3.2 NETWORKING SCREENS
+-----------------------
+✓ Creator Search Screen
+  - Search bar
+  - Filter options:
+    * Talent category
+    * Location
+    * Talent Score range
+    * Availability
+    * Verified only
+  - Search results list:
+    * Profile cards
+    * Quick view info
+    * Connect button
+  - Sort options:
+    * Relevance
+    * Talent Score
+    * Newest
+  - Featured profiles section (top)
+
+✓ Connection Requests Screen
+  - Pending requests list
+  - Accept/Reject buttons
+  - Profile preview
+  - Notification badge
+
+✓ Connections List Screen
+  - My connections list
+  - Search within connections
+  - Filter by category
+  - Connection details
+  - Remove connection option
+
+✓ Direct Messaging Screen
+  - Message requests section:
+    * Pending requests
+    * Approve/Decline buttons
+  - Conversations list:
+    * Active conversations
+    * Unread indicators
+    * Last message preview
+  - Chat screen:
+    * Message thread
+    * Send message input
+    * Read receipts
+    * Block/Report options
+
+3.3 VERIFIED ACCOUNTS
+----------------------
+✓ Brand Account Screen
+  - Brand profile display
+  - Verification badge
+  - Brand-specific features
+  - Search creators
+  - Contact creators
+
+✓ Recruiter Account Screen
+  - Recruiter profile
+  - Verification badge
+  - Search & filter creators
+  - Contact creators
+  - Save favorites
+
+3.4 MONETIZATION SCREENS
+-------------------------
+✓ Premium Profile Screen
+  - Subscription tiers display
+  - Feature comparison
+  - Payment options
+  - Current subscription status
+  - Upgrade/Downgrade options
+
+✓ Brand Access Screen
+  - Registration form
+  - Payment processing
+  - Access confirmation
+
+✓ Featured Search Screen
+  - Featured placement options
+  - Duration selection
+  - Payment processing
+  - Confirmation
+
+3.5 NAVIGATION UPDATES
+----------------------
+✓ Add "Network" tab to bottom navigation
+  - Replace or add new tab
+  - Network icon
+  - Badge for pending requests
+
+✓ Profile menu updates
+  - Add "Professional Profile" option
+  - Add "My Network" option
+  - Add "Messages" option
+
+================================================================================
+4. DATABASE SCHEMA REQUIREMENTS
+================================================================================
+
+4.1 NEW TABLES NEEDED
+----------------------
+✓ creator_profiles (extended)
+  - verified_name
+  - creator_id (unique)
+  - talent_category
+  - location_city
+  - location_state
+  - location_country
+  - languages (array)
+  - professional_bio
+  - availability_status
+  - availability_message
+  - profile_completeness_score
+
+✓ portfolio_items
+  - id
+  - creator_id (FK)
+  - item_type (video/image/link)
+  - title
+  - description
+  - url
+  - thumbnail_url
+  - display_order
+  - created_at
+  - updated_at
+
+✓ talent_scores
+  - id
+  - creator_id (FK)
+  - score (calculated)
+  - score_breakdown (JSON)
+  - last_calculated_at
+  - score_history (JSON array)
+
+✓ certifications
+  - id
+  - creator_id (FK)
+  - badge_type_id (FK)
+  - issued_date
+  - expiry_date (nullable)
+  - verified_by (admin_id)
+  - verified_at
+
+✓ badge_types
+  - id
+  - name
+  - description
+  - icon_url
+  - color
+  - is_active
+
+✓ work_history
+  - id
+  - creator_id (FK)
+  - job_title
+  - company_name
+  - start_date
+  - end_date (nullable)
+  - description
+  - location
+  - verification_status
+  - verified_by (nullable)
+  - verified_at (nullable)
+  - created_at
+  - updated_at
+
+✓ connections
+  - id
+  - requester_id (FK)
+  - receiver_id (FK)
+  - status (pending/accepted/rejected)
+  - requested_at
+  - accepted_at (nullable)
+
+✓ messages
+  - id
+  - sender_id (FK)
+  - receiver_id (FK)
+  - message_request_id (FK, nullable)
+  - content
+  - is_read
+  - read_at (nullable)
+  - created_at
+
+✓ message_requests
+  - id
+  - sender_id (FK)
+  - receiver_id (FK)
+  - status (pending/approved/rejected)
+  - message_preview
+  - requested_at
+  - responded_at (nullable)
+
+✓ verified_accounts
+  - id
+  - user_id (FK)
+  - account_type (brand/recruiter)
+  - verification_status
+  - verified_by (admin_id)
+  - verified_at
+  - verification_documents (JSON)
+
+✓ premium_subscriptions
+  - id
+  - user_id (FK)
+  - subscription_tier
+  - start_date
+  - end_date
+  - is_active
+  - payment_id
+
+✓ featured_profiles
+  - id
+  - creator_id (FK)
+  - start_date
+  - end_date
+  - is_active
+  - payment_id
+
+================================================================================
+5. API ENDPOINTS REQUIRED
+================================================================================
+
+5.1 PROFILE ENDPOINTS
+----------------------
+GET    /api/creator/profile/:creatorId
+POST   /api/creator/profile
+PUT    /api/creator/profile/:creatorId
+DELETE /api/creator/profile/:creatorId
+
+GET    /api/creator/portfolio/:creatorId
+POST   /api/creator/portfolio
+PUT    /api/creator/portfolio/:itemId
+DELETE /api/creator/portfolio/:itemId
+
+GET    /api/creator/talent-score/:creatorId
+GET    /api/creator/work-history/:creatorId
+POST   /api/creator/work-history
+PUT    /api/creator/work-history/:entryId
+DELETE /api/creator/work-history/:entryId
+
+GET    /api/creator/certifications/:creatorId
+POST   /api/admin/certifications/assign
+DELETE /api/admin/certifications/:certId
+
+PUT    /api/creator/availability-status
+
+5.2 NETWORKING ENDPOINTS
+-------------------------
+GET    /api/network/search
+GET    /api/network/connections
+POST   /api/network/connect
+PUT    /api/network/connection/:requestId
+DELETE /api/network/connection/:connectionId
+
+GET    /api/network/connection-requests
+POST   /api/network/connection-request
+PUT    /api/network/connection-request/:requestId
+
+GET    /api/messages/conversations
+GET    /api/messages/conversation/:conversationId
+POST   /api/messages/send
+POST   /api/messages/request
+PUT    /api/messages/request/:requestId
+PUT    /api/messages/read/:messageId
+
+5.3 VERIFICATION ENDPOINTS
+---------------------------
+POST   /api/verification/request
+GET    /api/admin/verification/requests
+PUT    /api/admin/verification/:requestId
+GET    /api/verification/status/:userId
+
+5.4 MONETIZATION ENDPOINTS
+---------------------------
+GET    /api/premium/subscription
+POST   /api/premium/subscribe
+PUT    /api/premium/subscription/:subscriptionId
+DELETE /api/premium/subscription/:subscriptionId
+
+POST   /api/brand/register
+POST   /api/brand/access
+
+POST   /api/featured/subscribe
+GET    /api/featured/status/:creatorId
+
+5.5 ADMIN ENDPOINTS
+-------------------
+GET    /api/admin/creators
+GET    /api/admin/creators/:creatorId
+PUT    /api/admin/creators/:creatorId
+DELETE /api/admin/creators/:creatorId
+
+GET    /api/admin/badges
+POST   /api/admin/badges
+PUT    /api/admin/badges/:badgeId
+DELETE /api/admin/badges/:badgeId
+
+GET    /api/admin/analytics
+GET    /api/admin/reports
+PUT    /api/admin/reports/:reportId
+
+================================================================================
+6. UI/UX GUIDELINES
+================================================================================
+
+6.1 DESIGN PRINCIPLES
+---------------------
+✓ Professional & Clean
+  - Minimal, clean layouts
+  - Professional color scheme
+  - Clear typography
+  - Ample white space
+
+✓ Credible & Trustworthy
+  - Verification badges prominent
+  - Professional imagery
+  - Clear information hierarchy
+  - Transparent processes
+
+✓ NOT Social Media-Like
+  - No like/heart buttons on profiles
+  - No public comment feeds
+  - No follower counts displayed prominently
+  - No algorithm-driven feeds
+  - No viral content focus
+
+6.2 COLOR SCHEME
+----------------
+✓ Primary: Professional blue/gray tones
+✓ Accent: Brand color (EC9A15) for CTAs
+✓ Success: Green for verified/approved
+✓ Warning: Orange for pending
+✓ Error: Red for rejected/blocked
+✓ Background: Clean white/light gray
+
+6.3 TYPOGRAPHY
+--------------
+✓ Headings: Bold, professional fonts
+✓ Body: Clean, readable fonts
+✓ Sizes: Clear hierarchy
+✓ Line spacing: Comfortable reading
+
+6.4 COMPONENTS
+--------------
+✓ Profile Cards
+  - Clean layout
+  - Key info visible
+  - Professional imagery
+  - Clear CTAs
+
+✓ Search Interface
+  - Simple, effective
+  - Clear filters
+  - Fast results
+  - Relevant sorting
+
+✓ Forms
+  - Clear labels
+  - Helpful placeholders
+  - Validation messages
+  - Save indicators
+
+================================================================================
+7. MONETIZATION FEATURES
+================================================================================
+
+7.1 PREMIUM CREATOR PROFILES
+-----------------------------
+Features:
+- Enhanced profile visibility
+- Advanced analytics dashboard
+- Priority in search results
+- Custom profile themes
+- Unlimited portfolio items
+- Featured badge
+
+Pricing Tiers:
+- Basic: Free
+- Premium: $X/month
+- Pro: $Y/month
+
+7.2 BRAND ACCESS
+----------------
+Features:
+- Access to creator database
+- Advanced search filters
+- Direct messaging
+- Creator analytics
+- Saved favorites
+
+Pricing:
+- Monthly: $Z/month
+- Annual: Discounted rate
+
+7.3 FEATURED SEARCH RESULTS
+---------------------------
+Features:
+- Top placement in search
+- Featured badge
+- Increased visibility
+
+Pricing:
+- Weekly: $A/week
+- Monthly: $B/month
+
+================================================================================
+8. TECHNICAL SPECIFICATIONS
+================================================================================
+
+8.1 MOBILE APP
+--------------
+Platform: React Native (Expo)
+Navigation: React Navigation
+State Management: Context API / Redux
+API Client: Axios
+Image Handling: React Native Image Picker
+Video Handling: Expo AV
+Forms: React Hook Form
+Validation: Yup
+
+8.2 BACKEND
+-----------
+Framework: Node.js / Python / PHP (as per existing)
+Database: PostgreSQL / MySQL (as per existing)
+Authentication: JWT (as per existing)
+File Storage: AWS S3 / Cloudinary
+Payment: Stripe / Razorpay (as per existing)
+Email: SendGrid / AWS SES
+
+8.3 SECURITY
+------------
+- Profile data encryption
+- Message encryption
+- Payment security
+- API rate limiting
+- Input validation
+- XSS protection
+- SQL injection prevention
+
+8.4 PERFORMANCE
+---------------
+- Image optimization
+- Lazy loading
+- Pagination
+- Caching strategy
+- CDN for assets
+- Database indexing
+
+================================================================================
+9. IMPLEMENTATION PHASES
+================================================================================
+
+PHASE 1: Foundation (Week 1-2)
+- Database schema
+- Basic profile API
+- Profile UI screens
+- Portfolio management
+
+PHASE 2: Networking (Week 3-4)
+- Search functionality
+- Connection system
+- Basic messaging
+
+PHASE 3: Advanced Features (Week 5-6)
+- Verification system
+- Work history
+- Certifications
+- Talent Score
+
+PHASE 4: Monetization (Week 7-8)
+- Premium subscriptions
+- Brand access
+- Featured results
+- Payment integration
+
+PHASE 5: Polish & Testing (Week 9-10)
+- UI/UX refinements
+- Bug fixes
+- Performance optimization
+- User testing
+
+================================================================================
+10. SUCCESS METRICS
+================================================================================
+
+✓ Profile completion rate
+✓ Connection requests sent/received
+✓ Message engagement
+✓ Search usage
+✓ Premium subscription conversions
+✓ Brand registrations
+✓ User retention
+✓ Profile views
+✓ Work history entries
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+
