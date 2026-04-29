@@ -2,6 +2,7 @@
   "name": "cultre-boat-monorepo",
   "private": true,
   "type": "module",
+  "packageManager": "npm@10.0.0",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
