@@ -1,0 +1,62 @@
+# Created by Kiro - Docker Ignore Configuration
+# Files and directories to exclude from Docker builds
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+.expo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Temporary
+*.tmp
+.cache/
+.turbo/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Documentation
+*.md
+docs/
+
+# Misc
+.DS_Store
+*.pem

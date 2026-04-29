@@ -67,7 +67,8 @@
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos"
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

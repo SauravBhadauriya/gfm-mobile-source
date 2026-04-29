@@ -1,0 +1,20 @@
+# Created by Kiro - GitHub Code Owners
+# Automatically request reviews from code owners
+
+# Mobile App
+apps/gully-fame-mobile/ @mobile-team
+
+# Admin Dashboard
+apps/gully-fame-admin/ @admin-team
+
+# Video Editor
+apps/videoeditor/ @video-team
+
+# Configuration files
+.github/ @devops-team
+docker* @devops-team
+.env* @devops-team
+
+# Root configuration
+package.json @devops-team
+tsconfig.json @devops-team

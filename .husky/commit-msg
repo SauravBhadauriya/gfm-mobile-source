@@ -1,0 +1,8 @@
+#!/bin/sh
+# Created by Kiro - Commit Message Hook
+# Validates commit message format
+
+. "$(dirname "$0")/_/husky.sh"
+
+echo "📝 Validating commit message..."
+npx --no -- commitlint --edit "$1"

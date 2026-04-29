@@ -1,0 +1,51 @@
+# Created by Kiro - Prettier Ignore Configuration
+# Files and directories to exclude from Prettier formatting
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+.expo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+
+# Temporary
+*.tmp
+.cache/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# Android/iOS
+android/
+ios/

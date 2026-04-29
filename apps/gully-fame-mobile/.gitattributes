@@ -1,2 +1,22 @@
-# Enforce LF line endings for all text files
-* text=auto eol=lf
+# Created by Kiro - Production Configuration
+# Gully Fame Mobile App - Git Attributes
+
+* text=auto
+
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.mp4 binary
+*.mov binary
+*.ttf binary
+*.keystore binary

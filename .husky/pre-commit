@@ -1,0 +1,17 @@
+#!/bin/sh
+# Created by Kiro - Pre-commit Hook
+# Runs linting and formatting checks before commit
+
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run prettier
+echo "✨ Formatting code with Prettier..."
+npm run format:check || exit 1
+
+# Run eslint
+echo "🔎 Linting code with ESLint..."
+npm run lint || exit 1
+
+echo "✅ Pre-commit checks passed!"
