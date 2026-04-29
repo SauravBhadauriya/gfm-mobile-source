@@ -1,0 +1,134 @@
+Created by Kiro - package.json Configuration Guide
+═══════════════════════════════════════════════════════════════════════════════
+
+ROOT LEVEL package.json EXPLANATION
+═══════════════════════════════════════════════════════════════════════════════
+
+{
+  "name": "cultre-boat-monorepo",
+  // Project name - identifies the monorepo
+
+  "private": true,
+  // Private flag - prevents accidental publishing to npm
+
+  "type": "module",
+  // ES modules enabled - allows import/export syntax
+
+  "packageManager": "npm@10.0.0",
+  // ✅ ADDED BY KIRO - Specifies npm version for consistency
+  // Turbo needs this to know which package manager to use
+  // All developers will use npm@10.0.0
+
+  "scripts": {
+    "build": "turbo build",
+    // Build all apps in monorepo using Turbo
+
+    "dev": "turbo dev",
+    // Start development servers for all apps
+
+    "lint": "turbo lint",
+    // Run linting across all apps
+
+    "clean": "turbo clean"
+    // Clean build artifacts from all apps
+  },
+
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  // Monorepo workspace configuration
+  // npm will link all apps together
+  // Shared dependencies installed once in root node_modules
+
+  "devDependencies": {
+    "fs": "^0.0.1-security",
+    // File system utilities
+
+    "path": "^0.12.7",
+    // Path utilities
+
+    "prettier": "latest",
+    // Code formatter
+
+    "turbo": "^2.8.9",
+    // Monorepo build orchestration tool
+
+    "typescript": "~5.9.2"
+    // TypeScript compiler
+  },
+
+  "engines": {
+    "node": ">=18"
+    // Minimum Node.js version required
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY ADDITION BY KIRO:
+═══════════════════════════════════════════════════════════════════════════════
+
+"packageManager": "npm@10.0.0"
+
+Why Added:
+  → Turbo 2.0+ requires this field
+  → Specifies which package manager to use
+  → Ensures consistency across team
+  → Prevents npm vs yarn conflicts
+
+What It Does:
+  → Tells Turbo to use npm@10.0.0
+  → All developers use same version
+  → Prevents "works on my machine" issues
+  → Enables reproducible builds
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TURBO.JSON CONFIGURATION:
+═══════════════════════════════════════════════════════════════════════════════
+
+Created by Kiro - turbo.json
+
+Purpose:
+  → Configures Turborepo for monorepo
+  → Defines build tasks and caching
+  → Optimizes build performance
+
+Key Sections:
+
+1. globalDependencies
+   → Files that affect all tasks
+   → .env.local, .env changes trigger rebuilds
+
+2. globalEnv
+   → Environment variables used by all tasks
+   → NODE_ENV affects all builds
+
+3. tasks
+   → build: Compiles all apps (with caching)
+   → lint: Lints code (no caching)
+   → test: Runs tests (caches coverage)
+   → dev: Development servers (persistent)
+   → clean: Removes build artifacts
+
+4. remoteCache
+   → Disabled (local caching only)
+   → Can be enabled for CI/CD later
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILES CREATED/MODIFIED BY KIRO:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. turbo.json (NEW)
+   ✅ Created with full comments
+   ✅ Turbo 2.0+ compatible
+   ✅ Production ready
+
+2. package.json (MODIFIED)
+   ✅ Added "packageManager": "npm@10.0.0"
+   ✅ Turbo compatible
+   ✅ Production ready
+
+═══════════════════════════════════════════════════════════════════════════════
