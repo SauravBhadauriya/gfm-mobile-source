@@ -1,8 +1,8 @@
-// 
+//
 
 // kiro code
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   TextInput,
@@ -14,19 +14,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
+} from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 // CHANGE THIS:
 // import * as userApi from '../api/services/userService';
 
 // TO THIS:
-import { authService } from '../api/services/authService';
-
+import { authService } from "../api/services/authService";
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ userId?: string; password?: string }>({});
 
@@ -35,13 +34,13 @@ export default function LoginScreen({ navigation }: any) {
     const newErrors: { userId?: string; password?: string } = {};
 
     if (!userId.trim()) {
-      newErrors.userId = 'Email or mobile is required';
+      newErrors.userId = "Email or mobile is required";
     }
 
     if (!password.trim()) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -56,34 +55,34 @@ export default function LoginScreen({ navigation }: any) {
 
     setIsLoading(true);
     try {
-      console.log('[LoginScreen] Attempting login with:', { userId });
+      console.log("[LoginScreen] Attempting login with:", { userId });
 
       // CHANGE THIS:
-// const response = await userApi.loginUser({...});
+      // const response = await userApi.loginUser({...});
 
-// TO THIS:
-const response = await authService.login({
+      // TO THIS:
+      const response = await authService.login({
         userId: userId.trim(),
         viaPassword: true,
         password,
       });
 
       if (response.success && response.data?.token) {
-        console.log('[LoginScreen] Login successful');
-        
+        console.log("[LoginScreen] Login successful");
+
         // Save token and user data
         await login(response.data.token);
-        
-        Alert.alert('Success', 'Login successful!');
+
+        Alert.alert("Success", "Login successful!");
       } else {
-        console.error('[LoginScreen] Login failed:', response.message);
-        Alert.alert('Login Failed', response.message || 'Invalid credentials');
+        console.error("[LoginScreen] Login failed:", response.message);
+        Alert.alert("Login Failed", response.message || "Invalid credentials");
       }
     } catch (error: any) {
-      console.error('[LoginScreen] Login error:', error);
-      
-      const errorMessage = error.message || 'Login failed. Please try again.';
-      Alert.alert('Error', errorMessage);
+      console.error("[LoginScreen] Login error:", error);
+
+      const errorMessage = error.message || "Login failed. Please try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -92,25 +91,25 @@ const response = await authService.login({
   // Handle forgot password
   const handleForgotPassword = async () => {
     if (!userId.trim()) {
-      Alert.alert('Error', 'Please enter your email or mobile number');
+      Alert.alert("Error", "Please enter your email or mobile number");
       return;
     }
 
     setIsLoading(true);
     try {
-     // FROM:
-// const response = await userApi.forgotPassword(userId.trim());
+      // FROM:
+      // const response = await userApi.forgotPassword(userId.trim());
 
-// TO:
-const response = await authService.forgotPassword(userId.trim());
-      
+      // TO:
+      const response = await authService.forgotPassword(userId.trim());
+
       if (response.success) {
-        Alert.alert('Success', 'Password reset link sent to your email/SMS');
+        Alert.alert("Success", "Password reset link sent to your email/SMS");
       } else {
-        Alert.alert('Error', response.message || 'Failed to send reset link');
+        Alert.alert("Error", response.message || "Failed to send reset link");
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to send reset link');
+      Alert.alert("Error", error.message || "Failed to send reset link");
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +117,7 @@ const response = await authService.forgotPassword(userId.trim());
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -191,13 +190,13 @@ const response = await authService.forgotPassword(userId.trim());
             )}
           </TouchableOpacity>
 
+          {/* ✅ UPDATED BY KIRO - Fixed unescaped apostrophe */}
+          {/* OLD CODE: Don't have (unescaped apostrophe) */}
+          {/* NEW CODE: Don&rsquo;t have (properly escaped) */}
           {/* Register Link */}
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
-            <TouchableOpacity
-              onPress={() => navigation?.navigate('Register')}
-              disabled={isLoading}
-            >
+            <Text style={styles.registerText}>Don&rsquo;t have an account? </Text>
+            <TouchableOpacity onPress={() => navigation?.navigate("Register")} disabled={isLoading}>
               <Text style={styles.registerLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
@@ -210,26 +209,26 @@ const response = await authService.forgotPassword(userId.trim());
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   header: {
     marginBottom: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   form: {
     gap: 16,
@@ -239,63 +238,63 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
   inputError: {
-    borderColor: '#ff4444',
+    borderColor: "#ff4444",
   },
   errorText: {
-    color: '#ff4444',
+    color: "#ff4444",
     fontSize: 12,
     marginTop: 4,
   },
   forgotPasswordLink: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 16,
   },
   forgotPasswordText: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loginButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 8,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   loginButtonDisabled: {
     opacity: 0.6,
   },
   loginButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 20,
   },
   registerText: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
   },
   registerLink: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

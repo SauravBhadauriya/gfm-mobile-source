@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setAuthToken } from '@api/axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setAuthToken } from "@api/axios";
 
 export interface UserData {
   id?: string;
@@ -29,12 +29,12 @@ export const saveUserSession = async (
 ): Promise<void> => {
   try {
     if (__DEV__) {
-      console.log('\n💾 ========== SAVING USER SESSION ==========');
-      console.log('Token:', token ? 'Received' : 'Missing');
-      console.log('User Data:', JSON.stringify(userData, null, 2));
-      console.log('Fallback Email:', fallbackEmail);
-      console.log('Fallback Mobile:', fallbackMobile);
-      console.log('==========================================\n');
+      console.log("\n💾 ========== SAVING USER SESSION ==========");
+      console.log("Token:", token ? "Received" : "Missing");
+      console.log("User Data:", JSON.stringify(userData, null, 2));
+      console.log("Fallback Email:", fallbackEmail);
+      console.log("Fallback Mobile:", fallbackMobile);
+      console.log("==========================================\n");
     }
 
     await setAuthToken(token);
@@ -48,32 +48,45 @@ export const saveUserSession = async (
       email: userData?.email || fallbackEmail || "",
       mobile: userData?.mobile || fallbackMobile || "",
       role: userData?.role || "participant",
-      profileCompleted: !!(userData?.firstName && userData?.lastName && (userData?.email || fallbackEmail)),
+      profileCompleted: !!(
+        userData?.firstName &&
+        userData?.lastName &&
+        (userData?.email || fallbackEmail)
+      ),
     };
 
     if (__DEV__) {
       if (!sessionData.firstName || !sessionData.lastName) {
-        console.log('⚠️ ========== USER PROFILE INCOMPLETE ==========');
-        console.log('Missing firstName/lastName from OTP login');
-        console.log('This happens because OTP verification API only returns token + userId');
-        console.log('The /users/profile endpoint is not returning user data (returns "Hello from main")');
-        console.log('Solution: Backend needs to either:');
-        console.log('  1. Return full user object in OTP verification response (like password login)');
-        console.log('  2. Implement /users/profile endpoint to return user data');
-        console.log('For now, only email/mobile will be stored from OTP login');
-        console.log('User can complete profile later or use password login to get full data');
-        console.log('==========================================');
+        console.log("⚠️ ========== USER PROFILE INCOMPLETE ==========");
+        console.log("Missing firstName/lastName from OTP login");
+        console.log("This happens because OTP verification API only returns token + userId");
+        console.log(
+          'The /users/profile endpoint is not returning user data (returns "Hello from main")'
+        );
+        console.log("Solution: Backend needs to either:");
+        console.log(
+          "  1. Return full user object in OTP verification response (like password login)"
+        );
+        console.log("  2. Implement /users/profile endpoint to return user data");
+        console.log("For now, only email/mobile will be stored from OTP login");
+        console.log("User can complete profile later or use password login to get full data");
+        console.log("==========================================");
       }
     }
 
     if (__DEV__) {
-      console.log('\n📦 ========== SESSION DATA TO STORE ==========');
-      console.log('Complete Session Object:', JSON.stringify(sessionData, null, 2));
-      console.log('==========================================\n');
+      console.log("\n📦 ========== SESSION DATA TO STORE ==========");
+      console.log("Complete Session Object:", JSON.stringify(sessionData, null, 2));
+      console.log("==========================================\n");
     }
 
-    const backendRole = sessionData.role === "participant" ? "participants" : (sessionData.role === "fan" ? "fan" : "participants");
-    
+    const backendRole =
+      sessionData.role === "participant"
+        ? "participants"
+        : sessionData.role === "fan"
+          ? "fan"
+          : "participants";
+
     await AsyncStorage.multiSet([
       ["authToken", token],
       ["isLoggedIn", "true"],
@@ -90,8 +103,8 @@ export const saveUserSession = async (
     }
 
     if (__DEV__) {
-      console.log('✅ User session saved successfully to AsyncStorage');
-      console.log('All login methods now use the same unified storage function');
+      console.log("✅ User session saved successfully to AsyncStorage");
+      console.log("All login methods now use the same unified storage function");
     }
 
     const userDateOfBirth = await AsyncStorage.getItem("userDateOfBirth");
@@ -102,74 +115,79 @@ export const saveUserSession = async (
 
     if (userDateOfBirth || userGender || userProfileImage || userBio || userRole) {
       if (__DEV__) {
-        console.log('\n💾 ========== SYNCING DOB AND GENDER TO BACKEND ==========');
-        console.log('Found DOB/Gender in AsyncStorage from onboarding');
-        console.log('Syncing to backend via PUT /user/profile');
-        console.log('DOB:', userDateOfBirth);
-        console.log('Gender:', userGender);
-        console.log('==========================================\n');
+        console.log("\n💾 ========== SYNCING DOB AND GENDER TO BACKEND ==========");
+        console.log("Found DOB/Gender in AsyncStorage from onboarding");
+        console.log("Syncing to backend via PUT /user/profile");
+        console.log("DOB:", userDateOfBirth);
+        console.log("Gender:", userGender);
+        console.log("==========================================\n");
       }
 
       try {
         const { authService } = await import("@api/services/authService");
-        
+
         let profileImageToUpload = undefined;
         if (userProfileImage && userProfileImage.trim() !== "") {
-          if (userProfileImage.startsWith('data:')) {
+          if (userProfileImage.startsWith("data:")) {
             profileImageToUpload = userProfileImage;
-          } else if (userProfileImage.startsWith('http://') || userProfileImage.startsWith('https://') || userProfileImage.startsWith('file://')) {
+          } else if (
+            userProfileImage.startsWith("http://") ||
+            userProfileImage.startsWith("https://") ||
+            userProfileImage.startsWith("file://")
+          ) {
             try {
-              const FileSystem = await import('expo-file-system');
-              const base64 = await FileSystem.default.readAsStringAsync(userProfileImage, {
-                encoding: 'base64' as any,
+              const { readAsStringAsync } = await import("expo-file-system");
+              const base64 = await readAsStringAsync(userProfileImage, {
+                encoding: "base64" as any,
               });
               profileImageToUpload = `data:image/jpeg;base64,${base64}`;
             } catch (error) {
               if (__DEV__) {
-                console.log('⚠️ Could not convert profile image to base64, skipping image upload');
-                console.log('Error:', error);
+                console.log("⚠️ Could not convert profile image to base64, skipping image upload");
+                console.log("Error:", error);
               }
             }
           } else {
             profileImageToUpload = userProfileImage;
           }
         }
-        
-        const backendRole = userRole === "participant" ? "participants" : (userRole === "fan" ? "fan" : undefined);
-        
+
+        const backendRole =
+          userRole === "participant" ? "participants" : userRole === "fan" ? "fan" : undefined;
+
         const updateData: any = {
           dob: userDateOfBirth || undefined,
           gender: userGender || undefined,
           bio: userBio || undefined,
           profileImage: profileImageToUpload,
         };
-        
+
         if (backendRole) {
           updateData.role = backendRole;
         }
-        
+
         const updateResult = await authService.updateProfile(updateData);
 
         if (updateResult.success) {
           if (__DEV__) {
-            console.log('✅ DOB and Gender synced to backend successfully');
+            console.log("✅ DOB and Gender synced to backend successfully");
           }
         } else {
           if (__DEV__) {
-            console.log('⚠️ Failed to sync DOB/Gender to backend, but continuing');
-            console.log('Error:', updateResult.error);
-            console.log('Data is still saved locally, will retry later');
+            console.log("⚠️ Failed to sync DOB/Gender to backend, but continuing");
+            console.log("Error:", updateResult.error);
+            console.log("Data is still saved locally, will retry later");
           }
         }
       } catch (error) {
         if (__DEV__) {
-          console.error('❌ Error syncing DOB/Gender to backend:', error);
-          console.log('Data is still saved locally, will retry later');
+          console.error("❌ Error syncing DOB/Gender to backend:", error);
+          console.log("Data is still saved locally, will retry later");
         }
       }
     }
   } catch (error) {
-    console.error('❌ Failed to save user session:', error);
+    console.error("❌ Failed to save user session:", error);
     throw error;
   }
 };
@@ -213,8 +231,7 @@ export const getUserSession = async (): Promise<UserSession | null> => {
       profileCompleted: profileCompleted[1] === "true",
     };
   } catch (error) {
-    console.error('❌ Failed to get user session:', error);
+    console.error("❌ Failed to get user session:", error);
     return null;
   }
 };
-

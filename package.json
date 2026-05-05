@@ -1,8 +1,6 @@
 {
   "name": "cultre-boat-monorepo",
   "private": true,
-  "type": "module",
-  "packageManager": "npm@10.0.0",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
@@ -14,13 +12,16 @@
     "packages/*"
   ],
   "devDependencies": {
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
-    "prettier": "latest",
+    "prettier": "^3.3.0",
     "turbo": "^2.8.9",
-    "typescript": "~5.9.2"
+    "typescript": "~5.4.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@expo/schema-utils": "55.0.3",
+    "expo": "54.0.33",
+    "metro": "0.81.5"
   }
 }

@@ -1,34 +1,32 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { removeAuthToken } from '@api/axios';
-import { router } from 'expo-router';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { removeAuthToken } from "@api/axios";
 
 export const performLogout = async (): Promise<void> => {
   try {
     await removeAuthToken();
-    
+
     await AsyncStorage.multiRemove([
-      'isLoggedIn',
-      'authToken',
-      'userId',
-      'userRole',
-      'userEmail',
-      'userFirstName',
-      'userLastName',
-      'userMobile',
-      'accountCreated',
-      'profileCompleted',
-      'termsAccepted',
-      'hasSeenOnboarding',
+      "isLoggedIn",
+      "authToken",
+      "userId",
+      "userRole",
+      "userEmail",
+      "userFirstName",
+      "userLastName",
+      "userMobile",
+      "accountCreated",
+      "profileCompleted",
+      "termsAccepted",
+      "hasSeenOnboarding",
     ]);
 
     if (__DEV__) {
-      console.log('✅ Logout successful - All user data cleared, redirecting to home instantly');
+      console.log("✅ Logout successful - All user data cleared");
     }
 
-    router.replace('/(main)');
+    // Note: Navigation will be handled by the app's main navigation context
+    // This function just clears the session data
   } catch (error) {
-    console.error('❌ Failed to log out:', error);
-    router.replace('/(main)');
+    console.error("❌ Failed to log out:", error);
   }
 };
-

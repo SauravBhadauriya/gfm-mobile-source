@@ -6,6 +6,10 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "NPM_FLAGS": "--legacy-peer-deps",
+        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx4096m"
+      },
       "android": {
         "gradleCommand": ":app:assembleDebug",
         "buildType": "apk"
@@ -33,4 +37,3 @@
     "production": {}
   }
 }
-

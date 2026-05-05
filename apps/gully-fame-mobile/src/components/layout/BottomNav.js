@@ -9,21 +9,16 @@ import {
   Platform,
   Image,
   Alert,
+  StatusBar,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UploadIcon } from "@/icons";
 
 const { width, height } = Dimensions.get("window");
 
 // BOTTOM NAV COMPONENT
-export default function BottomNav({
-  activeTab,
-  setActiveTab,
-  tabs,
-  onOpenDrawer,
-}) {
-  const insets = useSafeAreaInsets(); // iOS safe area insets
+export default function BottomNav({ activeTab, setActiveTab, tabs, onOpenDrawer }) {
+  const insets = { bottom: Platform.OS === "ios" ? 20 : 0 }; // iOS safe area insets
   const [profileImage, setProfileImage] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -107,11 +102,9 @@ export default function BottomNav({
       try {
         const userRole = await AsyncStorage.getItem("userRole");
         if (userRole === "fan") {
-          Alert.alert(
-            "Upload Restricted",
-            "Please upgrade your role to Participant to upload.",
-            [{ text: "OK" }],
-          );
+          Alert.alert("Upload Restricted", "Please upgrade your role to Participant to upload.", [
+            { text: "OK" },
+          ]);
           return; // Don't navigate
         }
       } catch (e) {
@@ -131,9 +124,7 @@ export default function BottomNav({
         styles.bottomNav,
         {
           paddingBottom:
-            Platform.OS === "ios"
-              ? Math.max(insets.bottom, height * 0.025)
-              : height * 0.025,
+            Platform.OS === "ios" ? Math.max(insets.bottom, height * 0.025) : height * 0.025,
         },
       ]}
     >
@@ -172,10 +163,7 @@ export default function BottomNav({
             >
               <Image
                 source={{ uri: profileImage }}
-                style={[
-                  styles.profileImageNav,
-                  isActive && styles.profileImageNavActive,
-                ]}
+                style={[styles.profileImageNav, isActive && styles.profileImageNavActive]}
               />
               <Text style={[styles.navText, isActive && styles.navTextActive]}>
                 {tab.label || tab.name}

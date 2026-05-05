@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setAuthToken } from '@api/axios';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setAuthToken } from "../api/axios";
 
 type AuthContextType = {
   token: string | null;
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       "accountCreatedVia",
     ]);
     await setAuthToken(""); // axios header bhi clear karo
-    setToken(null);        // AuthGate trigger → /auth/signin redirect
+    setToken(null); // AuthGate trigger → /auth/signin redirect
   };
 
   return (

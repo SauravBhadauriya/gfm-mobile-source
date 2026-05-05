@@ -33,29 +33,25 @@
 
 // kiro code
 
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useAuth } from '../contexts/AuthContext';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useAuth } from "../contexts/AuthContext";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Screens
-import SplashScreen from '../screens/splashscreen';
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import FeedScreen from '../screens/feed';
-import ReelsScreen from '../screens/ReelsScreen';
-// ❌ REMOVED: Duplicate ReelsScreen import (was on line 48)
-// import ReelsScreen from '../screens/ReelsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import SplashScreen from "../screens/SplashScreen";
+import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
+import FeedScreen from "../screens/FeedScreen";
+import ReelsScreen from "../screens/ReelsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 // ✅ ADDED: New screens for home, settings, edit profile, and competition details
-import HomeScreen from '../screens/HomeScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-import CompetitionDetailScreen from '../screens/CompetitionDetailScreen';
-
-
+import HomeScreen from "../screens/HomeScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import CompetitionDetailScreen from "../screens/CompetitionDetailScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -66,7 +62,7 @@ function AuthStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        animationTypeForReplace: 'pop',
+        animationTypeForReplace: "pop",
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
@@ -74,7 +70,7 @@ function AuthStack() {
         name="Register"
         component={RegisterScreen}
         options={{
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
       {/* ✅ ADDED: EditProfile screen for auth stack */}
@@ -82,9 +78,9 @@ function AuthStack() {
         name="EditProfile"
         component={EditProfileScreen}
         options={{
-          title: 'Edit Profile',
+          title: "Edit Profile",
           headerShown: true,
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
       {/* ✅ ADDED: Settings screen for auth stack */}
@@ -92,9 +88,9 @@ function AuthStack() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: 'Settings',
+          title: "Settings",
           headerShown: true,
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
     </Stack.Navigator>
@@ -108,30 +104,30 @@ function TabNavigator() {
       screenOptions={({ route }) => ({
         headerShown: true,
         headerStyle: {
-          backgroundColor: '#007AFF',
+          backgroundColor: "#007AFF",
         },
-        headerTintColor: '#fff',
+        headerTintColor: "#fff",
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: "bold",
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: "#007AFF",
+        tabBarInactiveTintColor: "#999",
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopColor: '#eee',
+          backgroundColor: "#fff",
+          borderTopColor: "#eee",
           borderTopWidth: 1,
           paddingBottom: 5,
           paddingTop: 5,
         },
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+          let iconName: keyof typeof Ionicons.glyphMap = "home";
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Reels') {
-            iconName = focused ? 'play-circle' : 'play-circle-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Reels") {
+            iconName = focused ? "play-circle" : "play-circle-outline";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -143,16 +139,16 @@ function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'Home',
-          tabBarLabel: 'Home',
+          title: "Home",
+          tabBarLabel: "Home",
         }}
       />
       <Tab.Screen
         name="Reels"
         component={ReelsScreen}
         options={{
-          title: 'Reels',
-          tabBarLabel: 'Reels',
+          title: "Reels",
+          tabBarLabel: "Reels",
         }}
       />
       {/* ✅ CHANGED: Profile tab now uses ProfileScreen instead of FeedScreen */}
@@ -160,8 +156,8 @@ function TabNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
+          title: "Profile",
+          tabBarLabel: "Profile",
         }}
       />
     </Tab.Navigator>
@@ -174,7 +170,7 @@ function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        animationTypeForReplace: 'pop',
+        animationTypeForReplace: "pop",
       }}
     >
       {/* Main tab navigator */}
@@ -182,7 +178,7 @@ function AppStack() {
         name="TabNavigator"
         component={TabNavigator}
         options={{
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
       {/* ✅ ADDED: Competition detail screen */}
@@ -190,9 +186,9 @@ function AppStack() {
         name="CompetitionDetail"
         component={CompetitionDetailScreen}
         options={{
-          title: 'Competition',
+          title: "Competition",
           headerShown: true,
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
       {/* ✅ ADDED: Edit profile screen for app stack */}
@@ -200,9 +196,9 @@ function AppStack() {
         name="EditProfile"
         component={EditProfileScreen}
         options={{
-          title: 'Edit Profile',
+          title: "Edit Profile",
           headerShown: true,
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
       {/* ✅ ADDED: Settings screen for app stack */}
@@ -210,9 +206,9 @@ function AppStack() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: 'Settings',
+          title: "Settings",
           headerShown: true,
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: "pop",
         }}
       />
     </Stack.Navigator>
@@ -234,7 +230,7 @@ export default function AppNavigator() {
         screenOptions={{
           headerShown: false,
           // animationEnabled: true,  // ❌ YE REMOVE KARO
-          animationTypeForReplace: 'pop',  // ✅ YE LIKHO
+          animationTypeForReplace: "pop", // ✅ YE LIKHO
         }}
       >
         {token ? (
@@ -243,8 +239,8 @@ export default function AppNavigator() {
             name="AppStack"
             component={AppStack}
             options={{
-            //  animationEnabled: false,  // ❌ YE REMOVE KARO
-            animationTypeForReplace: 'pop',  // ✅ YE LIKHO
+              //  animationEnabled: false,  // ❌ YE REMOVE KARO
+              animationTypeForReplace: "pop", // ✅ YE LIKHO
             }}
           />
         ) : (
@@ -254,7 +250,7 @@ export default function AppNavigator() {
             name="AuthStack"
             component={AuthStack}
             options={{
-              animationTypeForReplace: 'pop',
+              animationTypeForReplace: "pop",
             }}
           />
         )}

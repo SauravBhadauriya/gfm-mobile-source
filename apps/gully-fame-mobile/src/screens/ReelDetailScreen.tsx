@@ -1,7 +1,8 @@
 // Created by Kiro
 // Reel Detail Screen - Display single reel with video player, comments, and interactions
+// ✅ UPDATED BY KIRO - Added CommentsScreen navigation integration
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,8 +16,10 @@ import {
   RefreshControl,
   FlatList,
   TextInput,
-} from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+} from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+// ✅ UPDATED BY KIRO - Import CommentsScreen for navigation
+import CommentsScreen from "./CommentsScreen";
 
 interface Reel {
   id: string;
@@ -51,7 +54,7 @@ export default function ReelDetailScreen({ route, navigation }: any) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(reel?.likes || 0);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
   useEffect(() => {
@@ -68,36 +71,36 @@ export default function ReelDetailScreen({ route, navigation }: any) {
       // Mock comments data
       setComments([
         {
-          id: '1',
-          userId: 'user1',
-          userName: 'John Doe',
+          id: "1",
+          userId: "user1",
+          userName: "John Doe",
           userImage: undefined,
-          text: 'Amazing reel! Love it 🔥',
+          text: "Amazing reel! Love it 🔥",
           likes: 12,
-          createdAt: '2 hours ago',
+          createdAt: "2 hours ago",
         },
         {
-          id: '2',
-          userId: 'user2',
-          userName: 'Jane Smith',
+          id: "2",
+          userId: "user2",
+          userName: "Jane Smith",
           userImage: undefined,
-          text: 'This is so cool!',
+          text: "This is so cool!",
           likes: 8,
-          createdAt: '1 hour ago',
+          createdAt: "1 hour ago",
         },
         {
-          id: '3',
-          userId: 'user3',
-          userName: 'Mike Johnson',
+          id: "3",
+          userId: "user3",
+          userName: "Mike Johnson",
           userImage: undefined,
-          text: 'Great content 👍',
+          text: "Great content 👍",
           likes: 5,
-          createdAt: '30 minutes ago',
+          createdAt: "30 minutes ago",
         },
       ]);
     } catch (error) {
-      console.error('Error fetching reel data:', error);
-      Alert.alert('Error', 'Failed to load reel');
+      console.error("Error fetching reel data:", error);
+      Alert.alert("Error", "Failed to load reel");
     } finally {
       setLoading(false);
     }
@@ -117,23 +120,23 @@ export default function ReelDetailScreen({ route, navigation }: any) {
       setLikeCount(liked ? likeCount - 1 : likeCount + 1);
       // API call would go here
     } catch (error) {
-      console.error('Error liking reel:', error);
-      Alert.alert('Error', 'Failed to like reel');
+      console.error("Error liking reel:", error);
+      Alert.alert("Error", "Failed to like reel");
     }
   };
 
   // Handle share
   const handleShare = () => {
-    Alert.alert('Share', 'Share this reel with your friends', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Share', onPress: () => Alert.alert('Success', 'Reel shared!') },
+    Alert.alert("Share", "Share this reel with your friends", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Share", onPress: () => Alert.alert("Success", "Reel shared!") },
     ]);
   };
 
   // Handle submit comment
   const handleSubmitComment = async () => {
     if (!commentText.trim()) {
-      Alert.alert('Error', 'Please enter a comment');
+      Alert.alert("Error", "Please enter a comment");
       return;
     }
 
@@ -144,19 +147,19 @@ export default function ReelDetailScreen({ route, navigation }: any) {
 
       const newComment: Comment = {
         id: Date.now().toString(),
-        userId: 'currentUser',
-        userName: 'You',
+        userId: "currentUser",
+        userName: "You",
         userImage: undefined,
         text: commentText,
         likes: 0,
-        createdAt: 'just now',
+        createdAt: "just now",
       };
 
       setComments([newComment, ...comments]);
-      setCommentText('');
+      setCommentText("");
     } catch (error) {
-      console.error('Error submitting comment:', error);
-      Alert.alert('Error', 'Failed to submit comment');
+      console.error("Error submitting comment:", error);
+      Alert.alert("Error", "Failed to submit comment");
     } finally {
       setSubmittingComment(false);
     }
@@ -166,10 +169,7 @@ export default function ReelDetailScreen({ route, navigation }: any) {
   const renderCommentItem = ({ item }: { item: Comment }) => (
     <View style={styles.commentItem}>
       {item.userImage ? (
-        <Image
-          source={{ uri: item.userImage }}
-          style={styles.commentUserImage}
-        />
+        <Image source={{ uri: item.userImage }} style={styles.commentUserImage} />
       ) : (
         <View style={styles.commentUserImagePlaceholder}>
           <Ionicons name="person" size={16} color="#007AFF" />
@@ -220,17 +220,12 @@ export default function ReelDetailScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
         {/* Video Player Section */}
         {reel.thumbnail && (
           <View style={styles.videoContainer}>
-            <Image
-              source={{ uri: reel.thumbnail }}
-              style={styles.videoThumbnail}
-            />
+            <Image source={{ uri: reel.thumbnail }} style={styles.videoThumbnail} />
             <TouchableOpacity style={styles.playButton}>
               <Ionicons name="play" size={48} color="#fff" />
             </TouchableOpacity>
@@ -245,10 +240,7 @@ export default function ReelDetailScreen({ route, navigation }: any) {
           {/* Creator Info */}
           <View style={styles.creatorContainer}>
             {reel.creatorImage ? (
-              <Image
-                source={{ uri: reel.creatorImage }}
-                style={styles.creatorImage}
-              />
+              <Image source={{ uri: reel.creatorImage }} style={styles.creatorImage} />
             ) : (
               <View style={styles.creatorImagePlaceholder}>
                 <Ionicons name="person" size={20} color="#007AFF" />
@@ -256,9 +248,7 @@ export default function ReelDetailScreen({ route, navigation }: any) {
             )}
             <View style={styles.creatorInfo}>
               <Text style={styles.creatorName}>{reel.creatorName}</Text>
-              <Text style={styles.createdAt}>
-                {new Date(reel.createdAt).toLocaleDateString()}
-              </Text>
+              <Text style={styles.createdAt}>{new Date(reel.createdAt).toLocaleDateString()}</Text>
             </View>
             <TouchableOpacity style={styles.followButton}>
               <Text style={styles.followButtonText}>Follow</Text>
@@ -288,22 +278,30 @@ export default function ReelDetailScreen({ route, navigation }: any) {
               onPress={handleLike}
             >
               <Ionicons
-                name={liked ? 'heart' : 'heart-outline'}
+                name={liked ? "heart" : "heart-outline"}
                 size={24}
-                color={liked ? '#d32f2f' : '#999'}
+                color={liked ? "#d32f2f" : "#999"}
               />
               <Text style={styles.actionButtonLabel}>Like</Text>
             </TouchableOpacity>
 
+            {/* ✅ UPDATED BY KIRO - OLD CODE (COMMENTED) - Previous comment button without navigation
             <TouchableOpacity style={styles.actionButton}>
               <Ionicons name="chatbubble-outline" size={24} color="#999" />
               <Text style={styles.actionButtonLabel}>Comment</Text>
             </TouchableOpacity>
+            */}
 
+            {/* ✅ UPDATED BY KIRO - NEW CODE - Comment button now navigates to CommentsScreen with reelId */}
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={handleShare}
+              onPress={() => navigation.navigate("CommentsScreen", { reelId: reel.id })}
             >
+              <Ionicons name="chatbubble-outline" size={24} color="#999" />
+              <Text style={styles.actionButtonLabel}>Comment</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
               <Ionicons name="share-social-outline" size={24} color="#999" />
               <Text style={styles.actionButtonLabel}>Share</Text>
             </TouchableOpacity>
@@ -363,65 +361,65 @@ export default function ReelDetailScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   scrollView: {
     flex: 1,
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+    color: "#666",
+    fontWeight: "500",
   },
   errorText: {
     fontSize: 16,
-    color: '#d32f2f',
+    color: "#d32f2f",
   },
   videoContainer: {
-    width: '100%',
+    width: "100%",
     height: 300,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
   videoThumbnail: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   playButton: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
   },
   infoSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   reelTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     marginBottom: 8,
   },
   reelDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
     marginBottom: 16,
   },
   creatorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   creatorImage: {
@@ -434,9 +432,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   creatorInfo: {
@@ -444,99 +442,99 @@ const styles = StyleSheet.create({
   },
   creatorName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
     marginBottom: 2,
   },
   createdAt: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   followButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
   },
   followButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     marginBottom: 16,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   statText: {
     fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
+    color: "#666",
+    fontWeight: "500",
   },
   actionButtonsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     gap: 6,
   },
   actionButtonActive: {
-    backgroundColor: '#ffe0e0',
+    backgroundColor: "#ffe0e0",
   },
   actionButtonLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   commentsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
   commentsSectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     marginBottom: 12,
   },
   commentInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     gap: 8,
     marginBottom: 16,
   },
   commentInput: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#000',
+    color: "#000",
     maxHeight: 100,
   },
   submitCommentButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   commentItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
   },
   commentUserImage: {
@@ -549,56 +547,56 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   commentContent: {
     flex: 1,
   },
   commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 4,
   },
   commentUserName: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
   commentTime: {
     fontSize: 11,
-    color: '#999',
+    color: "#999",
   },
   commentText: {
     fontSize: 13,
-    color: '#333',
+    color: "#333",
     lineHeight: 18,
     marginBottom: 6,
   },
   commentActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   commentActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   commentActionText: {
     fontSize: 11,
-    color: '#999',
-    fontWeight: '500',
+    color: "#999",
+    fontWeight: "500",
   },
   noCommentsContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 40,
   },
   noCommentsText: {
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginTop: 12,
   },
   footerSpacing: {

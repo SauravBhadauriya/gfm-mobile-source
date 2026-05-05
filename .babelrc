@@ -1,15 +1,15 @@
-# Created by Kiro - Babel Configuration
-# JavaScript transpilation configuration
-
 {
   "presets": [
-    ["@babel/preset-env", {
-      "targets": {
-        "browsers": ["last 2 versions", "ie >= 11"]
-      },
-      "useBuiltIns": "entry",
-      "corejs": 3
-    }],
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "browsers": ["last 2 versions", "ie >= 11"]
+        },
+        "useBuiltIns": "entry",
+        "corejs": 3
+      }
+    ],
     "@babel/preset-react",
     "@babel/preset-typescript"
   ],
@@ -20,9 +20,7 @@
   ],
   "env": {
     "production": {
-      "plugins": [
-        "transform-remove-console"
-      ]
+      "plugins": ["transform-remove-console"]
     }
   }
 }

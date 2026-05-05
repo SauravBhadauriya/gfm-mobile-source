@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { router } from 'expo-router';
+import { useEffect, useState } from "react";
+import { StyleSheet, View, Image } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { router } from "expo-router";
 
 // Prevent the native splash screen from auto‑hiding
 (async () => {
@@ -34,7 +34,7 @@ export default function AppSplash() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimePassed(true);
-    }, 5000);  // 5 seconds minimum
+    }, 5000); // 5 seconds minimum
 
     return () => clearTimeout(timer);
   }, []);
@@ -49,9 +49,9 @@ export default function AppSplash() {
         }
 
         if (isAuthenticated) {
-          router.replace('./(main)');
+          router.replace("./(main)");
         } else {
-          router.replace('/onboarding' as any);
+          router.replace("/onboarding" as any);
         }
       })();
     }
@@ -60,7 +60,7 @@ export default function AppSplash() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/logo.png')}
+        source={require("../../assets/images/logo.png")}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -71,13 +71,12 @@ export default function AppSplash() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
   logo: {
     width: 200,
     height: 200,
   },
 });
-
