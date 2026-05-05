@@ -1,40 +1,14 @@
+// KIRO: App.tsx is deprecated - using Expo Router (app directory) instead
+// This file is kept for backward compatibility but is not used
+// The actual app entry point is in app/_layout.tsx
+
 import React from "react";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Provider } from "react-redux";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-import { store } from "./src/store";
-import { AuthProvider } from "./src/contexts/AuthContext";
-import { BrandingProvider } from "./src/contexts/BrandingContext";
-import AppNavigator from "./src/navigation/AppNavigator";
-
-// Create a client for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+import { Text, View } from "react-native";
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <Provider store={store}>
-          <QueryClientProvider client={queryClient}>
-            <BrandingProvider>
-              <AuthProvider>
-                <AppNavigator />
-                <StatusBar style="auto" />
-              </AuthProvider>
-            </BrandingProvider>
-          </QueryClientProvider>
-        </Provider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>This app uses Expo Router. Please use the app directory structure.</Text>
+    </View>
   );
 }

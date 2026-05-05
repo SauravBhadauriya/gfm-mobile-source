@@ -1,442 +1,529 @@
-import React, { useState, useCallback, useEffect } from "react";
+/**
+ * Export Screen Component
+ *
+ * Main export interface with settings, preview, and progress tracking
+ * Handles video export with FFmpeg
+ */
+
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    View,
-    Text,
-    StyleSheet,
-    ActivityIndicator,
-    TouchableOpacity,
-    SafeAreaView,
-    Animated,
-    Alert,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  Dimensions,
 } from "react-native";
-import { File, Paths } from "expo-file-system";
-import * as MediaLibrary from "expo-media-library";
-import Svg, { Path } from "react-native-svg";
-import { FFmpegKit, ReturnCode } from "ffmpeg-kit-react-native-community";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Slider from "@react-native-community/slider";
+import { Svg, Path } from "react-native-svg";
+
+import {
+  ExportSettings,
+  QualityPreset,
+  Resolution,
+  VideoFormat,
+  QUALITY_PRESETS,
+  RESOLUTION_PRESETS,
+  FORMAT_PRESETS,
+  getEstimatedFileSize,
+  getEstimatedEncodingTime,
+  DEFAULT_EXPORT_SETTINGS,
+} from "../utils/exportSettings";
+import { ExportProgress } from "../utils/ffmpegExporter";
 import type { CameraClip, CameraClipArray } from "../types/camera.types";
 
-// 🔥 Ensure this path matches where you saved the generator!
-import { buildExportCommandArgs } from "../utils/ffmpegGenerator";
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 interface ExportScreenProps {
-    clips: CameraClipArray;
-    onBack: () => void;
-    onComplete?: () => void;
-    globalTextOverlays: any[];
-    globalPipOverlays: any[];
-    globalStickerOverlays: any[];
-    previewDimensions: { width: number; height: number };
-    projectConfig: { resolution: "hd" | "2k" | "4k"; fps: number };
+  clips: CameraClipArray;
+  onBack: () => void;
+  onExport: (settings: ExportSettings) => Promise<void>;
+  totalDuration: number;
 }
 
-/**
- * Export screen with progress indicator and save to gallery
- */
-const ExportScreen: React.FC<ExportScreenProps> = ({
-    clips,
-    onBack,
-    onComplete,
-    globalPipOverlays,
-    globalStickerOverlays,
-    globalTextOverlays,
-    previewDimensions,
-    projectConfig,
-}) => {
-    const [exporting, setExporting] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [status, setStatus] = useState("Preparing export...");
-    const [exportedUri, setExportedUri] = useState<string | null>(null);
-    const progressAnim = React.useRef(new Animated.Value(0)).current;
+const ExportScreen: React.FC<ExportScreenProps> = ({ clips, onBack, onExport, totalDuration }) => {
+  const [settings, setSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
+  const [isExporting, setIsExporting] = useState(false);
+  const [progress, setProgress] = useState<ExportProgress | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-    // Request media library permission
-    useEffect(() => {
-        const requestPermission = async () => {
-            try {
-                const { status } = await MediaLibrary.requestPermissionsAsync();
-                if (status !== "granted") {
-                    Alert.alert(
-                        "Permission Required",
-                        "We need permission to save videos to your gallery.",
-                        [{ text: "OK", onPress: onBack }],
-                    );
-                }
-            } catch (error) {
-                console.warn("Permission error:", error);
-            }
-        };
-        requestPermission();
-    }, [onBack]);
+  const progressAnim = useSharedValue(0);
 
-    // Animate progress bar
-    useEffect(() => {
-        Animated.timing(progressAnim, {
-            toValue: progress,
-            duration: 300,
-            useNativeDriver: false,
-        }).start();
-    }, [progress, progressAnim]);
+  // Update progress animation
+  useEffect(() => {
+    if (progress) {
+      progressAnim.value = withSpring(progress.progress / 100, {
+        damping: 15,
+        stiffness: 150,
+        mass: 0.8,
+      });
+    }
+  }, [progress?.progress]);
 
-    const handleExport = useCallback(async () => {
-        if (exporting || clips.length === 0) return;
+  const progressAnimStyle = useAnimatedStyle(() => ({
+    width: `${progressAnim.value * 100}%`,
+  }));
 
-        setExporting(true);
-        setProgress(0);
-        setStatus("Initializing engine...");
-        setExportedUri(null);
+  const handleQualityChange = useCallback((quality: QualityPreset) => {
+    setSettings((prev) => ({ ...prev, quality }));
+  }, []);
 
-        try {
-            const totalDuration = clips.reduce((acc, clip) => {
-                const start = clip.trimStart || 0;
-                const end = clip.trimEnd || clip.duration || 3;
-                return acc + (end - start);
-            }, 0);
+  const handleResolutionChange = useCallback((resolution: Resolution) => {
+    setSettings((prev) => ({ ...prev, resolution }));
+  }, []);
 
-            const outputFile = new File(
-                Paths.cache,
-                `gullyfame_export_${Date.now()}.mp4`,
-            );
-            const outputPath = outputFile.uri;
+  const handleFormatChange = useCallback((format: VideoFormat) => {
+    setSettings((prev) => ({ ...prev, format }));
+  }, []);
 
-            setStatus("Building timeline...");
-            const commandArgs = buildExportCommandArgs(
-                clips,
-                globalTextOverlays,
-                globalStickerOverlays,
-                globalPipOverlays,
-                outputPath,
-                previewDimensions.width,
-                previewDimensions.height,
-                projectConfig.resolution,
-                projectConfig.fps,
-            );
-            const filterGraphArg =
-                commandArgs[commandArgs.indexOf("-filter_complex") + 1];
-            Alert.alert("FFmpeg Graph", filterGraphArg);
-            setStatus("Rendering video...");
+  const handleBitrateChange = useCallback((value: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      customBitrate: `${Math.round(value)}k`,
+    }));
+  }, []);
 
-            const outputUri = await new Promise<string>((resolve, reject) => {
-                FFmpegKit.executeWithArgumentsAsync(
-                    commandArgs,
-                    async (session) => {
-                        const returnCode = await session.getReturnCode();
-                        if (ReturnCode.isSuccess(returnCode)) {
-                            resolve(outputPath);
-                        } else {
-                            const logs = await session.getLogsAsString();
+  const handleExport = useCallback(async () => {
+    setIsExporting(true);
+    setError(null);
+    setProgress(null);
 
-                            // 🔥 THE LOG FIX: Print ONLY the last 1500 chars to bypass Metro's limit!
-                            console.error(
-                                "\n=== 🔥 ACTUAL FFMPEG ERROR ===\n",
-                                logs.slice(-1500),
-                            );
+    try {
+      await onExport(settings);
+      Alert.alert("Success", "Video exported successfully!");
+      onBack();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Export failed";
+      setError(errorMessage);
+      Alert.alert("Export Error", errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [settings, onExport, onBack]);
 
-                            reject(
-                                new Error(
-                                    `FFmpeg failed. Check the terminal for the exact error.`,
-                                ),
-                            );
-                        }
-                    },
-                    (log) => {
-                        // Optional: console.log(log.getMessage());
-                    },
-                    (statistics) => {
-                        // 🔥 Calculate accurate percentage based on time!
-                        const timeInMs = statistics.getTime();
-                        if (timeInMs > 0 && totalDuration > 0) {
-                            // Cap at 95% until it actually saves to the gallery
-                            const prog = Math.min(
-                                timeInMs / (totalDuration * 1000),
-                                0.95,
-                            );
-                            setProgress(prog);
-                            setStatus(
-                                `Rendering... ${Math.round(prog * 100)}%`,
-                            );
-                        }
-                    },
-                );
-            });
+  const estimatedFileSize = getEstimatedFileSize(
+    totalDuration,
+    settings.resolution,
+    settings.quality
+  );
+  const estimatedTime = getEstimatedEncodingTime(totalDuration, settings.quality);
+  const qualityConfig = QUALITY_PRESETS[settings.quality];
 
-            setProgress(0.98);
-            setStatus("Saving to GullyFame album...");
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={onBack} disabled={isExporting}>
+          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M19 12H5M5 12L12 19M5 12L12 5"
+              stroke="#ffffff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Export Video</Text>
+        <View style={{ width: 24 }} />
+      </View>
 
-            // 5. Save to gallery in a specific album
-            if (outputUri) {
-                const asset = await MediaLibrary.createAssetAsync(outputUri);
-                // 🔥 THE FIX: Changed from "Video Editor" to "GullyFame"
-                await MediaLibrary.createAlbumAsync("GullyFame", asset, false);
+      {isExporting ? (
+        // Export Progress View
+        <View style={styles.progressContainer}>
+          <ActivityIndicator size="large" color="#ec9a15" />
+          <Text style={styles.progressTitle}>Exporting Video...</Text>
 
-                setProgress(1);
-                setStatus("Export complete!");
-                setExportedUri(outputUri);
+          {progress && (
+            <>
+              <View style={styles.progressBar}>
+                <Animated.View style={[styles.progressFill, progressAnimStyle]} />
+              </View>
 
-                Alert.alert(
-                    "Success!",
-                    "Video saved to your GullyFame album successfully!",
-                    [
-                        {
-                            text: "Done",
-                            onPress: () => {
-                                onComplete?.();
-                                onBack();
-                            },
-                        },
-                    ],
-                );
-            }
-        } catch (error: any) {
-            console.error("Export error:", error);
-            Alert.alert(
-                "Export Failed",
-                error?.message ||
-                    "An error occurred while exporting. Please try again.",
-                [
-                    { text: "Cancel", style: "cancel", onPress: onBack },
-                    { text: "Retry", onPress: handleExport },
-                ],
-            );
-            setStatus("Export failed");
-        } finally {
-            setExporting(false);
-        }
-    }, [
-        clips,
-        exporting,
-        onBack,
-        onComplete,
-        globalPipOverlays,
-        globalStickerOverlays,
-        globalTextOverlays,
-    ]);
+              <View style={styles.progressStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Progress</Text>
+                  <Text style={styles.statValue}>{Math.round(progress.progress)}%</Text>
+                </View>
 
-    // Auto-start export when screen loads
-    useEffect(() => {
-        if (clips.length > 0 && !exporting && !exportedUri) {
-            handleExport();
-        }
-    }, []);
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Speed</Text>
+                  <Text style={styles.statValue}>{progress.speed}</Text>
+                </View>
 
-    const progressWidth = progressAnim.interpolate({
-        inputRange: [0, 100], // Actually, since we use 0 to 1, this should be [0, 1]
-        outputRange: ["0%", "100%"],
-    });
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Time Left</Text>
+                  <Text style={styles.statValue}>{progress.timeRemaining}</Text>
+                </View>
+              </View>
 
-    // 🔥 TINY FIX: progressWidth was interpolating [0, 100], but state uses [0, 1]!
-    // If you used 0 to 100 previously, make sure to change the interpolation!
-    const correctProgressWidth = progressAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ["0%", "100%"],
-    });
-
-    return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={onBack}
-                    style={styles.backButton}
-                    disabled={exporting}
-                >
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path
-                            d="M19 12H5M5 12L12 19M5 12L12 5"
-                            stroke="#ffffff"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Exporting</Text>
-                <View style={styles.backButton} />
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setIsExporting(false);
+                  setProgress(null);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      ) : (
+        // Settings View
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Quality Preset */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quality</Text>
+            <View style={styles.presetGrid}>
+              {(Object.entries(QUALITY_PRESETS) as Array<[QualityPreset, any]>).map(
+                ([key, config]) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.presetButton,
+                      settings.quality === key && styles.presetButtonActive,
+                    ]}
+                    onPress={() => handleQualityChange(key)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetButtonText,
+                        settings.quality === key && styles.presetButtonTextActive,
+                      ]}
+                    >
+                      {config.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
             </View>
+          </View>
 
-            {/* Content */}
-            <View style={styles.content}>
-                {exporting ? (
-                    <>
-                        {/* Progress Indicator */}
-                        <View style={styles.progressContainer}>
-                            <View style={styles.progressBarBackground}>
-                                <Animated.View
-                                    style={[
-                                        styles.progressBarFill,
-                                        {
-                                            width: correctProgressWidth,
-                                        },
-                                    ]}
-                                />
-                            </View>
-                            <Text style={styles.progressText}>
-                                {Math.round(progress * 100)}%
-                            </Text>
-                        </View>
-
-                        {/* Status Text */}
-                        <Text style={styles.statusText}>{status}</Text>
-
-                        {/* Spinner */}
-                        <ActivityIndicator
-                            size="large"
-                            color="#ec9a15"
-                            style={styles.spinner}
-                        />
-                    </>
-                ) : exportedUri ? (
-                    <>
-                        <View style={styles.successContainer}>
-                            <Svg
-                                width={80}
-                                height={80}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                            >
-                                <Path
-                                    d="M22 11.08V12a10 10 0 1 1-5.93-9.14"
-                                    stroke="#4CAF50"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                                <Path
-                                    d="M22 4L12 14.01l-3-3"
-                                    stroke="#4CAF50"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </Svg>
-                            <Text style={styles.successTitle}>
-                                Video Saved!
-                            </Text>
-                            <Text style={styles.successSubtitle}>
-                                Your video has been saved to the GullyFame album
-                            </Text>
-                        </View>
-                    </>
-                ) : (
-                    <View style={styles.readyContainer}>
-                        <Text style={styles.readyText}>Ready to export</Text>
-                        <TouchableOpacity
-                            style={styles.exportButton}
-                            onPress={handleExport}
-                        >
-                            <Text style={styles.exportButtonText}>
-                                Start Export
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+          {/* Resolution */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Resolution</Text>
+            <View style={styles.presetGrid}>
+              {(Object.entries(RESOLUTION_PRESETS) as Array<[Resolution, any]>).map(
+                ([key, config]) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.presetButton,
+                      settings.resolution === key && styles.presetButtonActive,
+                    ]}
+                    onPress={() => handleResolutionChange(key)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetButtonText,
+                        settings.resolution === key && styles.presetButtonTextActive,
+                      ]}
+                    >
+                      {config.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
             </View>
-        </SafeAreaView>
-    );
+          </View>
+
+          {/* Format */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Format</Text>
+            <View style={styles.presetGrid}>
+              {(Object.entries(FORMAT_PRESETS) as Array<[VideoFormat, any]>).map(
+                ([key, config]) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.presetButton,
+                      settings.format === key && styles.presetButtonActive,
+                    ]}
+                    onPress={() => handleFormatChange(key)}
+                  >
+                    <Text
+                      style={[
+                        styles.presetButtonText,
+                        settings.format === key && styles.presetButtonTextActive,
+                      ]}
+                    >
+                      {config.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
+            </View>
+          </View>
+
+          {/* Bitrate Control */}
+          <View style={styles.section}>
+            <View style={styles.bitrateHeader}>
+              <Text style={styles.sectionTitle}>Bitrate</Text>
+              <Text style={styles.bitrateValue}>
+                {settings.customBitrate || qualityConfig.bitrate}
+              </Text>
+            </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={1000}
+              maximumValue={30000}
+              step={500}
+              value={parseInt(settings.customBitrate || qualityConfig.bitrate)}
+              onValueChange={handleBitrateChange}
+              minimumTrackTintColor="#ec9a15"
+              maximumTrackTintColor="rgba(255, 255, 255, 0.3)"
+              thumbTintColor="#ec9a15"
+            />
+            <View style={styles.bitrateRange}>
+              <Text style={styles.bitrateRangeText}>1000k</Text>
+              <Text style={styles.bitrateRangeText}>30000k</Text>
+            </View>
+          </View>
+
+          {/* Estimated Stats */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estimated</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statBox}>
+                <Text style={styles.statBoxLabel}>File Size</Text>
+                <Text style={styles.statBoxValue}>{estimatedFileSize}</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statBoxLabel}>Encoding Time</Text>
+                <Text style={styles.statBoxValue}>{estimatedTime}</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statBoxLabel}>Video Duration</Text>
+                <Text style={styles.statBoxValue}>
+                  {Math.floor(totalDuration / 60)}m {Math.round(totalDuration % 60)}s
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Error Message */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {/* Export Button */}
+          <TouchableOpacity
+            style={[styles.exportButton, isExporting && styles.exportButtonDisabled]}
+            onPress={handleExport}
+            disabled={isExporting}
+          >
+            <Text style={styles.exportButtonText}>Export Video</Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 20 }} />
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#000000",
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
-        backgroundColor: "rgba(10, 10, 10, 0.95)",
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(255, 255, 255, 0.05)",
-    },
-    backButton: {
-        width: 44,
-        height: 44,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    headerTitle: {
-        color: "#ffffff",
-        fontSize: 18,
-        fontWeight: "700",
-    },
-    content: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 32,
-    },
-    progressContainer: {
-        width: "100%",
-        marginBottom: 24,
-    },
-    progressBarBackground: {
-        width: "100%",
-        height: 8,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        borderRadius: 4,
-        overflow: "hidden",
-        marginBottom: 12,
-    },
-    progressBarFill: {
-        height: "100%",
-        backgroundColor: "#ec9a15",
-        borderRadius: 4,
-    },
-    progressText: {
-        color: "#ffffff",
-        fontSize: 24,
-        fontWeight: "700",
-        textAlign: "center",
-    },
-    statusText: {
-        color: "rgba(255, 255, 255, 0.7)",
-        fontSize: 16,
-        textAlign: "center",
-        marginBottom: 32,
-    },
-    spinner: {
-        marginTop: 24,
-    },
-    successContainer: {
-        alignItems: "center",
-    },
-    successTitle: {
-        color: "#ffffff",
-        fontSize: 24,
-        fontWeight: "700",
-        marginTop: 24,
-        marginBottom: 8,
-    },
-    successSubtitle: {
-        color: "rgba(255, 255, 255, 0.7)",
-        fontSize: 16,
-        textAlign: "center",
-    },
-    readyContainer: {
-        alignItems: "center",
-    },
-    readyText: {
-        color: "#ffffff",
-        fontSize: 18,
-        marginBottom: 24,
-    },
-    exportButton: {
-        backgroundColor: "#ec9a15",
-        paddingHorizontal: 32,
-        paddingVertical: 16,
-        borderRadius: 24,
-        shadowColor: "#ec9a15",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 8,
-    },
-    exportButtonText: {
-        color: "#000000",
-        fontSize: 16,
-        fontWeight: "700",
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#1a1a1a",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333333",
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+    marginBottom: 12,
+  },
+  presetGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  presetButton: {
+    flex: 1,
+    minWidth: "48%",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#2a2a2a",
+    borderWidth: 1,
+    borderColor: "#444444",
+    alignItems: "center",
+  },
+  presetButtonActive: {
+    backgroundColor: "#ec9a15",
+    borderColor: "#ec9a15",
+  },
+  presetButtonText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#cccccc",
+  },
+  presetButtonTextActive: {
+    color: "#000000",
+  },
+  bitrateHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  bitrateValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ec9a15",
+  },
+  slider: {
+    width: "100%",
+    height: 40,
+  },
+  bitrateRange: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  bitrateRangeText: {
+    fontSize: 12,
+    color: "#888888",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  statBox: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#2a2a2a",
+    alignItems: "center",
+  },
+  statBoxLabel: {
+    fontSize: 12,
+    color: "#888888",
+    marginBottom: 4,
+  },
+  statBoxValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ec9a15",
+  },
+  errorContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#4a2a2a",
+    borderWidth: 1,
+    borderColor: "#ff6666",
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#ff9999",
+  },
+  exportButton: {
+    paddingVertical: 16,
+    borderRadius: 8,
+    backgroundColor: "#ec9a15",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  exportButtonDisabled: {
+    opacity: 0.5,
+  },
+  exportButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  progressTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffffff",
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  progressBar: {
+    width: "100%",
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#333333",
+    overflow: "hidden",
+    marginBottom: 24,
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#ec9a15",
+    borderRadius: 4,
+  },
+  progressStats: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 32,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#888888",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ec9a15",
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    backgroundColor: "#ff6666",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
 });
 
 export default ExportScreen;
