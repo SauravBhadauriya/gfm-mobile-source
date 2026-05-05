@@ -27,8 +27,7 @@ module.exports = function (api) {
           },
         },
       ],
-      // ✅ REMOVED: Reanimated, Vision Camera, FFmpeg plugins causing bundler errors
-      // Will add back after core app is stable
+      "react-native-reanimated/plugin",
     ],
   };
 };
