@@ -1,20 +1,24 @@
-import axios, {
-  AxiosInstance,
-  AxiosResponse,
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ✅ FIXED BY KIRO: Improved error handling and network error detection
-// Get base URL from env, with fallback to localhost
+// Get base URL from env, with fallback to production server
 export let BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-// If BASE_URL is pointing to the old server or not set, use localhost
+// ✅ KIRO: Edit by kiro - Changed fallback from localhost to production server for build compatibility
+// ❌ OLD CODE - LOCALHOST FALLBACK (doesn't work in build)
+// if (!BASE_URL) {
+//   BASE_URL = "http://localhost:3552/v1/api/";
+//   console.warn(
+//     "[axios] Using localhost as base URL. To change, set EXPO_PUBLIC_API_BASE_URL in .env",
+//   );
+// }
+
+// ✅ NEW CODE - PRODUCTION SERVER FALLBACK (works in build)
 if (!BASE_URL) {
-  BASE_URL = "http://localhost:3552/v1/api/";
+  BASE_URL = "http://103.194.228.68:3552/v1/api/";
   console.warn(
-    "[axios] Using localhost as base URL. To change, set EXPO_PUBLIC_API_BASE_URL in .env",
+    "[axios] Using production server as base URL. To change, set EXPO_PUBLIC_API_BASE_URL in .env"
   );
 }
 
@@ -54,7 +58,7 @@ apiClient.interceptors.request.use(
   (error: AxiosError) => {
     console.error("[axios] Request error:", error.message);
     return Promise.reject(error);
-  },
+  }
 );
 
 apiClient.interceptors.response.use(
@@ -68,11 +72,7 @@ apiClient.interceptors.response.use(
 
     // ✅ FIXED BY KIRO: Token Refresh Mechanism with proper error handling
     // Ye code 401 error par token refresh karta hai
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.skipAuth
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.skipAuth) {
       originalRequest._retry = true;
       try {
         // Refresh token API call karo
@@ -86,8 +86,7 @@ apiClient.interceptors.response.use(
           );
 
           if (refreshResponse.status === 200) {
-            const newToken =
-              refreshResponse.data.data?.token || refreshResponse.data.token;
+            const newToken = refreshResponse.data.data?.token || refreshResponse.data.token;
 
             if (newToken) {
               await AsyncStorage.setItem(TOKEN_STORAGE_KEY, newToken);
@@ -107,9 +106,7 @@ apiClient.interceptors.response.use(
     } else if (error.response?.status === 401 && originalRequest.skipAuth) {
       // Public endpoint returned 401 - don't log out, just log a warning
       if (__DEV__) {
-        console.warn(
-          "[axios] Public endpoint returned 401, but not logging out user"
-        );
+        console.warn("[axios] Public endpoint returned 401, but not logging out user");
       }
     }
 
@@ -144,15 +141,11 @@ apiClient.interceptors.response.use(
       if (error.code === "ECONNREFUSED") {
         networkErrorMessage =
           "Cannot connect to server. The backend server may be down. Please check if the API server is running.";
-      } else if (
-        error.code === "ETIMEDOUT" ||
-        error.message?.includes("timeout")
-      ) {
+      } else if (error.code === "ETIMEDOUT" || error.message?.includes("timeout")) {
         networkErrorMessage =
           "Connection timeout. The backend server is not responding. Please try again.";
       } else if (error.message?.includes("Network request failed")) {
-        networkErrorMessage =
-          "Network request failed. Please check your internet connection.";
+        networkErrorMessage = "Network request failed. Please check your internet connection.";
       } else if (error.code === "ENOTFOUND") {
         networkErrorMessage =
           "Server not found. Please verify the backend URL is correct in .env file.";
