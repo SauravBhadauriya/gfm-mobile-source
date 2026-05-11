@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ✅ KIRO: Created by kiro - Network security config to allow cleartext (HTTP) traffic for development -->
+<!-- This allows the app to connect to HTTP endpoints like http://103.194.228.68:3552 -->
+<network-security-config>
+    <!-- ✅ KIRO: Allow cleartext traffic to specific domain for development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">103.194.228.68</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+
+    <!-- ✅ KIRO: For production, only allow HTTPS -->
+    <!-- Uncomment this for production builds -->
+    <!-- <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.example.com</domain>
+    </domain-config> -->
+</network-security-config>
