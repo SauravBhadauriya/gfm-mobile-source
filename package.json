@@ -18,10 +18,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "@expo/schema-utils": "55.0.3",
-    "expo": "54.0.33",
-    "metro": "0.81.5"
   }
 }
