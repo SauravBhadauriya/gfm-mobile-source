@@ -20,13 +20,18 @@ const { width, height } = Dimensions.get("window");
 import { BackIcon } from "@/icons";
 
 // Mock downloaded reels data
+// ✅ KIRO: Edit by kiro - Commented out video file references (files deleted to reduce build size)
+// Videos will be loaded from backend API in production
 const downloadedReels = [
   {
     id: 1,
     username: "@Suhani0098000",
     caption: "Good morning everyone #goodmorning",
     musicName: "On the way - (alan walker)",
-    video: require("@assets/1.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/1.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending_reel1.png"),
     likes: 134,
     comments: 23,
@@ -42,7 +47,10 @@ const downloadedReels = [
     username: "@DancerPro",
     caption: "Showing off my moves! 💃 #dance",
     musicName: "Original Sound - DancerPro",
-    video: require("@assets/2.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/2.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending_reel2.png"),
     likes: 256,
     comments: 45,
@@ -58,7 +66,10 @@ const downloadedReels = [
     username: "@ChefMaster",
     caption: "Cooking up something special! 🍳",
     musicName: "Cooking Vibes - ChefMaster",
-    video: require("@assets/3.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/3.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending_reel3.png"),
     likes: 189,
     comments: 32,
@@ -74,7 +85,10 @@ const downloadedReels = [
     username: "@ComedyKing",
     caption: "Laugh out loud! 😂 #comedy",
     musicName: "Funny Moments - ComedyKing",
-    video: require("@assets/4.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/4.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending1.png"),
     likes: 312,
     comments: 67,
@@ -90,7 +104,10 @@ const downloadedReels = [
     username: "@MusicStar",
     caption: "New track dropping soon! 🎵",
     musicName: "Original Sound - MusicStar",
-    video: require("@assets/5.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/5.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending2.png"),
     likes: 445,
     comments: 89,
@@ -106,7 +123,10 @@ const downloadedReels = [
     username: "@ArtistLife",
     caption: "Creating art every day! 🎨",
     musicName: "Artistic Vibes - ArtistLife",
-    video: require("@assets/6.mp4"),
+    // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+    // video: require("@assets/6.mp4"),
+    // ✅ NEW CODE - PLACEHOLDER (will use backend video URL)
+    video: null,
     image: require("@assets/images/trending3.png"),
     likes: 278,
     comments: 54,
@@ -120,9 +140,7 @@ const downloadedReels = [
 ];
 
 export default function DownloadsScreen() {
-  const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(
-    null,
-  );
+  const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(null);
   const [showReelViewer, setShowReelViewer] = useState(false);
 
   const handleReelPress = (index: number) => {
@@ -150,11 +168,7 @@ export default function DownloadsScreen() {
         onPress={() => handleReelPress(index)}
         activeOpacity={0.8}
       >
-        <Image
-          source={item.image}
-          style={styles.reelThumbnail}
-          resizeMode="cover"
-        />
+        <Image source={item.image} style={styles.reelThumbnail} resizeMode="cover" />
       </TouchableOpacity>
     );
   };
@@ -165,10 +179,7 @@ export default function DownloadsScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <BackIcon />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Downloads</Text>
@@ -194,9 +205,7 @@ export default function DownloadsScreen() {
             />
           </Svg>
           <Text style={styles.emptyText}>No downloads yet</Text>
-          <Text style={styles.emptySubtext}>
-            Downloaded reels will appear here
-          </Text>
+          <Text style={styles.emptySubtext}>Downloaded reels will appear here</Text>
         </View>
       ) : (
         <FlatList
