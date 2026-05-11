@@ -24,12 +24,17 @@ if (!BASE_URL) {
 
 const TOKEN_STORAGE_KEY = "authToken";
 
+// ✅ KIRO: Edit by kiro - Added CORS headers and improved timeout for mobile builds
 const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
+  timeout: 60000, // ✅ KIRO: Increased timeout from 30s to 60s for mobile builds
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    // ✅ KIRO: Added CORS headers for mobile app
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   },
 });
 
@@ -42,6 +47,14 @@ declare module "axios" {
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
+      // ✅ KIRO: Edit by kiro - Added detailed logging for debugging mobile builds
+      console.log("[axios] Request:", {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL,
+        fullURL: `${config.baseURL}${config.url}`,
+      });
+
       if (!config.skipAuth) {
         const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
         if (token) {
