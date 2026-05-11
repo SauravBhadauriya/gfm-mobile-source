@@ -48,7 +48,12 @@ export async function getReelsFeed(params?: any): Promise<ApiResponse<ReelsRespo
   try {
     console.log("[reelsService] GET Reels Feed");
 
-    const response = await apiClient.get<any>("reels", { params });
+    // ✅ KIRO: Edit by kiro - Fixed endpoint path from 'reels' to 'feed/matrix' (Postman collection shows feed/matrix for home feed)
+    // ❌ OLD CODE - WRONG PATH
+    // const response = await apiClient.get<any>("reels", { params });
+
+    // ✅ NEW CODE - CORRECT PATH
+    const response = await apiClient.get<any>("feed/matrix", { params });
     const responseData = response.data as any;
 
     if (responseData.code === 1 && responseData.data) {
