@@ -119,6 +119,10 @@ PERCENTAGE_BREAKDOWN.txt
 # ✅ KIRO: Edit by kiro - Exclude EAS archive check folder
 eas-archive-check/
 
+# ✅ KIRO: Edit by kiro - Exclude demo video files from assets (150+ MB)
+src/assets/*.mp4
+src/assets/videos/
+
 # ==================== KIRO: Additional exclusions to reduce build size ====================
 # Expo cache
 .expo-shared/
