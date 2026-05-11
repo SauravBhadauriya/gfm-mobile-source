@@ -28,14 +28,7 @@ import Svg, {
   Stop,
   LinearGradient,
 } from "react-native-svg";
-import {
-  BackIcon,
-  MusicIcon,
-  InstagramIcon,
-  TagIcon,
-  ThreeDotsIcon,
-  LocationIcon,
-} from "@/icons";
+import { BackIcon, MusicIcon, InstagramIcon, TagIcon, ThreeDotsIcon, LocationIcon } from "@/icons";
 const { width, height } = Dimensions.get("window");
 
 export default function PostReelScreen() {
@@ -53,9 +46,7 @@ export default function PostReelScreen() {
     : [];
 
   // Initialize state from params if available
-  const [caption, setCaption] = useState(
-    params.caption ? String(params.caption) : "",
-  );
+  const [caption, setCaption] = useState(params.caption ? String(params.caption) : "");
   const [hashtags, setHashtags] = useState<string[]>(() => {
     if (params.hashtags) {
       try {
@@ -80,19 +71,15 @@ export default function PostReelScreen() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   // Competition params
-  const competitionId = params.competitionId
-    ? String(params.competitionId)
-    : null;
+  const competitionId = params.competitionId ? String(params.competitionId) : null;
   const competitionName = params.competitionName
     ? decodeURIComponent(String(params.competitionName))
     : null;
-  const entryFee = params.entryFee
-    ? decodeURIComponent(String(params.entryFee))
-    : null;
+  const entryFee = params.entryFee ? decodeURIComponent(String(params.entryFee)) : null;
 
   // More Options State
   const [turnOffCommenting, setTurnOffCommenting] = useState(
-    params.allowComments === "false" ? false : true,
+    params.allowComments === "false" ? false : true
   );
   const [hideLikeCount, setHideLikeCount] = useState(false);
   const [hideCommentCount, setHideCommentCount] = useState(false);
@@ -189,10 +176,7 @@ export default function PostReelScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <BackIcon />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Share Reel</Text>
@@ -222,7 +206,11 @@ export default function PostReelScreen() {
           ) : (
             <Video
               ref={videoRef}
-              source={require("@assets/1.mp4")}
+              // ✅ KIRO: Edit by kiro - Removed video file reference (file deleted to reduce build size)
+              // ❌ OLD CODE - VIDEO FILE REFERENCE (file deleted)
+              // source={require("@assets/1.mp4")}
+              // ✅ NEW CODE - PLACEHOLDER (will use uploaded video)
+              source={null}
               style={styles.video}
               resizeMode={ResizeMode.COVER}
               shouldPlay={true}
@@ -265,10 +253,7 @@ export default function PostReelScreen() {
               onKeyPress={handleHashtagKeyPress}
               returnKeyType="done"
             />
-            <TouchableOpacity
-              onPress={handleAddHashtag}
-              style={styles.addHashtagButton}
-            >
+            <TouchableOpacity onPress={handleAddHashtag} style={styles.addHashtagButton}>
               <Text style={styles.addHashtagText}>Add</Text>
             </TouchableOpacity>
           </View>
@@ -277,9 +262,7 @@ export default function PostReelScreen() {
               <Text style={styles.suggestionsTitle}>Suggestions:</Text>
               {hashtagSuggestions
                 .filter((s) =>
-                  s
-                    .toLowerCase()
-                    .includes(hashtagInput.toLowerCase().replace(/^#/, "")),
+                  s.toLowerCase().includes(hashtagInput.toLowerCase().replace(/^#/, ""))
                 )
                 .map((suggestion, index) => (
                   <TouchableOpacity
@@ -296,9 +279,7 @@ export default function PostReelScreen() {
               {/* Show option to add custom hashtag */}
               {hashtagInput.trim().replace(/^#/, "") &&
                 !hashtagSuggestions.some(
-                  (s) =>
-                    s.toLowerCase() ===
-                    hashtagInput.toLowerCase().replace(/^#/, ""),
+                  (s) => s.toLowerCase() === hashtagInput.toLowerCase().replace(/^#/, "")
                 ) && (
                   <TouchableOpacity
                     style={[styles.suggestionChip, styles.customHashtagChip]}
@@ -326,20 +307,14 @@ export default function PostReelScreen() {
         </View>
 
         {/* Add Music */}
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => setShowMusicModal(true)}
-        >
+        <TouchableOpacity style={styles.optionRow} onPress={() => setShowMusicModal(true)}>
           <MusicIcon />
           <Text style={styles.optionText}>{selectedMusic || "Add Music"}</Text>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
         {/* Tag People */}
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => setShowTagModal(true)}
-        >
+        <TouchableOpacity style={styles.optionRow} onPress={() => setShowTagModal(true)}>
           <TagIcon />
           <Text style={styles.optionText}>
             {taggedPeople.length > 0
@@ -352,10 +327,7 @@ export default function PostReelScreen() {
           <View style={styles.taggedContainer}>
             {taggedPeople.map((person, index) => (
               <View key={index} style={styles.taggedChip}>
-                <Image
-                  source={require("@assets/images/user1.png")}
-                  style={styles.taggedAvatar}
-                />
+                <Image source={require("@assets/images/user1.png")} style={styles.taggedAvatar} />
                 <Text style={styles.taggedName}>{person.name}</Text>
               </View>
             ))}
@@ -363,10 +335,7 @@ export default function PostReelScreen() {
         )}
 
         {/* Add Location */}
-        <TouchableOpacity
-          style={styles.optionRow}
-          onPress={() => setShowLocationModal(true)}
-        >
+        <TouchableOpacity style={styles.optionRow} onPress={() => setShowLocationModal(true)}>
           <LocationIcon />
           <Text style={styles.optionText}>{location || "Add Location"}</Text>
           <Text style={styles.chevron}>›</Text>
@@ -376,10 +345,7 @@ export default function PostReelScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Privacy & Sharing</Text>
 
-          <TouchableOpacity
-            style={styles.optionRow}
-            onPress={() => setShowPrivacyModal(true)}
-          >
+          <TouchableOpacity style={styles.optionRow} onPress={() => setShowPrivacyModal(true)}>
             <Text style={styles.optionText}>Who can see your reel?</Text>
             <View style={styles.privacyValue}>
               <Text style={styles.privacyText}>{privacy}</Text>
@@ -411,10 +377,7 @@ export default function PostReelScreen() {
 
       {/* Bottom Action Bar */}
       <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={styles.saveDraftButton}
-          onPress={handleSaveDraft}
-        >
+        <TouchableOpacity style={styles.saveDraftButton} onPress={handleSaveDraft}>
           <Text style={styles.saveDraftText}>Save Draft</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.postButton} onPress={handlePost}>
@@ -429,21 +392,11 @@ export default function PostReelScreen() {
         animationType="none"
         onRequestClose={closeMoreOptions}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={closeMoreOptions}
-        >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMoreOptions}>
           <Animated.View
-            style={[
-              styles.moreOptionsModal,
-              { transform: [{ translateY: slideAnim }] },
-            ]}
+            style={[styles.moreOptionsModal, { transform: [{ translateY: slideAnim }] }]}
           >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={(e) => e.stopPropagation()}
-            >
+            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
               {/* Header */}
               <View style={styles.modalHeader}>
                 <TouchableOpacity onPress={closeMoreOptions}>
@@ -453,10 +406,7 @@ export default function PostReelScreen() {
                 <View style={{ width: 24 }} />
               </View>
 
-              <ScrollView
-                style={styles.modalContent}
-                showsVerticalScrollIndicator={false}
-              >
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                 {/* Toggle Options with Icons */}
                 <View style={styles.toggleSection}>
                   <View style={styles.toggleRow}>
@@ -482,9 +432,7 @@ export default function PostReelScreen() {
                           strokeLinecap="round"
                         />
                       </Svg>
-                      <Text style={styles.toggleLabel}>
-                        Turn off commenting
-                      </Text>
+                      <Text style={styles.toggleLabel}>Turn off commenting</Text>
                     </View>
                     <Switch
                       value={turnOffCommenting}
@@ -662,27 +610,20 @@ export default function PostReelScreen() {
         >
           <View style={styles.simpleModal}>
             <Text style={styles.simpleModalTitle}>Who can see your reel?</Text>
-            {["Everyone", "Followers only", "Private (only me)"].map(
-              (option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    setPrivacy(option);
-                    setShowPrivacyModal(false);
-                  }}
-                >
-                  <Text style={styles.modalOptionText}>{option}</Text>
-                  {privacy === option && (
-                    <Text style={styles.checkmark}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ),
-            )}
-            <TouchableOpacity
-              style={styles.modalCancel}
-              onPress={() => setShowPrivacyModal(false)}
-            >
+            {["Everyone", "Followers only", "Private (only me)"].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={styles.modalOption}
+                onPress={() => {
+                  setPrivacy(option);
+                  setShowPrivacyModal(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{option}</Text>
+                {privacy === option && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setShowPrivacyModal(false)}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -703,12 +644,7 @@ export default function PostReelScreen() {
         >
           <View style={styles.simpleModal}>
             <Text style={styles.simpleModalTitle}>Select Music</Text>
-            {[
-              "Original Sound",
-              "Trending Song 1",
-              "Trending Song 2",
-              "My Music",
-            ].map((music) => (
+            {["Original Sound", "Trending Song 1", "Trending Song 2", "My Music"].map((music) => (
               <TouchableOpacity
                 key={music}
                 style={styles.modalOption}
@@ -718,15 +654,10 @@ export default function PostReelScreen() {
                 }}
               >
                 <Text style={styles.modalOptionText}>{music}</Text>
-                {selectedMusic === music && (
-                  <Text style={styles.checkmark}>✓</Text>
-                )}
+                {selectedMusic === music && <Text style={styles.checkmark}>✓</Text>}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.modalCancel}
-              onPress={() => setShowMusicModal(false)}
-            >
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setShowMusicModal(false)}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -778,10 +709,7 @@ export default function PostReelScreen() {
                 <Text style={styles.modalOptionText}>{person.name}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.modalCancel}
-              onPress={() => setShowTagModal(false)}
-            >
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setShowTagModal(false)}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -807,21 +735,19 @@ export default function PostReelScreen() {
               placeholder="Search location..."
               placeholderTextColor="#666"
             />
-            {["Mumbai, India", "Delhi, India", "Bangalore, India"].map(
-              (loc) => (
-                <TouchableOpacity
-                  key={loc}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    setLocation(loc);
-                    setShowLocationModal(false);
-                  }}
-                >
-                  <Text style={styles.modalOptionText}>{loc}</Text>
-                  {location === loc && <Text style={styles.checkmark}>✓</Text>}
-                </TouchableOpacity>
-              ),
-            )}
+            {["Mumbai, India", "Delhi, India", "Bangalore, India"].map((loc) => (
+              <TouchableOpacity
+                key={loc}
+                style={styles.modalOption}
+                onPress={() => {
+                  setLocation(loc);
+                  setShowLocationModal(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{loc}</Text>
+                {location === loc && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
               style={styles.modalCancel}
               onPress={() => setShowLocationModal(false)}

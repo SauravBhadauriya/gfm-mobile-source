@@ -17,13 +17,14 @@ import { BackIcon } from "@/icons";
 const { width } = Dimensions.get("window");
 
 // Mock saved reels data - same format as downloads
+// ✅ KIRO: Edit by kiro - Removed all video file references (files deleted to reduce build size)
 const savedReels = [
   {
     id: 1,
     username: "@Suhani0098000",
     caption: "Good morning everyone #goodmorning",
     musicName: "On the way - (alan walker)",
-    video: require("@assets/1.mp4"),
+    video: null,
     image: require("@assets/images/trending_reel1.png"),
     likes: 134,
     comments: 23,
@@ -39,7 +40,7 @@ const savedReels = [
     username: "@DancerPro",
     caption: "Showing off my moves! 💃 #dance",
     musicName: "Original Sound - DancerPro",
-    video: require("@assets/2.mp4"),
+    video: null,
     image: require("@assets/images/trending_reel2.png"),
     likes: 256,
     comments: 45,
@@ -55,7 +56,7 @@ const savedReels = [
     username: "@ChefMaster",
     caption: "Cooking up something special! 🍳",
     musicName: "Cooking Vibes - ChefMaster",
-    video: require("@assets/3.mp4"),
+    video: null,
     image: require("@assets/images/trending_reel3.png"),
     likes: 189,
     comments: 32,
@@ -71,7 +72,7 @@ const savedReels = [
     username: "@ComedyKing",
     caption: "Laugh out loud! 😂 #comedy",
     musicName: "Funny Moments - ComedyKing",
-    video: require("@assets/4.mp4"),
+    video: null,
     image: require("@assets/images/trending1.png"),
     likes: 312,
     comments: 67,
@@ -87,7 +88,7 @@ const savedReels = [
     username: "@MusicStar",
     caption: "New track dropping soon! 🎵",
     musicName: "Original Sound - MusicStar",
-    video: require("@assets/5.mp4"),
+    video: null,
     image: require("@assets/images/trending2.png"),
     likes: 445,
     comments: 89,
@@ -103,7 +104,7 @@ const savedReels = [
     username: "@ArtistLife",
     caption: "Creating art every day! 🎨",
     musicName: "Artistic Vibes - ArtistLife",
-    video: require("@assets/6.mp4"),
+    video: null,
     image: require("@assets/images/trending3.png"),
     likes: 278,
     comments: 54,
@@ -117,9 +118,7 @@ const savedReels = [
 ];
 
 export default function SavedScreen() {
-  const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(
-    null,
-  );
+  const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(null);
   const [showReelViewer, setShowReelViewer] = useState(false);
 
   const handleReelPress = (index: number) => {
@@ -132,13 +131,7 @@ export default function SavedScreen() {
     setSelectedReelIndex(null);
   };
 
-  const renderReelItem = ({
-    item,
-    index,
-  }: {
-    item: (typeof savedReels)[0];
-    index: number;
-  }) => {
+  const renderReelItem = ({ item, index }: { item: (typeof savedReels)[0]; index: number }) => {
     const itemWidth = (width - 60) / 2; // 2 columns with padding
 
     return (
@@ -147,11 +140,7 @@ export default function SavedScreen() {
         onPress={() => handleReelPress(index)}
         activeOpacity={0.8}
       >
-        <Image
-          source={item.image}
-          style={styles.reelThumbnail}
-          resizeMode="cover"
-        />
+        <Image source={item.image} style={styles.reelThumbnail} resizeMode="cover" />
       </TouchableOpacity>
     );
   };
@@ -162,10 +151,7 @@ export default function SavedScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <BackIcon />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Saved Posts / Reels</Text>

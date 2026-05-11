@@ -1,39 +1,30 @@
-import React, {
-    useState,
-    useRef,
-    useEffect,
-    useCallback,
-    useMemo,
-} from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { File, Paths } from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { Asset } from "expo-asset";
 import { FFmpegKit, ReturnCode } from "ffmpeg-kit-react-native-community";
 import {
-    View,
-    Text,
-    StyleSheet,
-    FlatList,
-    Image,
-    TouchableOpacity,
-    Dimensions,
-    ActivityIndicator,
-    StatusBar,
-    Platform,
-    Modal,
-    Animated,
-    TextInput,
-    ScrollView,
-    KeyboardAvoidingView,
-    Linking,
-    AppState,
-    Alert,
-    ViewToken,
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  ActivityIndicator,
+  StatusBar,
+  Platform,
+  Modal,
+  Animated,
+  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Linking,
+  AppState,
+  Alert,
+  ViewToken,
 } from "react-native";
-import {
-    SafeAreaView,
-    useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Video, ResizeMode, Audio } from "expo-av";
 import Svg, { Path } from "react-native-svg";
 import BottomNav from "../../../src/components/layout/BottomNav";
@@ -44,33 +35,33 @@ import { TipPopup } from "../../../src/components/tip/TipComponents";
 
 import { ReelViewer } from "../../../src/components/reel/ReelViewer";
 import {
-    scale,
-    scaleVertical,
-    getFontSize,
-    wp,
-    hp,
-    getStatusBarHeight,
-    spacing,
-    getResponsiveDimensions,
+  scale,
+  scaleVertical,
+  getFontSize,
+  wp,
+  hp,
+  getStatusBarHeight,
+  spacing,
+  getResponsiveDimensions,
 } from "../../../src/utils/responsive";
 import {
-    HomeIconSVG,
-    ReelIconSVG,
-    SearchIconSVG,
-    UserIconSVG,
-    StarIcon,
-    BlockIcon,
-    CoinIcon,
-    CommentIcon,
-    DownloadIcon,
-    FlagIcon,
-    FullScreenIcon,
-    HeartIcon,
-    MusicIcon,
-    PauseIcon,
-    PlayIcon,
-    ShareIcon,
-    ThreeDotsIcon,
+  HomeIconSVG,
+  ReelIconSVG,
+  SearchIconSVG,
+  UserIconSVG,
+  StarIcon,
+  BlockIcon,
+  CoinIcon,
+  CommentIcon,
+  DownloadIcon,
+  FlagIcon,
+  FullScreenIcon,
+  HeartIcon,
+  MusicIcon,
+  PauseIcon,
+  PlayIcon,
+  ShareIcon,
+  ThreeDotsIcon,
 } from "@/icons";
 
 // Get screen dimensions - keep as constants for FlatList paging
@@ -79,3503 +70,2890 @@ const { width, height } = Dimensions.get("window");
 // Icons
 
 // Reel data with video files - matching IDs from search page
+// ✅ KIRO: Edit by kiro - Removed all video file references (files deleted to reduce build size)
 const reelData = [
-    {
-        id: 1,
-        username: "@Suhani0098000",
-        caption:
-            "Good morining every one #goodmorning\nGood morining every\none #goodmorning",
-        musicName: "On the way - (alan walker) - music hip hop brand new york",
-        video: require("@assets/1.mp4"),
-        likes: 134,
-        comments: 23,
-        shares: 12,
-        saves: 45,
-        tips: 12,
-        isLiked: false,
-        isSaved: false,
-    },
-    {
-        id: 2,
-        username: "@DancerPro",
-        caption: "Showing off my moves! 💃 #dance #gullyfame",
-        musicName: "Original Sound - DancerPro",
-        video: require("@assets/2.mp4"),
-        likes: 256,
-        comments: 45,
-        shares: 23,
-        saves: 67,
-        tips: 28,
-        isLiked: true,
-        isSaved: false,
-    },
-    {
-        id: 3,
-        username: "@ChefMaster",
-        caption: "Cooking up something special! 🍳 #cooking #food",
-        musicName: "Cooking Vibes - ChefMaster",
-        video: require("@assets/3.mp4"),
-        likes: 189,
-        comments: 32,
-        shares: 15,
-        saves: 89,
-        tips: 15,
-        isLiked: false,
-        isSaved: true,
-    },
-    {
-        id: 4,
-        username: "@ComedyKing",
-        caption: "Laugh out loud! 😂 #comedy #funny",
-        musicName: "Funny Moments - ComedyKing",
-        video: require("@assets/4.mp4"),
-        likes: 312,
-        comments: 67,
-        shares: 34,
-        saves: 123,
-        tips: 45,
-        isLiked: true,
-        isSaved: true,
-    },
-    {
-        id: 5,
-        username: "@MusicStar",
-        caption: "New track dropping soon! 🎵 #music #newrelease",
-        musicName: "Original Sound - MusicStar",
-        video: require("@assets/5.mp4"),
-        likes: 445,
-        comments: 89,
-        shares: 56,
-        saves: 156,
-        tips: 67,
-        isLiked: false,
-        isSaved: false,
-    },
-    {
-        id: 6,
-        username: "@ArtistLife",
-        caption: "Creating something beautiful! 🎨 #art #creativity",
-        musicName: "Artistic Vibes - ArtistLife",
-        video: require("@assets/6.mp4"),
-        likes: 567,
-        comments: 102,
-        shares: 78,
-        saves: 234,
-        tips: 89,
-        isLiked: true,
-        isSaved: false,
-    },
-    {
-        id: 7,
-        username: "@FitnessGuru",
-        caption: "Stay fit, stay strong! 💪 #fitness #workout",
-        musicName: "Workout Beats - FitnessGuru",
-        video: require("@assets/7.mp4"),
-        likes: 678,
-        comments: 145,
-        shares: 89,
-        saves: 278,
-        tips: 112,
-        isLiked: false,
-        isSaved: true,
-    },
-    {
-        id: 8,
-        username: "@TravelBuddy",
-        caption: "Exploring the world! ✈️ #travel #adventure",
-        musicName: "Travel Vibes - TravelBuddy",
-        video: require("@assets/8.mp4"),
-        likes: 789,
-        comments: 189,
-        shares: 112,
-        saves: 345,
-        tips: 134,
-        isLiked: true,
-        isSaved: false,
-    },
-    {
-        id: 9,
-        username: "@FoodieLife",
-        caption: "Food is love! 🍕 #food #foodie",
-        musicName: "Foodie Beats - FoodieLife",
-        video: require("@assets/9.mp4"),
-        likes: 890,
-        comments: 234,
-        shares: 145,
-        saves: 456,
-        tips: 156,
-        isLiked: false,
-        isSaved: true,
-    },
+  {
+    id: 1,
+    username: "@Suhani0098000",
+    caption: "Good morining every one #goodmorning\nGood morining every\none #goodmorning",
+    musicName: "On the way - (alan walker) - music hip hop brand new york",
+    video: null,
+    likes: 134,
+    comments: 23,
+    shares: 12,
+    saves: 45,
+    tips: 12,
+    isLiked: false,
+    isSaved: false,
+  },
+  {
+    id: 2,
+    username: "@DancerPro",
+    caption: "Showing off my moves! 💃 #dance #gullyfame",
+    musicName: "Original Sound - DancerPro",
+    video: null,
+    likes: 256,
+    comments: 45,
+    shares: 23,
+    saves: 67,
+    tips: 28,
+    isLiked: true,
+    isSaved: false,
+  },
+  {
+    id: 3,
+    username: "@ChefMaster",
+    caption: "Cooking up something special! 🍳 #cooking #food",
+    musicName: "Cooking Vibes - ChefMaster",
+    video: null,
+    likes: 189,
+    comments: 32,
+    shares: 15,
+    saves: 89,
+    tips: 15,
+    isLiked: false,
+    isSaved: true,
+  },
+  {
+    id: 4,
+    username: "@ComedyKing",
+    caption: "Laugh out loud! 😂 #comedy #funny",
+    musicName: "Funny Moments - ComedyKing",
+    video: null,
+    likes: 312,
+    comments: 67,
+    shares: 34,
+    saves: 123,
+    tips: 45,
+    isLiked: true,
+    isSaved: true,
+  },
+  {
+    id: 5,
+    username: "@MusicStar",
+    caption: "New track dropping soon! 🎵 #music #newrelease",
+    musicName: "Original Sound - MusicStar",
+    video: null,
+    likes: 445,
+    comments: 89,
+    shares: 56,
+    saves: 156,
+    tips: 67,
+    isLiked: false,
+    isSaved: false,
+  },
+  {
+    id: 6,
+    username: "@ArtistLife",
+    caption: "Creating something beautiful! 🎨 #art #creativity",
+    musicName: "Artistic Vibes - ArtistLife",
+    video: null,
+    likes: 567,
+    comments: 102,
+    shares: 78,
+    saves: 234,
+    tips: 89,
+    isLiked: true,
+    isSaved: false,
+  },
+  {
+    id: 7,
+    username: "@FitnessGuru",
+    caption: "Stay fit, stay strong! 💪 #fitness #workout",
+    musicName: "Workout Beats - FitnessGuru",
+    video: null,
+    likes: 678,
+    comments: 145,
+    shares: 89,
+    saves: 278,
+    tips: 112,
+    isLiked: false,
+    isSaved: true,
+  },
+  {
+    id: 8,
+    username: "@TravelBuddy",
+    caption: "Exploring the world! ✈️ #travel #adventure",
+    musicName: "Travel Vibes - TravelBuddy",
+    video: null,
+    likes: 789,
+    comments: 189,
+    shares: 112,
+    saves: 345,
+    tips: 134,
+    isLiked: true,
+    isSaved: false,
+  },
+  {
+    id: 9,
+    username: "@FoodieLife",
+    caption: "Food is love! 🍕 #food #foodie",
+    musicName: "Foodie Beats - FoodieLife",
+    video: null,
+    likes: 890,
+    comments: 234,
+    shares: 145,
+    saves: 456,
+    tips: 156,
+    isLiked: false,
+    isSaved: true,
+  },
 ];
 
 export default function GullyReelScreen() {
-    const params = useLocalSearchParams();
-    const insets = useSafeAreaInsets();
-    const isFocused = useIsFocused();
-    const [activeTab, setActiveTab] = useState("Reel");
-    const [drawerVisible, setDrawerVisible] = useState(false);
-    const [showVotePopup, setShowVotePopup] = useState<number | null>(null);
-    const votePopupAnim = useRef(new Animated.Value(0)).current;
-    const [reels, setReels] = useState(reelData);
-    const flatListRef = useRef<FlatList<(typeof reelData)[0]>>(null);
-    const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
-    const [currentVisibleIndex, setCurrentVisibleIndex] = useState<
-        number | null
-    >(null);
-    const videoRefs = useRef<Map<number, Video>>(new Map());
-    const [showStarAnimation, setShowStarAnimation] = useState<number | null>(
-        null,
-    );
-    const [showThreeDotsMenu, setShowThreeDotsMenu] = useState(false);
-    const [currentReelForMenu, setCurrentReelForMenu] = useState<number | null>(
-        null,
-    );
-    const [expandedCaptions, setExpandedCaptions] = useState<Set<number>>(
-        new Set(),
-    );
-    const starAnimations = useRef<
-        Map<number, { scale: Animated.Value; opacity: Animated.Value }>
-    >(new Map());
-    const lastTap = useRef<{ time: number; id: number | null }>({
-        time: 0,
-        id: null,
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const [activeTab, setActiveTab] = useState("Reel");
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [showVotePopup, setShowVotePopup] = useState<number | null>(null);
+  const votePopupAnim = useRef(new Animated.Value(0)).current;
+  const [reels, setReels] = useState(reelData);
+  const flatListRef = useRef<FlatList<(typeof reelData)[0]>>(null);
+  const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
+  const [currentVisibleIndex, setCurrentVisibleIndex] = useState<number | null>(null);
+  const videoRefs = useRef<Map<number, Video>>(new Map());
+  const [showStarAnimation, setShowStarAnimation] = useState<number | null>(null);
+  const [showThreeDotsMenu, setShowThreeDotsMenu] = useState(false);
+  const [currentReelForMenu, setCurrentReelForMenu] = useState<number | null>(null);
+  const [expandedCaptions, setExpandedCaptions] = useState<Set<number>>(new Set());
+  const starAnimations = useRef<Map<number, { scale: Animated.Value; opacity: Animated.Value }>>(
+    new Map()
+  );
+  const lastTap = useRef<{ time: number; id: number | null }>({
+    time: 0,
+    id: null,
+  });
+
+  const threeDotsSlideAnim = useRef(new Animated.Value(height)).current;
+  const [tipModalVisible, setTipModalVisible] = useState(false);
+  const [downloadModalVisible, setDownloadModalVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedReelForDownload, setSelectedReelForDownload] = useState<any>(null);
+  const [currentTipReelId, setCurrentTipReelId] = useState<number | null>(null);
+  const [showPlayPauseIcon, setShowPlayPauseIcon] = useState<{
+    reelId: number;
+    isPlaying: boolean;
+  } | null>(null);
+  const playPauseIconTimeout = useRef<NodeJS.Timeout | null>(null);
+  const videoPlayingStates = useRef<Map<number, boolean>>(new Map());
+  const playPauseIconOpacity = useRef(new Animated.Value(0)).current;
+  const THEME_COLOR = "#EC9A15";
+
+  // Responsive positioning constants
+  const BOTTOM_NAV_HEIGHT = scale(60);
+  const ACTION_ICONS_BOTTOM = BOTTOM_NAV_HEIGHT + scale(12);
+  const ACTION_ICONS_CONTAINER_HEIGHT = scale(50);
+  const LEFT_CONTENT_BOTTOM = ACTION_ICONS_BOTTOM + ACTION_ICONS_CONTAINER_HEIGHT + scale(24);
+
+  // Status bar height
+  const statusBarHeight = getStatusBarHeight();
+
+  // Memoize reel data to prevent unnecessary re-renders
+  const memoizedReels = useMemo(() => reels, [reels]);
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true, // Lowers other app volumes instead of crashing
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (e) {
+        console.warn("Audio mode init failed", e);
+      }
+    };
+    initAudio();
+  }, []);
+  // Initialize comment likes state
+  useEffect(() => {
+    const initialLikes = new Map<number, { likes: number; isLiked: boolean }>();
+    // Sample comments data
+    initialLikes.set(1, { likes: 12, isLiked: false });
+    initialLikes.set(2, { likes: 8, isLiked: true });
+    initialLikes.set(3, { likes: 5, isLiked: false });
+    initialLikes.set(4, { likes: 3, isLiked: false }); // Reply comment
+    setCommentLikes(initialLikes);
+  }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      // If the app goes to the background or inactive state, pause all videos
+      if (nextAppState !== "active") {
+        videoRefs.current.forEach((videoRef) => {
+          if (videoRef) {
+            videoRef.pauseAsync().catch(() => {});
+          }
+        });
+      }
     });
 
-    const threeDotsSlideAnim = useRef(new Animated.Value(height)).current;
-    const [tipModalVisible, setTipModalVisible] = useState(false);
-    const [downloadModalVisible, setDownloadModalVisible] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
-    const [selectedReelForDownload, setSelectedReelForDownload] =
-        useState<any>(null);
-    const [currentTipReelId, setCurrentTipReelId] = useState<number | null>(
-        null,
-    );
-    const [showPlayPauseIcon, setShowPlayPauseIcon] = useState<{
-        reelId: number;
-        isPlaying: boolean;
-    } | null>(null);
-    const playPauseIconTimeout = useRef<NodeJS.Timeout | null>(null);
-    const videoPlayingStates = useRef<Map<number, boolean>>(new Map());
-    const playPauseIconOpacity = useRef(new Animated.Value(0)).current;
-    const THEME_COLOR = "#EC9A15";
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+  useEffect(() => {
+    if (params.reelId && flatListRef.current) {
+      const reelIndex = parseInt(params.reelId as string) - 1;
+      if (reelIndex >= 0 && reelIndex < reels.length) {
+        // Set visible index immediately for instant playback
+        setCurrentVisibleIndex(reelIndex);
+        // Scroll to index immediately - no delay for instant video start
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({
+            index: reelIndex,
+            animated: false,
+          });
+          const videoRef = videoRefs.current.get(reels[reelIndex].id);
+          // Add AppState check
+          if (videoRef && AppState.currentState === "active") {
+            videoRef.playAsync().catch(() => {});
+          }
+        }, 50);
+      }
+    } else {
+      // Set first video as visible by default
+      setCurrentVisibleIndex(0);
+    }
+  }, [params.reelId, reels.length]);
 
-    // Responsive positioning constants
-    const BOTTOM_NAV_HEIGHT = scale(60);
-    const ACTION_ICONS_BOTTOM = BOTTOM_NAV_HEIGHT + scale(12);
-    const ACTION_ICONS_CONTAINER_HEIGHT = scale(50);
-    const LEFT_CONTENT_BOTTOM =
-        ACTION_ICONS_BOTTOM + ACTION_ICONS_CONTAINER_HEIGHT + scale(24);
+  // Cleanup all videos when screen loses focus
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Pause all videos when navigating away
+        videoRefs.current.forEach((videoRef) => {
+          if (videoRef) {
+            videoRef.pauseAsync().catch(() => {});
+          }
+        });
+        // Cleanup animations
+        starAnimations.current.clear();
+      };
+    }, [])
+  );
 
-    // Status bar height
-    const statusBarHeight = getStatusBarHeight();
+  // Control video playback based on visibility - optimized to prevent lag and crashes
+  useEffect(() => {
+    if (currentVisibleIndex === null) return;
 
-    // Memoize reel data to prevent unnecessary re-renders
-    const memoizedReels = useMemo(() => reels, [reels]);
-    useEffect(() => {
-        const initAudio = async () => {
-            try {
-                await Audio.setAudioModeAsync({
-                    playsInSilentModeIOS: true,
-                    staysActiveInBackground: false,
-                    shouldDuckAndroid: true, // Lowers other app volumes instead of crashing
-                    playThroughEarpieceAndroid: false,
-                });
-            } catch (e) {
-                console.warn("Audio mode init failed", e);
-            }
-        };
-        initAudio();
-    }, []);
-    // Initialize comment likes state
-    useEffect(() => {
-        const initialLikes = new Map<
-            number,
-            { likes: number; isLiked: boolean }
-        >();
-        // Sample comments data
-        initialLikes.set(1, { likes: 12, isLiked: false });
-        initialLikes.set(2, { likes: 8, isLiked: true });
-        initialLikes.set(3, { likes: 5, isLiked: false });
-        initialLikes.set(4, { likes: 3, isLiked: false }); // Reply comment
-        setCommentLikes(initialLikes);
-    }, []);
-    useEffect(() => {
-        const subscription = AppState.addEventListener(
-            "change",
-            (nextAppState) => {
-                // If the app goes to the background or inactive state, pause all videos
-                if (nextAppState !== "active") {
-                    videoRefs.current.forEach((videoRef) => {
-                        if (videoRef) {
-                            videoRef.pauseAsync().catch(() => {});
-                        }
-                    });
-                }
-            },
-        );
+    // Create a map of reel IDs to indices for faster lookup
+    const reelIdToIndex = new Map<number, number>();
+    reels.forEach((reel, index) => {
+      reelIdToIndex.set(reel.id, index);
+    });
 
-        return () => {
-            subscription.remove();
-        };
-    }, []);
-    useEffect(() => {
-        if (params.reelId && flatListRef.current) {
-            const reelIndex = parseInt(params.reelId as string) - 1;
-            if (reelIndex >= 0 && reelIndex < reels.length) {
-                // Set visible index immediately for instant playback
-                setCurrentVisibleIndex(reelIndex);
-                // Scroll to index immediately - no delay for instant video start
-                setTimeout(() => {
-                    flatListRef.current?.scrollToIndex({
-                        index: reelIndex,
-                        animated: false,
-                    });
-                    const videoRef = videoRefs.current.get(reels[reelIndex].id);
-                    // Add AppState check
-                    if (videoRef && AppState.currentState === "active") {
-                        videoRef.playAsync().catch(() => {});
-                    }
-                }, 50);
-            }
+    // Small delay to ensure video is ready before playing - prevents crashes
+    const playTimeout = setTimeout(() => {
+      const currentReel = reels[currentVisibleIndex];
+      if (currentReel) {
+        const videoRef = videoRefs.current.get(currentReel.id);
+        if (videoRef && AppState.currentState === "active") {
+          videoRef.playAsync().catch((error) => {
+            console.log("Play error:", error);
+            // Retry once after a short delay
+            setTimeout(() => {
+              if (AppState.currentState === "active") {
+                videoRef.playAsync().catch(() => {});
+              }
+            }, 300);
+          });
+        }
+      }
+    }, 150);
+
+    // Pause all other videos - optimized lookup
+    videoRefs.current.forEach((videoRef, reelId) => {
+      const reelIndex = reelIdToIndex.get(reelId);
+      const shouldPlay = currentVisibleIndex === reelIndex;
+
+      if (videoRef && !shouldPlay) {
+        videoRef.pauseAsync().catch(() => {});
+      }
+    });
+
+    return () => clearTimeout(playTimeout);
+  }, [currentVisibleIndex, reels]);
+
+  // Viewability callback to track visible video
+  const onViewableItemsChangedRef = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (
+      viewableItems.length > 0 &&
+      viewableItems[0].index !== null &&
+      viewableItems[0].index !== undefined
+    ) {
+      setCurrentVisibleIndex(viewableItems[0].index);
+    }
+  });
+
+  const handleBackPress = () => {
+    router.push("/(main)" as any);
+  };
+
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [currentReelId, setCurrentReelId] = useState<number | null>(null);
+  const [commentText, setCommentText] = useState("");
+  const [replyingToComment, setReplyingToComment] = useState<number | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set());
+  const [commentLikes, setCommentLikes] = useState<
+    Map<number, { likes: number; isLiked: boolean }>
+  >(new Map());
+  const [reelViewerVisible, setReelViewerVisible] = useState(false);
+  const [reelViewerInitialIndex, setReelViewerInitialIndex] = useState(0);
+  const slideAnim = useRef(new Animated.Value(height)).current;
+  const shareScrollViewRef = useRef<ScrollView>(null);
+  const executeDownloadWithWatermark = async (reelData: any) => {
+    setIsDownloading(true);
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "We need access to save the video.");
+        setIsDownloading(false);
+        setDownloadModalVisible(false);
+        return;
+      }
+
+      const videoAsset = Asset.fromModule(reelData.video);
+      await videoAsset.downloadAsync();
+      const videoUri = videoAsset.localUri || videoAsset.uri;
+
+      const watermarkAsset = Asset.fromModule(require("@assets/images/gfi.png"));
+      await watermarkAsset.downloadAsync();
+      const watermarkUri = watermarkAsset.localUri || watermarkAsset.uri;
+
+      const outputFile = new File(Paths.cache, `gully_watermarked_${Date.now()}.mp4`);
+      const outputUri = outputFile.uri;
+
+      const ffmpegCommand = `-i ${videoUri} -i ${watermarkUri} -filter_complex "[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.6[wm];[0:v][wm]overlay=W-w-20:H-h-20" -preset ultrafast -c:a copy ${outputUri}`;
+
+      const session = await FFmpegKit.execute(ffmpegCommand);
+      const returnCode = await session.getReturnCode();
+
+      if (ReturnCode.isSuccess(returnCode)) {
+        const asset = await MediaLibrary.createAssetAsync(outputUri);
+
+        // 2. Check if the GullyFame album already exists
+        const existingAlbum = await MediaLibrary.getAlbumAsync("GullyFame");
+
+        if (existingAlbum) {
+          // If it exists, just slide the new video in
+          await MediaLibrary.addAssetsToAlbumAsync([asset], existingAlbum, false);
         } else {
-            // Set first video as visible by default
-            setCurrentVisibleIndex(0);
+          // If it's their first time downloading, create the album with this video
+          await MediaLibrary.createAlbumAsync("GullyFame", asset, false);
         }
-    }, [params.reelId, reels.length]);
 
-    // Cleanup all videos when screen loses focus
-    useFocusEffect(
-        useCallback(() => {
-            return () => {
-                // Pause all videos when navigating away
-                videoRefs.current.forEach((videoRef) => {
-                    if (videoRef) {
-                        videoRef.pauseAsync().catch(() => {});
-                    }
-                });
-                // Cleanup animations
-                starAnimations.current.clear();
-            };
-        }, []),
-    );
+        if (outputFile.exists) {
+          outputFile.delete();
+        }
 
-    // Control video playback based on visibility - optimized to prevent lag and crashes
-    useEffect(() => {
-        if (currentVisibleIndex === null) return;
+        Alert.alert("Success!", "Reel saved to your gallery with +10 XP!");
+      } else {
+        console.error("FFmpeg failed to render watermark");
+        Alert.alert("Error", "Failed to process video.");
+      }
+    } catch (error) {
+      console.error("Export Error:", error);
+      Alert.alert("Error", "Something went wrong during download.");
+    } finally {
+      setIsDownloading(false);
+      setDownloadModalVisible(false);
+      setSelectedReelForDownload(null);
+    }
+  };
+  const handleShare = async (option: string) => {
+    const reelUrl = `https://gullyfame.com/reel/${currentReelId}`;
+    const reelText = `Check out this amazing reel on Gully Fame! ${reelUrl}`;
 
-        // Create a map of reel IDs to indices for faster lookup
-        const reelIdToIndex = new Map<number, number>();
-        reels.forEach((reel, index) => {
-            reelIdToIndex.set(reel.id, index);
-        });
-
-        // Small delay to ensure video is ready before playing - prevents crashes
-        const playTimeout = setTimeout(() => {
-            const currentReel = reels[currentVisibleIndex];
-            if (currentReel) {
-                const videoRef = videoRefs.current.get(currentReel.id);
-                if (videoRef && AppState.currentState === "active") {
-                    videoRef.playAsync().catch((error) => {
-                        console.log("Play error:", error);
-                        // Retry once after a short delay
-                        setTimeout(() => {
-                            if (AppState.currentState === "active") {
-                                videoRef.playAsync().catch(() => {});
-                            }
-                        }, 300);
-                    });
-                }
-            }
-        }, 150);
-
-        // Pause all other videos - optimized lookup
-        videoRefs.current.forEach((videoRef, reelId) => {
-            const reelIndex = reelIdToIndex.get(reelId);
-            const shouldPlay = currentVisibleIndex === reelIndex;
-
-            if (videoRef && !shouldPlay) {
-                videoRef.pauseAsync().catch(() => {});
-            }
-        });
-
-        return () => clearTimeout(playTimeout);
-    }, [currentVisibleIndex, reels]);
-
-    // Viewability callback to track visible video
-    const onViewableItemsChangedRef = useRef(
-        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-            if (
-                viewableItems.length > 0 &&
-                viewableItems[0].index !== null &&
-                viewableItems[0].index !== undefined
-            ) {
-                setCurrentVisibleIndex(viewableItems[0].index);
-            }
-        },
-    );
-
-    const handleBackPress = () => {
-        router.push("/(main)" as any);
-    };
-
-    const [commentModalVisible, setCommentModalVisible] = useState(false);
-    const [shareModalVisible, setShareModalVisible] = useState(false);
-    const [currentReelId, setCurrentReelId] = useState<number | null>(null);
-    const [commentText, setCommentText] = useState("");
-    const [replyingToComment, setReplyingToComment] = useState<number | null>(
-        null,
-    );
-    const [expandedReplies, setExpandedReplies] = useState<Set<number>>(
-        new Set(),
-    );
-    const [commentLikes, setCommentLikes] = useState<
-        Map<number, { likes: number; isLiked: boolean }>
-    >(new Map());
-    const [reelViewerVisible, setReelViewerVisible] = useState(false);
-    const [reelViewerInitialIndex, setReelViewerInitialIndex] = useState(0);
-    const slideAnim = useRef(new Animated.Value(height)).current;
-    const shareScrollViewRef = useRef<ScrollView>(null);
-    const executeDownloadWithWatermark = async (reelData: any) => {
-        setIsDownloading(true);
-        try {
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            if (status !== "granted") {
-                Alert.alert(
-                    "Permission Denied",
-                    "We need access to save the video.",
-                );
-                setIsDownloading(false);
-                setDownloadModalVisible(false);
-                return;
-            }
-
-            const videoAsset = Asset.fromModule(reelData.video);
-            await videoAsset.downloadAsync();
-            const videoUri = videoAsset.localUri || videoAsset.uri;
-
-            const watermarkAsset = Asset.fromModule(
-                require("@assets/images/gfi.png"),
-            );
-            await watermarkAsset.downloadAsync();
-            const watermarkUri = watermarkAsset.localUri || watermarkAsset.uri;
-
-            const outputFile = new File(
-                Paths.cache,
-                `gully_watermarked_${Date.now()}.mp4`,
-            );
-            const outputUri = outputFile.uri;
-
-            const ffmpegCommand = `-i ${videoUri} -i ${watermarkUri} -filter_complex "[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.6[wm];[0:v][wm]overlay=W-w-20:H-h-20" -preset ultrafast -c:a copy ${outputUri}`;
-
-            const session = await FFmpegKit.execute(ffmpegCommand);
-            const returnCode = await session.getReturnCode();
-
-            if (ReturnCode.isSuccess(returnCode)) {
-                const asset = await MediaLibrary.createAssetAsync(outputUri);
-
-                // 2. Check if the GullyFame album already exists
-                const existingAlbum =
-                    await MediaLibrary.getAlbumAsync("GullyFame");
-
-                if (existingAlbum) {
-                    // If it exists, just slide the new video in
-                    await MediaLibrary.addAssetsToAlbumAsync(
-                        [asset],
-                        existingAlbum,
-                        false,
-                    );
-                } else {
-                    // If it's their first time downloading, create the album with this video
-                    await MediaLibrary.createAlbumAsync(
-                        "GullyFame",
-                        asset,
-                        false,
-                    );
-                }
-
-                if (outputFile.exists) {
-                    outputFile.delete();
-                }
-
-                Alert.alert(
-                    "Success!",
-                    "Reel saved to your gallery with +10 XP!",
-                );
+    try {
+      switch (option) {
+        case "copy":
+          // Copy to clipboard
+          try {
+            if (Platform.OS === "web") {
+              await navigator.clipboard.writeText(reelUrl);
+              Alert.alert("Copied!", "Link copied to clipboard");
             } else {
-                console.error("FFmpeg failed to render watermark");
-                Alert.alert("Error", "Failed to process video.");
+              // For React Native, show the URL for manual copying
+              // In production, you would install @react-native-clipboard/clipboard
+              Alert.alert("Copy Link", reelUrl, [{ text: "OK" }]);
             }
-        } catch (error) {
-            console.error("Export Error:", error);
-            Alert.alert("Error", "Something went wrong during download.");
-        } finally {
-            setIsDownloading(false);
-            setDownloadModalVisible(false);
-            setSelectedReelForDownload(null);
-        }
-    };
-    const handleShare = async (option: string) => {
-        const reelUrl = `https://gullyfame.com/reel/${currentReelId}`;
-        const reelText = `Check out this amazing reel on Gully Fame! ${reelUrl}`;
+          } catch {
+            // Fallback: show URL in alert
+            Alert.alert("Copy Link", reelUrl);
+          }
+          break;
+        case "whatsapp":
+          const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(reelText)}`;
+          const canOpen = await Linking.canOpenURL(whatsappUrl);
+          if (canOpen) {
+            await Linking.openURL(whatsappUrl);
+          } else {
+            Alert.alert("WhatsApp not installed", "Please install WhatsApp to share");
+          }
+          break;
+        case "whatsappstatus":
+          const statusUrl = `whatsapp://send?text=${encodeURIComponent(reelText)}`;
+          const canOpenStatus = await Linking.canOpenURL(statusUrl);
+          if (canOpenStatus) {
+            await Linking.openURL(statusUrl);
+          } else {
+            Alert.alert("WhatsApp not installed", "Please install WhatsApp to share");
+          }
+          break;
+        case "instagram":
+          const instagramUrl = `instagram://share`;
+          const canOpenInsta = await Linking.canOpenURL(instagramUrl);
+          if (canOpenInsta) {
+            await Linking.openURL(instagramUrl);
+          } else {
+            Alert.alert("Instagram not installed", "Please install Instagram to share");
+          }
+          break;
+        case "snapchat":
+          const snapchatUrl = `snapchat://`;
+          const canOpenSnap = await Linking.canOpenURL(snapchatUrl);
+          if (canOpenSnap) {
+            await Linking.openURL(snapchatUrl);
+          } else {
+            Alert.alert("Snapchat not installed", "Please install Snapchat to share");
+          }
+          break;
+        case "download":
+          Alert.alert("Download", "Download feature coming soon!");
+          break;
+        case "facebook":
+          const facebookUrl = `fb://share?text=${encodeURIComponent(reelText)}`;
+          const canOpenFB = await Linking.canOpenURL(facebookUrl);
+          if (canOpenFB) {
+            await Linking.openURL(facebookUrl);
+          } else {
+            const fbWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(reelUrl)}`;
+            await Linking.openURL(fbWebUrl);
+          }
+          break;
+        case "twitter":
+          const twitterUrl = `twitter://post?message=${encodeURIComponent(reelText)}`;
+          const canOpenTwitter = await Linking.canOpenURL(twitterUrl);
+          if (canOpenTwitter) {
+            await Linking.openURL(twitterUrl);
+          } else {
+            const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(reelText)}`;
+            await Linking.openURL(twitterWebUrl);
+          }
+          break;
+      }
+      // Close modal after sharing
+      Animated.timing(slideAnim, {
+        toValue: height,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setShareModalVisible(false);
+        setShowMoreShareOptions(false);
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+      Alert.alert("Error", "Unable to share. Please try again.");
+    }
+  };
 
-        try {
-            switch (option) {
-                case "copy":
-                    // Copy to clipboard
-                    try {
-                        if (Platform.OS === "web") {
-                            await navigator.clipboard.writeText(reelUrl);
-                            Alert.alert("Copied!", "Link copied to clipboard");
-                        } else {
-                            // For React Native, show the URL for manual copying
-                            // In production, you would install @react-native-clipboard/clipboard
-                            Alert.alert("Copy Link", reelUrl, [{ text: "OK" }]);
-                        }
-                    } catch {
-                        // Fallback: show URL in alert
-                        Alert.alert("Copy Link", reelUrl);
-                    }
-                    break;
-                case "whatsapp":
-                    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(reelText)}`;
-                    const canOpen = await Linking.canOpenURL(whatsappUrl);
-                    if (canOpen) {
-                        await Linking.openURL(whatsappUrl);
-                    } else {
-                        Alert.alert(
-                            "WhatsApp not installed",
-                            "Please install WhatsApp to share",
-                        );
-                    }
-                    break;
-                case "whatsappstatus":
-                    const statusUrl = `whatsapp://send?text=${encodeURIComponent(reelText)}`;
-                    const canOpenStatus = await Linking.canOpenURL(statusUrl);
-                    if (canOpenStatus) {
-                        await Linking.openURL(statusUrl);
-                    } else {
-                        Alert.alert(
-                            "WhatsApp not installed",
-                            "Please install WhatsApp to share",
-                        );
-                    }
-                    break;
-                case "instagram":
-                    const instagramUrl = `instagram://share`;
-                    const canOpenInsta = await Linking.canOpenURL(instagramUrl);
-                    if (canOpenInsta) {
-                        await Linking.openURL(instagramUrl);
-                    } else {
-                        Alert.alert(
-                            "Instagram not installed",
-                            "Please install Instagram to share",
-                        );
-                    }
-                    break;
-                case "snapchat":
-                    const snapchatUrl = `snapchat://`;
-                    const canOpenSnap = await Linking.canOpenURL(snapchatUrl);
-                    if (canOpenSnap) {
-                        await Linking.openURL(snapchatUrl);
-                    } else {
-                        Alert.alert(
-                            "Snapchat not installed",
-                            "Please install Snapchat to share",
-                        );
-                    }
-                    break;
-                case "download":
-                    Alert.alert("Download", "Download feature coming soon!");
-                    break;
-                case "facebook":
-                    const facebookUrl = `fb://share?text=${encodeURIComponent(reelText)}`;
-                    const canOpenFB = await Linking.canOpenURL(facebookUrl);
-                    if (canOpenFB) {
-                        await Linking.openURL(facebookUrl);
-                    } else {
-                        const fbWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(reelUrl)}`;
-                        await Linking.openURL(fbWebUrl);
-                    }
-                    break;
-                case "twitter":
-                    const twitterUrl = `twitter://post?message=${encodeURIComponent(reelText)}`;
-                    const canOpenTwitter = await Linking.canOpenURL(twitterUrl);
-                    if (canOpenTwitter) {
-                        await Linking.openURL(twitterUrl);
-                    } else {
-                        const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(reelText)}`;
-                        await Linking.openURL(twitterWebUrl);
-                    }
-                    break;
-            }
-            // Close modal after sharing
-            Animated.timing(slideAnim, {
-                toValue: height,
-                duration: 300,
-                useNativeDriver: true,
-            }).start(() => {
-                setShareModalVisible(false);
-                setShowMoreShareOptions(false);
+  const handleLike = useCallback(
+    (id: number) => {
+      // 1. Find the reel FIRST (using the current 'reels' state)
+      const targetReel = reels.find((r) => r.id === id);
+
+      // 2. Trigger side-effects/animations OUTSIDE the state updater
+      if (targetReel && !targetReel.isLiked) {
+        setShowVotePopup(id);
+        votePopupAnim.setValue(0);
+        Animated.timing(votePopupAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start(() => setShowVotePopup(null));
+      }
+
+      // 3. Keep the state updater purely for data!
+      setReels((prevReels) =>
+        prevReels.map((reel) =>
+          reel.id === id
+            ? {
+                ...reel,
+                isLiked: !reel.isLiked,
+                likes: reel.isLiked ? reel.likes - 1 : reel.likes + 1,
+              }
+            : reel
+        )
+      );
+    },
+    [reels, votePopupAnim]
+  );
+
+  const handleVideoTap = useCallback(async (id: number) => {
+    const videoRef = videoRefs.current.get(id);
+    if (!videoRef) return;
+
+    try {
+      const status = await videoRef.getStatusAsync();
+      if (status.isLoaded) {
+        const isPlaying = status.isPlaying;
+        videoPlayingStates.current.set(id, !isPlaying);
+
+        if (isPlaying) {
+          await videoRef.pauseAsync();
+          setShowPlayPauseIcon({ reelId: id, isPlaying: false });
+        } else {
+          if (AppState.currentState === "active") {
+            await videoRef.playAsync();
+            setShowPlayPauseIcon({ reelId: id, isPlaying: true });
+          }
+        }
+
+        // Animate icon fade in
+        playPauseIconOpacity.setValue(0);
+        Animated.timing(playPauseIconOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+
+        // Clear existing timeout
+        if (playPauseIconTimeout.current) {
+          clearTimeout(playPauseIconTimeout.current);
+        }
+
+        // Hide icon after 1 second with fade out
+        playPauseIconTimeout.current = setTimeout(() => {
+          Animated.timing(playPauseIconOpacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            setShowPlayPauseIcon(null);
+          });
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error toggling video playback:", error);
+    }
+  }, []);
+
+  const handleDoubleTap = useCallback(
+    (id: number) => {
+      const now = Date.now();
+      const DOUBLE_TAP_DELAY = 300;
+
+      if (now - lastTap.current.time < DOUBLE_TAP_DELAY && lastTap.current.id === id) {
+        const targetReel = reels.find((r) => r.id === id);
+
+        // Trigger animations first
+        if (targetReel && !targetReel.isLiked) {
+          if (!starAnimations.current.has(id)) {
+            starAnimations.current.set(id, {
+              scale: new Animated.Value(0),
+              opacity: new Animated.Value(0),
             });
-        } catch (error) {
-            console.error("Error sharing:", error);
-            Alert.alert("Error", "Unable to share. Please try again.");
+          }
+
+          const anim = starAnimations.current.get(id)!;
+          setShowStarAnimation(id);
+          anim.scale.setValue(0);
+          anim.opacity.setValue(1);
+
+          Animated.parallel([
+            Animated.spring(anim.scale, {
+              toValue: 1.2,
+              useNativeDriver: true,
+              tension: 50,
+              friction: 3,
+            }),
+            Animated.timing(anim.opacity, {
+              toValue: 0,
+              duration: 1000,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setShowStarAnimation(null);
+            anim.scale.setValue(0);
+          });
         }
-    };
 
-    const handleLike = useCallback(
-        (id: number) => {
-            // 1. Find the reel FIRST (using the current 'reels' state)
-            const targetReel = reels.find((r) => r.id === id);
-
-            // 2. Trigger side-effects/animations OUTSIDE the state updater
-            if (targetReel && !targetReel.isLiked) {
-                setShowVotePopup(id);
-                votePopupAnim.setValue(0);
-                Animated.timing(votePopupAnim, {
-                    toValue: 1,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }).start(() => setShowVotePopup(null));
-            }
-
-            // 3. Keep the state updater purely for data!
-            setReels((prevReels) =>
-                prevReels.map((reel) =>
-                    reel.id === id
-                        ? {
-                              ...reel,
-                              isLiked: !reel.isLiked,
-                              likes: reel.isLiked
-                                  ? reel.likes - 1
-                                  : reel.likes + 1,
-                          }
-                        : reel,
-                ),
-            );
-        },
-        [reels, votePopupAnim],
-    );
-
-    const handleVideoTap = useCallback(async (id: number) => {
-        const videoRef = videoRefs.current.get(id);
-        if (!videoRef) return;
-
-        try {
-            const status = await videoRef.getStatusAsync();
-            if (status.isLoaded) {
-                const isPlaying = status.isPlaying;
-                videoPlayingStates.current.set(id, !isPlaying);
-
-                if (isPlaying) {
-                    await videoRef.pauseAsync();
-                    setShowPlayPauseIcon({ reelId: id, isPlaying: false });
-                } else {
-                    if (AppState.currentState === "active") {
-                        await videoRef.playAsync();
-                        setShowPlayPauseIcon({ reelId: id, isPlaying: true });
-                    }
-                }
-
-                // Animate icon fade in
-                playPauseIconOpacity.setValue(0);
-                Animated.timing(playPauseIconOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }).start();
-
-                // Clear existing timeout
-                if (playPauseIconTimeout.current) {
-                    clearTimeout(playPauseIconTimeout.current);
-                }
-
-                // Hide icon after 1 second with fade out
-                playPauseIconTimeout.current = setTimeout(() => {
-                    Animated.timing(playPauseIconOpacity, {
-                        toValue: 0,
-                        duration: 200,
-                        useNativeDriver: true,
-                    }).start(() => {
-                        setShowPlayPauseIcon(null);
-                    });
-                }, 1000);
-            }
-        } catch (error) {
-            console.error("Error toggling video playback:", error);
-        }
-    }, []);
-
-    const handleDoubleTap = useCallback(
-        (id: number) => {
-            const now = Date.now();
-            const DOUBLE_TAP_DELAY = 300;
-
-            if (
-                now - lastTap.current.time < DOUBLE_TAP_DELAY &&
-                lastTap.current.id === id
-            ) {
-                const targetReel = reels.find((r) => r.id === id);
-
-                // Trigger animations first
-                if (targetReel && !targetReel.isLiked) {
-                    if (!starAnimations.current.has(id)) {
-                        starAnimations.current.set(id, {
-                            scale: new Animated.Value(0),
-                            opacity: new Animated.Value(0),
-                        });
-                    }
-
-                    const anim = starAnimations.current.get(id)!;
-                    setShowStarAnimation(id);
-                    anim.scale.setValue(0);
-                    anim.opacity.setValue(1);
-
-                    Animated.parallel([
-                        Animated.spring(anim.scale, {
-                            toValue: 1.2,
-                            useNativeDriver: true,
-                            tension: 50,
-                            friction: 3,
-                        }),
-                        Animated.timing(anim.opacity, {
-                            toValue: 0,
-                            duration: 1000,
-                            useNativeDriver: true,
-                        }),
-                    ]).start(() => {
-                        setShowStarAnimation(null);
-                        anim.scale.setValue(0);
-                    });
-                }
-
-                // Then update state purely
-                setReels((prevReels) =>
-                    prevReels.map((r) =>
-                        r.id === id && !r.isLiked
-                            ? { ...r, isLiked: true, likes: r.likes + 1 }
-                            : r,
-                    ),
-                );
-
-                lastTap.current = { time: 0, id: null };
-            } else {
-                lastTap.current = { time: now, id };
-            }
-        },
-        [reels],
-    );
-
-    const handleSave = useCallback((id: number) => {
+        // Then update state purely
         setReels((prevReels) =>
-            prevReels.map((reel) =>
-                reel.id === id
-                    ? {
-                          ...reel,
-                          isSaved: !reel.isSaved,
-                          saves: reel.isSaved
-                              ? (reel.saves || 0) - 1
-                              : (reel.saves || 0) + 1,
-                      }
-                    : reel,
-            ),
+          prevReels.map((r) =>
+            r.id === id && !r.isLiked ? { ...r, isLiked: true, likes: r.likes + 1 } : r
+          )
         );
-    }, []);
 
-    const tabs = [
-        { name: "Home", icon: HomeIconSVG, label: "" },
-        { name: "Reel", icon: ReelIconSVG, label: "GullyReel" },
-        { name: "Upload", icon: null, label: "UPLOAD" },
-        { name: "Search", icon: SearchIconSVG, label: "" },
-        { name: "MyFame", icon: UserIconSVG, label: "" },
-    ];
+        lastTap.current = { time: 0, id: null };
+      } else {
+        lastTap.current = { time: now, id };
+      }
+    },
+    [reels]
+  );
 
-    const renderReel = useCallback(
-        ({
-            item: reel,
-            index,
-        }: {
-            item: (typeof reelData)[0];
-            index: number;
-        }) => {
-            const isVisible = currentVisibleIndex === index;
-            const anim = starAnimations.current.get(reel.id);
-            const showAnimation =
-                showStarAnimation === reel.id && isVisible && anim;
-            const shouldLoadVideo =
-                isFocused &&
-                currentVisibleIndex !== null &&
-                Math.abs(currentVisibleIndex - index) <= 1;
-            return (
-                <View style={styles.reelContainer}>
-                    {/* Reel Video - Full Screen */}
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={() => {
-                            const now = Date.now();
-                            const DOUBLE_TAP_DELAY = 300;
-
-                            if (
-                                now - lastTap.current.time < DOUBLE_TAP_DELAY &&
-                                lastTap.current.id === reel.id
-                            ) {
-                                handleDoubleTap(reel.id);
-                                lastTap.current = { time: 0, id: null };
-                            } else {
-                                handleVideoTap(reel.id);
-                                lastTap.current = { time: now, id: reel.id };
-                            }
-                        }}
-                        style={styles.videoTouchable}
-                    >
-                        {shouldLoadVideo ? (
-                            <Video
-                                ref={(ref) => {
-                                    if (ref) {
-                                        videoRefs.current.set(reel.id, ref);
-                                    } else {
-                                        videoRefs.current.delete(reel.id);
-                                    }
-                                }}
-                                source={reel.video}
-                                style={styles.reelImage}
-                                resizeMode={ResizeMode.COVER}
-                                shouldPlay={false}
-                                isLooping={true}
-                                isMuted={false}
-                                useNativeControls={false}
-                                usePoster={false}
-                                // progressUpdateIntervalMillis={1000}
-                                onLoad={(status) => {
-                                    if (isVisible && status.isLoaded) {
-                                        const videoRef = videoRefs.current.get(
-                                            reel.id,
-                                        );
-                                        if (
-                                            videoRef &&
-                                            AppState.currentState === "active"
-                                        ) {
-                                            setTimeout(() => {
-                                                if (
-                                                    AppState.currentState ===
-                                                    "active"
-                                                ) {
-                                                    videoRef
-                                                        .playAsync()
-                                                        .catch(() => {});
-                                                }
-                                            }, 100);
-                                        }
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <View
-                                style={[
-                                    styles.reelImage,
-                                    { backgroundColor: "#111" },
-                                ]}
-                            />
-                        )}
-
-                        {/* Star Animation Overlay */}
-                        {showAnimation && (
-                            <Animated.View
-                                style={[
-                                    styles.starAnimationContainer,
-                                    {
-                                        transform: [{ scale: anim.scale }],
-                                        opacity: anim.opacity,
-                                    },
-                                ]}
-                                pointerEvents="none"
-                            >
-                                <StarIcon
-                                    filled={true}
-                                    color={THEME_COLOR}
-                                    size={80}
-                                    themeColor={THEME_COLOR}
-                                />
-                            </Animated.View>
-                        )}
-                    </TouchableOpacity>
-
-                    {/* Overlay Content */}
-                    <View style={styles.overlay} pointerEvents="box-none">
-                        {/* Gamified Quest Tracker (Top Left) */}
-                        <View style={styles.questTracker}>
-                            <Text style={styles.questIcon}>🎯</Text>
-                            <View>
-                                <Text style={styles.questTitle}>
-                                    Daily Mission
-                                </Text>
-                                <Text style={styles.questProgress}>
-                                    Vote on 5 videos (3/5)
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Top Right - Three Dots Menu Button */}
-                        <TouchableOpacity
-                            style={styles.threeDotsButton}
-                            onPress={() => {
-                                setCurrentReelForMenu(reel.id);
-                                threeDotsSlideAnim.setValue(height);
-                                setShowThreeDotsMenu(true);
-                                Animated.spring(threeDotsSlideAnim, {
-                                    toValue: 0,
-                                    useNativeDriver: true,
-                                    tension: 50,
-                                    friction: 8,
-                                }).start();
-                            }}
-                        >
-                            <ThreeDotsIcon color="#fff" size={24} />
-                        </TouchableOpacity>
-
-                        {/* RIGHT SIDE VERTICAL ICONS */}
-                        <View style={styles.rightActionContainer}>
-                            <TouchableOpacity
-                                style={styles.rightActionButton}
-                                onPress={() => {
-                                    // 1. Reset animation value to bottom of screen
-                                    slideAnim.setValue(height);
-                                    // 2. Show the modal background
-                                    setCommentModalVisible(true);
-                                    // 3. Animate the modal content sliding up into view
-                                    Animated.timing(slideAnim, {
-                                        toValue: 0,
-                                        duration: 300, // Matches the duration you use to close it
-                                        useNativeDriver: true,
-                                    }).start();
-                                }}
-                            >
-                                <CommentIcon color="#fff" size={32} />
-                                <Text style={styles.actionIconCount}>
-                                    {reel.comments}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.rightActionButton}
-                                onPress={() => {
-                                    // Pop open the Share Modal using the exact same logic
-                                    slideAnim.setValue(height);
-                                    setShareModalVisible(true);
-                                    Animated.timing(slideAnim, {
-                                        toValue: 0,
-                                        duration: 300,
-                                        useNativeDriver: true,
-                                    }).start();
-                                }}
-                            >
-                                <ShareIcon color="#fff" size={32} />
-                                <Text style={styles.actionIconCount}>
-                                    {reel.shares || 0}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {/* Download Button (Text Removed for clean UI) */}
-                            <TouchableOpacity
-                                style={styles.rightActionButton}
-                                onPress={() => {
-                                    setSelectedReelForDownload(reel);
-                                    setDownloadModalVisible(true);
-                                }}
-                            >
-                                <DownloadIcon size={32} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Play/Pause Icon Overlay */}
-                        {showPlayPauseIcon &&
-                            showPlayPauseIcon.reelId === reel.id && (
-                                <View
-                                    style={styles.playPauseIconContainer}
-                                    pointerEvents="none"
-                                >
-                                    <Animated.View
-                                        style={[
-                                            styles.playPauseIconWrapper,
-                                            { opacity: playPauseIconOpacity },
-                                        ]}
-                                    >
-                                        {showPlayPauseIcon.isPlaying ? (
-                                            <PlayIcon
-                                                size={scale(80)}
-                                                color="#fff"
-                                            />
-                                        ) : (
-                                            <PauseIcon
-                                                size={scale(80)}
-                                                color="#fff"
-                                            />
-                                        )}
-                                    </Animated.View>
-                                </View>
-                            )}
-
-                        {/* BOTTOM CONTENT AREA (Full Width layout) */}
-                        <View
-                            style={[
-                                styles.bottomContent,
-                                { bottom: BOTTOM_NAV_HEIGHT + scale(16) },
-                            ]}
-                            pointerEvents="box-none"
-                        >
-                            {/* Profile Info restored! Wrapped in a container so it doesn't overlap icons */}
-                            <View style={styles.bottomInfoContainer}>
-                                {/* Profile Row */}
-                                <View style={styles.profileRow}>
-                                    <TouchableOpacity
-                                        style={styles.profileImageContainer}
-                                    >
-                                        <Image
-                                            source={require("@assets/images/user1.png")}
-                                            style={styles.profileImage}
-                                        />
-                                        <View style={styles.followButton}>
-                                            <Text
-                                                style={styles.followButtonText}
-                                            >
-                                                +
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Text style={styles.username}>
-                                            {reel.username}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.followButtonBox}
-                                    >
-                                        <Text
-                                            style={styles.followButtonBoxText}
-                                        >
-                                            Follow
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Caption */}
-                                <View style={styles.captionContainer}>
-                                    <Text
-                                        style={styles.caption}
-                                        numberOfLines={
-                                            expandedCaptions.has(reel.id)
-                                                ? undefined
-                                                : 2
-                                        }
-                                    >
-                                        {reel.caption}
-                                    </Text>
-                                    {reel.caption.length > 100 && (
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setExpandedCaptions((prev) => {
-                                                    const newSet = new Set(
-                                                        prev,
-                                                    );
-                                                    if (newSet.has(reel.id))
-                                                        newSet.delete(reel.id);
-                                                    else newSet.add(reel.id);
-                                                    return newSet;
-                                                });
-                                            }}
-                                        >
-                                            <Text style={styles.showMoreText}>
-                                                {expandedCaptions.has(reel.id)
-                                                    ? "Show less"
-                                                    : "Show more"}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-
-                                {/* Music Row */}
-                                <View style={styles.musicRow}>
-                                    <MusicIcon color="#fff" size={16} />
-                                    <Text
-                                        style={styles.musicName}
-                                        numberOfLines={1}
-                                    >
-                                        {reel.musicName}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            {/* FULL WIDTH ACTION PILLS (Tip & Vote) */}
-                            <View style={styles.bottomButtonsRow}>
-                                {/* Tip Button Wrapper */}
-                                <View style={styles.flexButtonWrapper}>
-                                    <TouchableOpacity
-                                        style={styles.tipButton}
-                                        onPress={() => {
-                                            setCurrentTipReelId(reel.id);
-                                            setTipModalVisible(true);
-                                        }}
-                                    >
-                                        <CoinIcon size={16} color="#fff" />
-                                        <Text style={styles.tipButtonText}>
-                                            Tip
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Vote Button Wrapper with Floating Text */}
-                                <View style={styles.flexButtonWrapper}>
-                                    {/* Floating Gamified Text */}
-                                    {showVotePopup === reel.id && (
-                                        <Animated.View
-                                            style={[
-                                                styles.floatingXP,
-                                                {
-                                                    opacity:
-                                                        votePopupAnim.interpolate(
-                                                            {
-                                                                inputRange: [
-                                                                    0, 0.2, 0.8,
-                                                                    1,
-                                                                ],
-                                                                outputRange: [
-                                                                    0, 1, 1, 0,
-                                                                ],
-                                                            },
-                                                        ),
-                                                    transform: [
-                                                        {
-                                                            translateY:
-                                                                votePopupAnim.interpolate(
-                                                                    {
-                                                                        inputRange:
-                                                                            [
-                                                                                0,
-                                                                                1,
-                                                                            ],
-                                                                        outputRange:
-                                                                            [
-                                                                                0,
-                                                                                -40,
-                                                                            ],
-                                                                    },
-                                                                ),
-                                                        },
-                                                        {
-                                                            scale: votePopupAnim.interpolate(
-                                                                {
-                                                                    inputRange:
-                                                                        [
-                                                                            0,
-                                                                            0.2,
-                                                                            1,
-                                                                        ],
-                                                                    outputRange:
-                                                                        [
-                                                                            0.5,
-                                                                            1.2,
-                                                                            1,
-                                                                        ],
-                                                                },
-                                                            ),
-                                                        },
-                                                    ],
-                                                },
-                                            ]}
-                                            pointerEvents="none"
-                                        >
-                                            <Text style={styles.floatingXPText}>
-                                                +50 FAME! 🔥
-                                            </Text>
-                                        </Animated.View>
-                                    )}
-
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.tipButton,
-                                            reel.isLiked
-                                                ? styles.voteButtonActive
-                                                : styles.voteButtonInactive,
-                                        ]}
-                                        onPress={() => handleLike(reel.id)}
-                                    >
-                                        <StarIcon
-                                            filled={reel.isLiked}
-                                            size={18}
-                                            color={
-                                                reel.isLiked
-                                                    ? "#fff"
-                                                    : THEME_COLOR
-                                            }
-                                            themeColor={
-                                                reel.isLiked
-                                                    ? "#fff"
-                                                    : THEME_COLOR
-                                            }
-                                        />
-                                        <Text
-                                            style={[
-                                                styles.tipButtonText,
-                                                {
-                                                    color: reel.isLiked
-                                                        ? "#fff"
-                                                        : THEME_COLOR,
-                                                },
-                                            ]}
-                                        >
-                                            {reel.isLiked ? "Voted" : "Vote"} •{" "}
-                                            {reel.likes}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            );
-        },
-        [
-            currentVisibleIndex,
-            showStarAnimation,
-            showVotePopup, // <-- Make sure this is in your dependencies!
-            handleDoubleTap,
-            handleLike,
-            handleSave,
-        ],
+  const handleSave = useCallback((id: number) => {
+    setReels((prevReels) =>
+      prevReels.map((reel) =>
+        reel.id === id
+          ? {
+              ...reel,
+              isSaved: !reel.isSaved,
+              saves: reel.isSaved ? (reel.saves || 0) - 1 : (reel.saves || 0) + 1,
+            }
+          : reel
+      )
     );
+  }, []);
 
-    return (
-        <SafeAreaView style={styles.container} edges={[]}>
-            <StatusBar
-                barStyle="light-content"
-                backgroundColor="#000"
-                translucent
-            />
+  const tabs = [
+    { name: "Home", icon: HomeIconSVG, label: "" },
+    { name: "Reel", icon: ReelIconSVG, label: "GullyReel" },
+    { name: "Upload", icon: null, label: "UPLOAD" },
+    { name: "Search", icon: SearchIconSVG, label: "" },
+    { name: "MyFame", icon: UserIconSVG, label: "" },
+  ];
 
-            {/* Back Button */}
-            <View style={styles.backButtonContainer}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={handleBackPress}
-                >
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path
-                            d="M19 12H5M12 19l-7-7 7-7"
-                            stroke="#fff"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                </TouchableOpacity>
-            </View>
+  const renderReel = useCallback(
+    ({ item: reel, index }: { item: (typeof reelData)[0]; index: number }) => {
+      const isVisible = currentVisibleIndex === index;
+      const anim = starAnimations.current.get(reel.id);
+      const showAnimation = showStarAnimation === reel.id && isVisible && anim;
+      const shouldLoadVideo =
+        isFocused && currentVisibleIndex !== null && Math.abs(currentVisibleIndex - index) <= 1;
+      return (
+        <View style={styles.reelContainer}>
+          {/* Reel Video - Full Screen */}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              const now = Date.now();
+              const DOUBLE_TAP_DELAY = 300;
 
-            <FlatList
-                ref={flatListRef}
-                data={memoizedReels}
-                renderItem={renderReel}
-                keyExtractor={(item) => item.id.toString()}
-                pagingEnabled
-                showsVerticalScrollIndicator={false}
-                snapToInterval={height}
-                snapToAlignment="start"
-                decelerationRate="fast"
-                contentContainerStyle={styles.flatListContent}
-                getItemLayout={(data: any, index: number) => ({
-                    length: height,
-                    offset: height * index,
-                    index,
-                })}
-                onViewableItemsChanged={onViewableItemsChangedRef.current}
-                viewabilityConfig={{
-                    itemVisiblePercentThreshold: 50,
+              if (now - lastTap.current.time < DOUBLE_TAP_DELAY && lastTap.current.id === reel.id) {
+                handleDoubleTap(reel.id);
+                lastTap.current = { time: 0, id: null };
+              } else {
+                handleVideoTap(reel.id);
+                lastTap.current = { time: now, id: reel.id };
+              }
+            }}
+            style={styles.videoTouchable}
+          >
+            {shouldLoadVideo ? (
+              <Video
+                ref={(ref) => {
+                  if (ref) {
+                    videoRefs.current.set(reel.id, ref);
+                  } else {
+                    videoRefs.current.delete(reel.id);
+                  }
                 }}
-                windowSize={1}
-                maxToRenderPerBatch={1}
-                updateCellsBatchingPeriod={50}
-                removeClippedSubviews={true}
-                initialNumToRender={1}
-                maintainVisibleContentPosition={null}
-                onScrollToIndexFailed={(info) => {
-                    const wait = new Promise((resolve) =>
-                        setTimeout(resolve, 500),
-                    );
-                    wait.then(() => {
-                        flatListRef.current?.scrollToIndex({
-                            index: info.index,
-                            animated: false,
-                        });
-                    });
-                }}
-            />
-
-            {/* Comment Modal */}
-            <Modal
-                visible={commentModalVisible}
-                transparent={true}
-                animationType="none"
-                onRequestClose={() => {
-                    Animated.timing(slideAnim, {
-                        toValue: height,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }).start(() => setCommentModalVisible(false));
-                }}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => {
-                        Animated.timing(slideAnim, {
-                            toValue: height,
-                            duration: 300,
-                            useNativeDriver: true,
-                        }).start(() => setCommentModalVisible(false));
-                    }}
-                >
-                    <Animated.View
-                        style={[
-                            styles.gamifiedModal,
-                            { transform: [{ translateY: slideAnim }] },
-                        ]}
-                    >
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                            style={{ flex: 1 }}
-                        >
-                            <View style={styles.handleBar} />
-
-                            {/* Header - No Borders */}
-                            <View style={styles.commentHeader}>
-                                <Text style={styles.commandPanelTitle}>
-                                    COMMENTS
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        Animated.timing(slideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() =>
-                                            setCommentModalVisible(false),
-                                        );
-                                    }}
-                                >
-                                    <Text style={styles.closeButton}>✕</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                                <KeyboardAvoidingView
-                                    behavior={
-                                        Platform.OS === "ios"
-                                            ? "padding"
-                                            : undefined
-                                    }
-                                    style={{ flex: 1 }}
-                                >
-                                    <ScrollView
-                                        style={styles.commentsList}
-                                        contentContainerStyle={{
-                                            flexGrow: 1,
-                                            paddingBottom: 20,
-                                        }}
-                                        showsVerticalScrollIndicator={false}
-                                        keyboardShouldPersistTaps="handled"
-                                    >
-                                        {[
-                                            {
-                                                id: 1,
-                                                username: "@user1",
-                                                level: 12,
-                                                comment: "Amazing! 🔥",
-                                                likes: 12,
-                                                isLiked: false,
-                                                replies: [],
-                                            },
-                                            {
-                                                id: 2,
-                                                username: "@user2",
-                                                level: 8,
-                                                comment: "Love this! ❤️",
-                                                likes: 8,
-                                                isLiked: true,
-                                                replies: [
-                                                    {
-                                                        id: 4,
-                                                        username: "@user4",
-                                                        level: 3,
-                                                        comment:
-                                                            "I agree! So good!",
-                                                        likes: 3,
-                                                        isLiked: false,
-                                                    },
-                                                ],
-                                            },
-                                            {
-                                                id: 3,
-                                                username: "@user3",
-                                                level: 15,
-                                                comment: "So talented! 👏",
-                                                likes: 5,
-                                                isLiked: false,
-                                                replies: [],
-                                            },
-                                        ].map((comment) => {
-                                            const commentLikeData =
-                                                commentLikes.get(
-                                                    comment.id,
-                                                ) || {
-                                                    likes: comment.likes,
-                                                    isLiked: comment.isLiked,
-                                                };
-                                            return (
-                                                <View
-                                                    key={comment.id}
-                                                    style={
-                                                        styles.cleanCommentRow
-                                                    }
-                                                >
-                                                    <View
-                                                        style={
-                                                            styles.commentItemInner
-                                                        }
-                                                    >
-                                                        <Image
-                                                            source={require("@assets/images/user1.png")}
-                                                            style={
-                                                                styles.commentAvatar
-                                                            }
-                                                        />
-                                                        <View
-                                                            style={
-                                                                styles.commentContent
-                                                            }
-                                                        >
-                                                            <View
-                                                                style={
-                                                                    styles.usernameRow
-                                                                }
-                                                            >
-                                                                <Text
-                                                                    style={
-                                                                        styles.commentUsername
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        comment.username
-                                                                    }
-                                                                </Text>
-                                                                <Text
-                                                                    style={
-                                                                        styles.levelText
-                                                                    }
-                                                                >
-                                                                    Lv.
-                                                                    {
-                                                                        comment.level
-                                                                    }
-                                                                </Text>
-                                                            </View>
-                                                            <Text
-                                                                style={
-                                                                    styles.commentText
-                                                                }
-                                                            >
-                                                                {
-                                                                    comment.comment
-                                                                }
-                                                            </Text>
-
-                                                            <View
-                                                                style={
-                                                                    styles.commentActions
-                                                                }
-                                                            >
-                                                                <Text
-                                                                    style={
-                                                                        styles.commentTime
-                                                                    }
-                                                                >
-                                                                    2h
-                                                                </Text>
-                                                                <TouchableOpacity
-                                                                    onPress={() => {
-                                                                        if (
-                                                                            replyingToComment ===
-                                                                            comment.id
-                                                                        ) {
-                                                                            setReplyingToComment(
-                                                                                null,
-                                                                            );
-                                                                            setCommentText(
-                                                                                "",
-                                                                            );
-                                                                        } else {
-                                                                            setReplyingToComment(
-                                                                                comment.id,
-                                                                            );
-                                                                            setCommentText(
-                                                                                `@${comment.username} `,
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <Text
-                                                                        style={
-                                                                            styles.commentReply
-                                                                        }
-                                                                    >
-                                                                        {replyingToComment ===
-                                                                        comment.id
-                                                                            ? "Cancel"
-                                                                            : "Reply"}
-                                                                    </Text>
-                                                                </TouchableOpacity>
-                                                            </View>
-
-                                                            {/* Clean text toggle */}
-                                                            {comment.replies &&
-                                                                comment.replies
-                                                                    .length >
-                                                                    0 && (
-                                                                    <TouchableOpacity
-                                                                        onPress={() => {
-                                                                            setExpandedReplies(
-                                                                                (
-                                                                                    prev,
-                                                                                ) => {
-                                                                                    const newSet =
-                                                                                        new Set(
-                                                                                            prev,
-                                                                                        );
-                                                                                    if (
-                                                                                        newSet.has(
-                                                                                            comment.id,
-                                                                                        )
-                                                                                    )
-                                                                                        newSet.delete(
-                                                                                            comment.id,
-                                                                                        );
-                                                                                    else
-                                                                                        newSet.add(
-                                                                                            comment.id,
-                                                                                        );
-                                                                                    return newSet;
-                                                                                },
-                                                                            );
-                                                                        }}
-                                                                        style={
-                                                                            styles.viewRepliesButton
-                                                                        }
-                                                                    >
-                                                                        <Text
-                                                                            style={
-                                                                                styles.viewRepliesText
-                                                                            }
-                                                                        >
-                                                                            {expandedReplies.has(
-                                                                                comment.id,
-                                                                            )
-                                                                                ? `—  Hide ${comment.replies.length} ${comment.replies.length === 1 ? "reply" : "replies"}`
-                                                                                : `—  View ${comment.replies.length} ${comment.replies.length === 1 ? "reply" : "replies"}`}
-                                                                        </Text>
-                                                                    </TouchableOpacity>
-                                                                )}
-                                                        </View>
-
-                                                        <TouchableOpacity
-                                                            style={
-                                                                styles.commentLikeButton
-                                                            }
-                                                            onPress={() => {
-                                                                setCommentLikes(
-                                                                    (prev) => {
-                                                                        const newMap =
-                                                                            new Map(
-                                                                                prev,
-                                                                            );
-                                                                        const current =
-                                                                            newMap.get(
-                                                                                comment.id,
-                                                                            ) || {
-                                                                                likes: comment.likes,
-                                                                                isLiked:
-                                                                                    comment.isLiked,
-                                                                            };
-                                                                        newMap.set(
-                                                                            comment.id,
-                                                                            {
-                                                                                likes: current.isLiked
-                                                                                    ? current.likes -
-                                                                                      1
-                                                                                    : current.likes +
-                                                                                      1,
-                                                                                isLiked:
-                                                                                    !current.isLiked,
-                                                                            },
-                                                                        );
-                                                                        return newMap;
-                                                                    },
-                                                                );
-                                                            }}
-                                                        >
-                                                            <StarIcon
-                                                                filled={
-                                                                    commentLikeData.isLiked
-                                                                }
-                                                                color="#666"
-                                                                size={16}
-                                                                themeColor={
-                                                                    THEME_COLOR
-                                                                }
-                                                            />
-                                                            <Text
-                                                                style={[
-                                                                    styles.commentLikeCount,
-                                                                    commentLikeData.isLiked && {
-                                                                        color: THEME_COLOR,
-                                                                    },
-                                                                ]}
-                                                            >
-                                                                {
-                                                                    commentLikeData.likes
-                                                                }
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    </View>
-
-                                                    {/* Nested Replies - Indented without borders */}
-                                                    {expandedReplies.has(
-                                                        comment.id,
-                                                    ) &&
-                                                        comment.replies &&
-                                                        comment.replies.length >
-                                                            0 && (
-                                                            <View
-                                                                style={
-                                                                    styles.repliesContainer
-                                                                }
-                                                            >
-                                                                {comment.replies.map(
-                                                                    (reply) => {
-                                                                        const replyLikeData =
-                                                                            commentLikes.get(
-                                                                                reply.id,
-                                                                            ) || {
-                                                                                likes: reply.likes,
-                                                                                isLiked:
-                                                                                    reply.isLiked,
-                                                                            };
-                                                                        return (
-                                                                            <View
-                                                                                key={
-                                                                                    reply.id
-                                                                                }
-                                                                                style={
-                                                                                    styles.cleanReplyRow
-                                                                                }
-                                                                            >
-                                                                                <Image
-                                                                                    source={require("@assets/images/user1.png")}
-                                                                                    style={
-                                                                                        styles.replyAvatar
-                                                                                    }
-                                                                                />
-                                                                                <View
-                                                                                    style={
-                                                                                        styles.replyContent
-                                                                                    }
-                                                                                >
-                                                                                    <View
-                                                                                        style={
-                                                                                            styles.usernameRow
-                                                                                        }
-                                                                                    >
-                                                                                        <Text
-                                                                                            style={
-                                                                                                styles.replyUsername
-                                                                                            }
-                                                                                        >
-                                                                                            {
-                                                                                                reply.username
-                                                                                            }
-                                                                                        </Text>
-                                                                                        <Text
-                                                                                            style={
-                                                                                                styles.levelTextSub
-                                                                                            }
-                                                                                        >
-                                                                                            Lv.
-                                                                                            {
-                                                                                                reply.level
-                                                                                            }
-                                                                                        </Text>
-                                                                                    </View>
-                                                                                    <Text
-                                                                                        style={
-                                                                                            styles.replyText
-                                                                                        }
-                                                                                    >
-                                                                                        {
-                                                                                            reply.comment
-                                                                                        }
-                                                                                    </Text>
-                                                                                    <View
-                                                                                        style={
-                                                                                            styles.replyActions
-                                                                                        }
-                                                                                    >
-                                                                                        <Text
-                                                                                            style={
-                                                                                                styles.commentTime
-                                                                                            }
-                                                                                        >
-                                                                                            1h
-                                                                                        </Text>
-                                                                                    </View>
-                                                                                </View>
-                                                                                <TouchableOpacity
-                                                                                    style={
-                                                                                        styles.commentLikeButton
-                                                                                    }
-                                                                                    onPress={() => {
-                                                                                        setCommentLikes(
-                                                                                            (
-                                                                                                prev,
-                                                                                            ) => {
-                                                                                                const newMap =
-                                                                                                    new Map(
-                                                                                                        prev,
-                                                                                                    );
-                                                                                                const current =
-                                                                                                    newMap.get(
-                                                                                                        reply.id,
-                                                                                                    ) || {
-                                                                                                        likes: reply.likes,
-                                                                                                        isLiked:
-                                                                                                            reply.isLiked,
-                                                                                                    };
-                                                                                                newMap.set(
-                                                                                                    reply.id,
-                                                                                                    {
-                                                                                                        likes: current.isLiked
-                                                                                                            ? current.likes -
-                                                                                                              1
-                                                                                                            : current.likes +
-                                                                                                              1,
-                                                                                                        isLiked:
-                                                                                                            !current.isLiked,
-                                                                                                    },
-                                                                                                );
-                                                                                                return newMap;
-                                                                                            },
-                                                                                        );
-                                                                                    }}
-                                                                                >
-                                                                                    <StarIcon
-                                                                                        filled={
-                                                                                            replyLikeData.isLiked
-                                                                                        }
-                                                                                        color="#666"
-                                                                                        size={
-                                                                                            14
-                                                                                        }
-                                                                                        themeColor={
-                                                                                            THEME_COLOR
-                                                                                        }
-                                                                                    />
-                                                                                    <Text
-                                                                                        style={[
-                                                                                            styles.commentLikeCount,
-                                                                                            replyLikeData.isLiked && {
-                                                                                                color: THEME_COLOR,
-                                                                                            },
-                                                                                        ]}
-                                                                                    >
-                                                                                        {
-                                                                                            replyLikeData.likes
-                                                                                        }
-                                                                                    </Text>
-                                                                                </TouchableOpacity>
-                                                                            </View>
-                                                                        );
-                                                                    },
-                                                                )}
-                                                            </View>
-                                                        )}
-                                                </View>
-                                            );
-                                        })}
-                                    </ScrollView>
-
-                                    {/* Input area remains exactly the same */}
-                                    <View style={styles.gamifiedInputWrapper}>
-                                        <View
-                                            style={
-                                                styles.gamifiedInputContainer
-                                            }
-                                        >
-                                            {/* ... */}
-                                        </View>
-                                    </View>
-                                </KeyboardAvoidingView>
-                            </View>
-                        </TouchableOpacity>
-                    </Animated.View>
-                </TouchableOpacity>
-            </Modal>
-            {/* Share Modal */}
-            <Modal
-                visible={shareModalVisible}
-                transparent={true}
-                animationType="none"
-                onRequestClose={() => {
-                    Animated.timing(slideAnim, {
-                        toValue: height,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }).start(() => {
-                        setShareModalVisible(false);
-                        setShowMoreShareOptions(false);
-                    });
-                }}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => {
-                        Animated.timing(slideAnim, {
-                            toValue: height,
-                            duration: 300,
-                            useNativeDriver: true,
-                        }).start(() => {
-                            setShareModalVisible(false);
-                            setShowMoreShareOptions(false);
-                        });
-                    }}
-                >
-                    <Animated.View
-                        style={[
-                            styles.shareModal,
-                            {
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                        >
-                            {/* Handle Bar */}
-                            <View style={styles.handleBar} />
-
-                            {/* Header */}
-                            <View style={styles.shareHeader}>
-                                <Text style={styles.shareHeaderTitle}>
-                                    Share
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        Animated.timing(slideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() => {
-                                            setShareModalVisible(false);
-                                            setShowMoreShareOptions(false);
-                                        });
-                                    }}
-                                >
-                                    <Text style={styles.closeButton}>✕</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Friends List */}
-                            <View style={styles.friendsSection}>
-                                <Text style={styles.sectionTitle}>Send to</Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.friendsList}
-                                >
-                                    {[
-                                        {
-                                            id: 1,
-                                            name: "Friend 1",
-                                            avatar: require("@assets/images/user1.png"),
-                                        },
-                                        {
-                                            id: 2,
-                                            name: "Friend 2",
-                                            avatar: require("@assets/images/user2.png"),
-                                        },
-                                        {
-                                            id: 3,
-                                            name: "Friend 3",
-                                            avatar: require("@assets/images/user1.png"),
-                                        },
-                                        {
-                                            id: 4,
-                                            name: "Friend 4",
-                                            avatar: require("@assets/images/user2.png"),
-                                        },
-                                    ].map((friend) => (
-                                        <TouchableOpacity
-                                            key={friend.id}
-                                            style={styles.friendItem}
-                                        >
-                                            <Image
-                                                source={friend.avatar}
-                                                style={styles.friendAvatar}
-                                            />
-                                            <Text
-                                                style={styles.friendName}
-                                                numberOfLines={1}
-                                            >
-                                                {friend.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            </View>
-
-                            {/* Share Options */}
-                            <View style={styles.shareOptionsSection}>
-                                <Text style={styles.sectionTitle}>
-                                    Share to
-                                </Text>
-                                <ScrollView
-                                    ref={shareScrollViewRef}
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.shareOptionsList}
-                                >
-                                    {/* Initial options: Copy, WhatsApp, WhatsApp Status, Instagram */}
-                                    <TouchableOpacity
-                                        style={styles.shareOption}
-                                        onPress={() => handleShare("copy")}
-                                    >
-                                        <View
-                                            style={[
-                                                styles.shareOptionIconCircle,
-                                                { backgroundColor: "#66620" },
-                                            ]}
-                                        >
-                                            <Image
-                                                source={require("@assets/ShareIcon/copy.png")}
-                                                style={styles.shareIconImage}
-                                                resizeMode="contain"
-                                            />
-                                        </View>
-                                        <Text
-                                            style={styles.shareOptionName}
-                                            numberOfLines={1}
-                                        >
-                                            Copy Link
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.shareOption}
-                                        onPress={() => handleShare("whatsapp")}
-                                    >
-                                        <View
-                                            style={[
-                                                styles.shareOptionIconCircle,
-                                                {
-                                                    backgroundColor:
-                                                        "#25D36620",
-                                                },
-                                            ]}
-                                        >
-                                            <Image
-                                                source={require("@assets/ShareIcon/whatsapp.png")}
-                                                style={styles.shareIconImage}
-                                                resizeMode="contain"
-                                            />
-                                        </View>
-                                        <Text
-                                            style={styles.shareOptionName}
-                                            numberOfLines={1}
-                                        >
-                                            WhatsApp
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.shareOption}
-                                        onPress={() =>
-                                            handleShare("whatsappstatus")
-                                        }
-                                    >
-                                        <View
-                                            style={[
-                                                styles.shareOptionIconCircle,
-                                                {
-                                                    backgroundColor:
-                                                        "#25D36620",
-                                                },
-                                            ]}
-                                        >
-                                            <Image
-                                                source={require("@assets/ShareIcon/status.png")}
-                                                style={styles.shareIconImage}
-                                                resizeMode="contain"
-                                            />
-                                        </View>
-                                        <Text
-                                            style={styles.shareOptionName}
-                                            numberOfLines={1}
-                                        >
-                                            Status
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.shareOption}
-                                        onPress={() => handleShare("instagram")}
-                                    >
-                                        <View
-                                            style={[
-                                                styles.shareOptionIconCircle,
-                                                {
-                                                    backgroundColor:
-                                                        "#E4405F20",
-                                                },
-                                            ]}
-                                        >
-                                            <Image
-                                                source={require("@assets/ShareIcon/instagram.png")}
-                                                style={styles.shareIconImage}
-                                                resizeMode="contain"
-                                            />
-                                        </View>
-                                        <Text
-                                            style={styles.shareOptionName}
-                                            numberOfLines={1}
-                                        >
-                                            Instagram
-                                        </Text>
-                                    </TouchableOpacity>
-
-                                    {/* More options: Snapchat, Download, Facebook, Twitter - shown when More is clicked */}
-                                    {showMoreShareOptions && (
-                                        <>
-                                            <TouchableOpacity
-                                                style={styles.shareOption}
-                                                onPress={() =>
-                                                    handleShare("snapchat")
-                                                }
-                                            >
-                                                <View
-                                                    style={[
-                                                        styles.shareOptionIconCircle,
-                                                        {
-                                                            backgroundColor:
-                                                                "#FFEC0620",
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Image
-                                                        source={require("@assets/ShareIcon/snapchat.png")}
-                                                        style={
-                                                            styles.shareIconImage
-                                                        }
-                                                        resizeMode="contain"
-                                                    />
-                                                </View>
-                                                <Text
-                                                    style={
-                                                        styles.shareOptionName
-                                                    }
-                                                    numberOfLines={1}
-                                                >
-                                                    Snapchat
-                                                </Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                style={styles.shareOption}
-                                                onPress={() =>
-                                                    handleShare("download")
-                                                }
-                                            >
-                                                <View
-                                                    style={[
-                                                        styles.shareOptionIconCircle,
-                                                        {
-                                                            backgroundColor:
-                                                                "#66620",
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Image
-                                                        source={require("@assets/ShareIcon/download.svg")}
-                                                        style={
-                                                            styles.shareIconImage
-                                                        }
-                                                        resizeMode="contain"
-                                                    />
-                                                </View>
-                                                <Text
-                                                    style={
-                                                        styles.shareOptionName
-                                                    }
-                                                    numberOfLines={1}
-                                                >
-                                                    Download
-                                                </Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                style={styles.shareOption}
-                                                onPress={() =>
-                                                    handleShare("facebook")
-                                                }
-                                            >
-                                                <View
-                                                    style={[
-                                                        styles.shareOptionIconCircle,
-                                                        {
-                                                            backgroundColor:
-                                                                "#485a9620",
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Image
-                                                        source={require("@assets/ShareIcon/facebook.svg")}
-                                                        style={
-                                                            styles.shareIconImage
-                                                        }
-                                                        resizeMode="contain"
-                                                    />
-                                                </View>
-                                                <Text
-                                                    style={
-                                                        styles.shareOptionName
-                                                    }
-                                                    numberOfLines={1}
-                                                >
-                                                    Facebook
-                                                </Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                style={styles.shareOption}
-                                                onPress={() =>
-                                                    handleShare("twitter")
-                                                }
-                                            >
-                                                <View
-                                                    style={[
-                                                        styles.shareOptionIconCircle,
-                                                        {
-                                                            backgroundColor:
-                                                                "#1DA1F220",
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Image
-                                                        source={require("@assets/ShareIcon/twitter.png")}
-                                                        style={
-                                                            styles.shareIconImage
-                                                        }
-                                                        resizeMode="contain"
-                                                    />
-                                                </View>
-                                                <Text
-                                                    style={
-                                                        styles.shareOptionName
-                                                    }
-                                                    numberOfLines={1}
-                                                >
-                                                    Twitter
-                                                </Text>
-                                            </TouchableOpacity>
-                                        </>
-                                    )}
-
-                                    {/* More Button - only show if more options are not visible */}
-                                    {!showMoreShareOptions && (
-                                        <TouchableOpacity
-                                            style={styles.shareOption}
-                                            onPress={() => {
-                                                setShowMoreShareOptions(true);
-                                                // Scroll to show the new icons when "More" is clicked
-                                                setTimeout(() => {
-                                                    shareScrollViewRef.current?.scrollToEnd(
-                                                        {
-                                                            animated: true,
-                                                        },
-                                                    );
-                                                }, 100);
-                                            }}
-                                        >
-                                            <View
-                                                style={[
-                                                    styles.shareOptionIconCircle,
-                                                    {
-                                                        backgroundColor:
-                                                            "#66620",
-                                                    },
-                                                ]}
-                                            >
-                                                <Text
-                                                    style={
-                                                        styles.shareOptionIconText
-                                                    }
-                                                >
-                                                    ⋯
-                                                </Text>
-                                            </View>
-                                            <Text
-                                                style={styles.shareOptionName}
-                                                numberOfLines={1}
-                                            >
-                                                More
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </ScrollView>
-                            </View>
-                        </TouchableOpacity>
-                    </Animated.View>
-                </TouchableOpacity>
-            </Modal>
-
-            {/* Three Dots Menu Modal - Bottom Overlay */}
-            <Modal
-                visible={showThreeDotsMenu}
-                transparent={true}
-                animationType="none"
-                onRequestClose={() => {
-                    Animated.timing(threeDotsSlideAnim, {
-                        toValue: height,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }).start(() => setShowThreeDotsMenu(false));
-                }}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => {
-                        Animated.timing(threeDotsSlideAnim, {
-                            toValue: height,
-                            duration: 300,
-                            useNativeDriver: true,
-                        }).start(() => setShowThreeDotsMenu(false));
-                    }}
-                >
-                    <Animated.View
-                        style={[
-                            styles.commandPanelModal,
-                            { transform: [{ translateY: threeDotsSlideAnim }] },
-                        ]}
-                    >
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                        >
-                            <View style={styles.handleBar} />
-
-                            <Text style={styles.commandPanelTitle}>
-                                OPTIONS
-                            </Text>
-
-                            <View style={styles.commandGrid}>
-                                <TouchableOpacity
-                                    style={styles.commandItem}
-                                    onPress={() => {
-                                        Animated.timing(threeDotsSlideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() => {
-                                            setShowThreeDotsMenu(false);
-                                            if (currentReelForMenu !== null) {
-                                                const reelIndex =
-                                                    reels.findIndex(
-                                                        (r) =>
-                                                            r.id ===
-                                                            currentReelForMenu,
-                                                    );
-                                                if (reelIndex >= 0) {
-                                                    setReelViewerInitialIndex(
-                                                        reelIndex,
-                                                    );
-                                                    setReelViewerVisible(true);
-                                                }
-                                            }
-                                        });
-                                    }}
-                                >
-                                    <View style={styles.commandIconBox}>
-                                        <FullScreenIcon
-                                            color="#EC9A15"
-                                            size={22}
-                                        />
-                                    </View>
-                                    <Text style={styles.commandItemText}>
-                                        Full Screen
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={styles.commandItem}
-                                    onPress={() => {
-                                        Animated.timing(threeDotsSlideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() => {
-                                            setShowThreeDotsMenu(false);
-                                            Alert.alert(
-                                                "Interested",
-                                                "Marked as interested! +5 XP",
-                                            );
-                                        });
-                                    }}
-                                >
-                                    <View style={styles.commandIconBox}>
-                                        <HeartIcon color="#EC9A15" size={22} />
-                                    </View>
-                                    <Text style={styles.commandItemText}>
-                                        Interested
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={styles.commandItem}
-                                    onPress={() => {
-                                        Animated.timing(threeDotsSlideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() => {
-                                            setShowThreeDotsMenu(false);
-                                            Alert.alert(
-                                                "Not Interested",
-                                                "We'll show you less content like this.",
-                                            );
-                                        });
-                                    }}
-                                >
-                                    <View style={styles.commandIconBox}>
-                                        <BlockIcon color="#fff" size={22} />
-                                    </View>
-                                    <Text style={styles.commandItemText}>
-                                        Not Interested
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={[
-                                        styles.commandItem,
-                                        styles.commandItemDanger,
-                                    ]}
-                                    onPress={() => {
-                                        Animated.timing(threeDotsSlideAnim, {
-                                            toValue: height,
-                                            duration: 300,
-                                            useNativeDriver: true,
-                                        }).start(() => {
-                                            setShowThreeDotsMenu(false);
-                                            Alert.alert(
-                                                "Report",
-                                                "Report this content",
-                                                [
-                                                    {
-                                                        text: "Cancel",
-                                                        style: "cancel",
-                                                    },
-                                                    {
-                                                        text: "Report",
-                                                        style: "destructive",
-                                                        onPress: () =>
-                                                            Alert.alert(
-                                                                "Reported",
-                                                                "Thank you for reporting.",
-                                                            ),
-                                                    },
-                                                ],
-                                            );
-                                        });
-                                    }}
-                                >
-                                    <View
-                                        style={[
-                                            styles.commandIconBox,
-                                            {
-                                                backgroundColor:
-                                                    "rgba(255, 59, 48, 0.15)",
-                                            },
-                                        ]}
-                                    >
-                                        <FlagIcon size={22} />
-                                    </View>
-                                    <Text
-                                        style={[
-                                            styles.commandItemText,
-                                            styles.commandTextDanger,
-                                        ]}
-                                    >
-                                        Report
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.commandCancelButton}
-                                onPress={() => {
-                                    Animated.timing(threeDotsSlideAnim, {
-                                        toValue: height,
-                                        duration: 300,
-                                        useNativeDriver: true,
-                                    }).start(() => setShowThreeDotsMenu(false));
-                                }}
-                            >
-                                <Text style={styles.commandCancelText}>
-                                    Cancel
-                                </Text>
-                            </TouchableOpacity>
-                        </TouchableOpacity>
-                    </Animated.View>
-                </TouchableOpacity>
-            </Modal>
-            <Modal
-                visible={downloadModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() =>
-                    !isDownloading && setDownloadModalVisible(false)
-                }
-            >
-                {/* We add the inline justifyContent and alignItems here to force it center */}
-                <View
-                    style={[
-                        styles.modalOverlay,
-                        { justifyContent: "center", alignItems: "center" },
-                    ]}
-                >
-                    <View style={styles.downloadCard}>
-                        <Text style={styles.downloadTitle}>
-                            Save to Gallery?
-                        </Text>
-                        <Text style={styles.downloadSubtitle}>
-                            This will download the reel to your device.
-                        </Text>
-
-                        {isDownloading ? (
-                            <View style={styles.downloadingState}>
-                                <ActivityIndicator
-                                    size="large"
-                                    color="#EC9A15"
-                                />
-                                <Text style={styles.processingText}>
-                                    Applying Watermark...
-                                </Text>
-                            </View>
-                        ) : (
-                            <View style={styles.downloadButtonRow}>
-                                <TouchableOpacity
-                                    style={styles.downloadCancelBtn}
-                                    onPress={() =>
-                                        setDownloadModalVisible(false)
-                                    }
-                                >
-                                    <Text style={styles.downloadCancelText}>
-                                        Cancel
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.downloadConfirmBtn}
-                                    onPress={() =>
-                                        selectedReelForDownload &&
-                                        executeDownloadWithWatermark(
-                                            selectedReelForDownload,
-                                        )
-                                    }
-                                >
-                                    <Text style={styles.downloadConfirmText}>
-                                        Download
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-                </View>
-            </Modal>
-            {/* Bottom Navigation */}
-            <BottomNav
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                tabs={tabs}
-                onOpenDrawer={() => setDrawerVisible(true)}
-            />
-
-            {/* Drawer Menu */}
-            <DrawerMenu
-                visible={drawerVisible}
-                onClose={() => setDrawerVisible(false)}
-            />
-
-            {/* Tip Popup */}
-            {currentTipReelId !== null && (
-                <TipPopup
-                    visible={tipModalVisible}
-                    onClose={() => {
-                        setTipModalVisible(false);
-                        setCurrentTipReelId(null);
-                    }}
-                    reelId={currentTipReelId}
-                    onTipSuccess={(amount) => {
-                        // Update tip count for the reel
-                        if (currentTipReelId !== null) {
-                            try {
-                                setReels((prevReels) =>
-                                    prevReels.map((reel) =>
-                                        reel.id === currentTipReelId
-                                            ? {
-                                                  ...reel,
-                                                  tips: (reel.tips || 0) + 1,
-                                              }
-                                            : reel,
-                                    ),
-                                );
-                            } catch (error) {
-                                console.error(
-                                    "Error updating tip count:",
-                                    error,
-                                );
-                            }
+                source={reel.video}
+                style={styles.reelImage}
+                resizeMode={ResizeMode.COVER}
+                shouldPlay={false}
+                isLooping={true}
+                isMuted={false}
+                useNativeControls={false}
+                usePoster={false}
+                // progressUpdateIntervalMillis={1000}
+                onLoad={(status) => {
+                  if (isVisible && status.isLoaded) {
+                    const videoRef = videoRefs.current.get(reel.id);
+                    if (videoRef && AppState.currentState === "active") {
+                      setTimeout(() => {
+                        if (AppState.currentState === "active") {
+                          videoRef.playAsync().catch(() => {});
                         }
-                    }}
-                />
+                      }, 100);
+                    }
+                  }
+                }}
+              />
+            ) : (
+              <View style={[styles.reelImage, { backgroundColor: "#111" }]} />
             )}
 
-            {/* ReelViewer for Full Screen */}
-            <ReelViewer
-                visible={reelViewerVisible}
-                reels={reels.map((reel) => ({
-                    ...reel,
-                    type: "video" as const,
-                    source: reel.video,
-                }))}
-                initialIndex={reelViewerInitialIndex}
-                onClose={() => setReelViewerVisible(false)}
-                hasBottomNav={false}
-                insets={insets}
+            {/* Star Animation Overlay */}
+            {showAnimation && (
+              <Animated.View
+                style={[
+                  styles.starAnimationContainer,
+                  {
+                    transform: [{ scale: anim.scale }],
+                    opacity: anim.opacity,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <StarIcon filled={true} color={THEME_COLOR} size={80} themeColor={THEME_COLOR} />
+              </Animated.View>
+            )}
+          </TouchableOpacity>
+
+          {/* Overlay Content */}
+          <View style={styles.overlay} pointerEvents="box-none">
+            {/* Gamified Quest Tracker (Top Left) */}
+            <View style={styles.questTracker}>
+              <Text style={styles.questIcon}>🎯</Text>
+              <View>
+                <Text style={styles.questTitle}>Daily Mission</Text>
+                <Text style={styles.questProgress}>Vote on 5 videos (3/5)</Text>
+              </View>
+            </View>
+
+            {/* Top Right - Three Dots Menu Button */}
+            <TouchableOpacity
+              style={styles.threeDotsButton}
+              onPress={() => {
+                setCurrentReelForMenu(reel.id);
+                threeDotsSlideAnim.setValue(height);
+                setShowThreeDotsMenu(true);
+                Animated.spring(threeDotsSlideAnim, {
+                  toValue: 0,
+                  useNativeDriver: true,
+                  tension: 50,
+                  friction: 8,
+                }).start();
+              }}
+            >
+              <ThreeDotsIcon color="#fff" size={24} />
+            </TouchableOpacity>
+
+            {/* RIGHT SIDE VERTICAL ICONS */}
+            <View style={styles.rightActionContainer}>
+              <TouchableOpacity
+                style={styles.rightActionButton}
+                onPress={() => {
+                  // 1. Reset animation value to bottom of screen
+                  slideAnim.setValue(height);
+                  // 2. Show the modal background
+                  setCommentModalVisible(true);
+                  // 3. Animate the modal content sliding up into view
+                  Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 300, // Matches the duration you use to close it
+                    useNativeDriver: true,
+                  }).start();
+                }}
+              >
+                <CommentIcon color="#fff" size={32} />
+                <Text style={styles.actionIconCount}>{reel.comments}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.rightActionButton}
+                onPress={() => {
+                  // Pop open the Share Modal using the exact same logic
+                  slideAnim.setValue(height);
+                  setShareModalVisible(true);
+                  Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                  }).start();
+                }}
+              >
+                <ShareIcon color="#fff" size={32} />
+                <Text style={styles.actionIconCount}>{reel.shares || 0}</Text>
+              </TouchableOpacity>
+
+              {/* Download Button (Text Removed for clean UI) */}
+              <TouchableOpacity
+                style={styles.rightActionButton}
+                onPress={() => {
+                  setSelectedReelForDownload(reel);
+                  setDownloadModalVisible(true);
+                }}
+              >
+                <DownloadIcon size={32} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Play/Pause Icon Overlay */}
+            {showPlayPauseIcon && showPlayPauseIcon.reelId === reel.id && (
+              <View style={styles.playPauseIconContainer} pointerEvents="none">
+                <Animated.View
+                  style={[styles.playPauseIconWrapper, { opacity: playPauseIconOpacity }]}
+                >
+                  {showPlayPauseIcon.isPlaying ? (
+                    <PlayIcon size={scale(80)} color="#fff" />
+                  ) : (
+                    <PauseIcon size={scale(80)} color="#fff" />
+                  )}
+                </Animated.View>
+              </View>
+            )}
+
+            {/* BOTTOM CONTENT AREA (Full Width layout) */}
+            <View
+              style={[styles.bottomContent, { bottom: BOTTOM_NAV_HEIGHT + scale(16) }]}
+              pointerEvents="box-none"
+            >
+              {/* Profile Info restored! Wrapped in a container so it doesn't overlap icons */}
+              <View style={styles.bottomInfoContainer}>
+                {/* Profile Row */}
+                <View style={styles.profileRow}>
+                  <TouchableOpacity style={styles.profileImageContainer}>
+                    <Image
+                      source={require("@assets/images/user1.png")}
+                      style={styles.profileImage}
+                    />
+                    <View style={styles.followButton}>
+                      <Text style={styles.followButtonText}>+</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity>
+                    <Text style={styles.username}>{reel.username}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.followButtonBox}>
+                    <Text style={styles.followButtonBoxText}>Follow</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Caption */}
+                <View style={styles.captionContainer}>
+                  <Text
+                    style={styles.caption}
+                    numberOfLines={expandedCaptions.has(reel.id) ? undefined : 2}
+                  >
+                    {reel.caption}
+                  </Text>
+                  {reel.caption.length > 100 && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setExpandedCaptions((prev) => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(reel.id)) newSet.delete(reel.id);
+                          else newSet.add(reel.id);
+                          return newSet;
+                        });
+                      }}
+                    >
+                      <Text style={styles.showMoreText}>
+                        {expandedCaptions.has(reel.id) ? "Show less" : "Show more"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Music Row */}
+                <View style={styles.musicRow}>
+                  <MusicIcon color="#fff" size={16} />
+                  <Text style={styles.musicName} numberOfLines={1}>
+                    {reel.musicName}
+                  </Text>
+                </View>
+              </View>
+
+              {/* FULL WIDTH ACTION PILLS (Tip & Vote) */}
+              <View style={styles.bottomButtonsRow}>
+                {/* Tip Button Wrapper */}
+                <View style={styles.flexButtonWrapper}>
+                  <TouchableOpacity
+                    style={styles.tipButton}
+                    onPress={() => {
+                      setCurrentTipReelId(reel.id);
+                      setTipModalVisible(true);
+                    }}
+                  >
+                    <CoinIcon size={16} color="#fff" />
+                    <Text style={styles.tipButtonText}>Tip</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Vote Button Wrapper with Floating Text */}
+                <View style={styles.flexButtonWrapper}>
+                  {/* Floating Gamified Text */}
+                  {showVotePopup === reel.id && (
+                    <Animated.View
+                      style={[
+                        styles.floatingXP,
+                        {
+                          opacity: votePopupAnim.interpolate({
+                            inputRange: [0, 0.2, 0.8, 1],
+                            outputRange: [0, 1, 1, 0],
+                          }),
+                          transform: [
+                            {
+                              translateY: votePopupAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, -40],
+                              }),
+                            },
+                            {
+                              scale: votePopupAnim.interpolate({
+                                inputRange: [0, 0.2, 1],
+                                outputRange: [0.5, 1.2, 1],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                      pointerEvents="none"
+                    >
+                      <Text style={styles.floatingXPText}>+50 FAME! 🔥</Text>
+                    </Animated.View>
+                  )}
+
+                  <TouchableOpacity
+                    style={[
+                      styles.tipButton,
+                      reel.isLiked ? styles.voteButtonActive : styles.voteButtonInactive,
+                    ]}
+                    onPress={() => handleLike(reel.id)}
+                  >
+                    <StarIcon
+                      filled={reel.isLiked}
+                      size={18}
+                      color={reel.isLiked ? "#fff" : THEME_COLOR}
+                      themeColor={reel.isLiked ? "#fff" : THEME_COLOR}
+                    />
+                    <Text
+                      style={[
+                        styles.tipButtonText,
+                        {
+                          color: reel.isLiked ? "#fff" : THEME_COLOR,
+                        },
+                      ]}
+                    >
+                      {reel.isLiked ? "Voted" : "Vote"} • {reel.likes}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      );
+    },
+    [
+      currentVisibleIndex,
+      showStarAnimation,
+      showVotePopup, // <-- Make sure this is in your dependencies!
+      handleDoubleTap,
+      handleLike,
+      handleSave,
+    ]
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={[]}>
+      <StatusBar barStyle="light-content" backgroundColor="#000" translucent />
+
+      {/* Back Button */}
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M19 12H5M12 19l-7-7 7-7"
+              stroke="#fff"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
-        </SafeAreaView>
-    );
+          </Svg>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        ref={flatListRef}
+        data={memoizedReels}
+        renderItem={renderReel}
+        keyExtractor={(item) => item.id.toString()}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={height}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        contentContainerStyle={styles.flatListContent}
+        getItemLayout={(data: any, index: number) => ({
+          length: height,
+          offset: height * index,
+          index,
+        })}
+        onViewableItemsChanged={onViewableItemsChangedRef.current}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+        }}
+        windowSize={1}
+        maxToRenderPerBatch={1}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        initialNumToRender={1}
+        maintainVisibleContentPosition={null}
+        onScrollToIndexFailed={(info) => {
+          const wait = new Promise((resolve) => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: false,
+            });
+          });
+        }}
+      />
+
+      {/* Comment Modal */}
+      <Modal
+        visible={commentModalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={() => {
+          Animated.timing(slideAnim, {
+            toValue: height,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setCommentModalVisible(false));
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            Animated.timing(slideAnim, {
+              toValue: height,
+              duration: 300,
+              useNativeDriver: true,
+            }).start(() => setCommentModalVisible(false));
+          }}
+        >
+          <Animated.View style={[styles.gamifiedModal, { transform: [{ translateY: slideAnim }] }]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+              style={{ flex: 1 }}
+            >
+              <View style={styles.handleBar} />
+
+              {/* Header - No Borders */}
+              <View style={styles.commentHeader}>
+                <Text style={styles.commandPanelTitle}>COMMENTS</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    Animated.timing(slideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => setCommentModalVisible(false));
+                  }}
+                >
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === "ios" ? "padding" : undefined}
+                  style={{ flex: 1 }}
+                >
+                  <ScrollView
+                    style={styles.commentsList}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      paddingBottom: 20,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {[
+                      {
+                        id: 1,
+                        username: "@user1",
+                        level: 12,
+                        comment: "Amazing! 🔥",
+                        likes: 12,
+                        isLiked: false,
+                        replies: [],
+                      },
+                      {
+                        id: 2,
+                        username: "@user2",
+                        level: 8,
+                        comment: "Love this! ❤️",
+                        likes: 8,
+                        isLiked: true,
+                        replies: [
+                          {
+                            id: 4,
+                            username: "@user4",
+                            level: 3,
+                            comment: "I agree! So good!",
+                            likes: 3,
+                            isLiked: false,
+                          },
+                        ],
+                      },
+                      {
+                        id: 3,
+                        username: "@user3",
+                        level: 15,
+                        comment: "So talented! 👏",
+                        likes: 5,
+                        isLiked: false,
+                        replies: [],
+                      },
+                    ].map((comment) => {
+                      const commentLikeData = commentLikes.get(comment.id) || {
+                        likes: comment.likes,
+                        isLiked: comment.isLiked,
+                      };
+                      return (
+                        <View key={comment.id} style={styles.cleanCommentRow}>
+                          <View style={styles.commentItemInner}>
+                            <Image
+                              source={require("@assets/images/user1.png")}
+                              style={styles.commentAvatar}
+                            />
+                            <View style={styles.commentContent}>
+                              <View style={styles.usernameRow}>
+                                <Text style={styles.commentUsername}>{comment.username}</Text>
+                                <Text style={styles.levelText}>
+                                  Lv.
+                                  {comment.level}
+                                </Text>
+                              </View>
+                              <Text style={styles.commentText}>{comment.comment}</Text>
+
+                              <View style={styles.commentActions}>
+                                <Text style={styles.commentTime}>2h</Text>
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    if (replyingToComment === comment.id) {
+                                      setReplyingToComment(null);
+                                      setCommentText("");
+                                    } else {
+                                      setReplyingToComment(comment.id);
+                                      setCommentText(`@${comment.username} `);
+                                    }
+                                  }}
+                                >
+                                  <Text style={styles.commentReply}>
+                                    {replyingToComment === comment.id ? "Cancel" : "Reply"}
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+
+                              {/* Clean text toggle */}
+                              {comment.replies && comment.replies.length > 0 && (
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setExpandedReplies((prev) => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(comment.id)) newSet.delete(comment.id);
+                                      else newSet.add(comment.id);
+                                      return newSet;
+                                    });
+                                  }}
+                                  style={styles.viewRepliesButton}
+                                >
+                                  <Text style={styles.viewRepliesText}>
+                                    {expandedReplies.has(comment.id)
+                                      ? `—  Hide ${comment.replies.length} ${comment.replies.length === 1 ? "reply" : "replies"}`
+                                      : `—  View ${comment.replies.length} ${comment.replies.length === 1 ? "reply" : "replies"}`}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                            </View>
+
+                            <TouchableOpacity
+                              style={styles.commentLikeButton}
+                              onPress={() => {
+                                setCommentLikes((prev) => {
+                                  const newMap = new Map(prev);
+                                  const current = newMap.get(comment.id) || {
+                                    likes: comment.likes,
+                                    isLiked: comment.isLiked,
+                                  };
+                                  newMap.set(comment.id, {
+                                    likes: current.isLiked ? current.likes - 1 : current.likes + 1,
+                                    isLiked: !current.isLiked,
+                                  });
+                                  return newMap;
+                                });
+                              }}
+                            >
+                              <StarIcon
+                                filled={commentLikeData.isLiked}
+                                color="#666"
+                                size={16}
+                                themeColor={THEME_COLOR}
+                              />
+                              <Text
+                                style={[
+                                  styles.commentLikeCount,
+                                  commentLikeData.isLiked && {
+                                    color: THEME_COLOR,
+                                  },
+                                ]}
+                              >
+                                {commentLikeData.likes}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Nested Replies - Indented without borders */}
+                          {expandedReplies.has(comment.id) &&
+                            comment.replies &&
+                            comment.replies.length > 0 && (
+                              <View style={styles.repliesContainer}>
+                                {comment.replies.map((reply) => {
+                                  const replyLikeData = commentLikes.get(reply.id) || {
+                                    likes: reply.likes,
+                                    isLiked: reply.isLiked,
+                                  };
+                                  return (
+                                    <View key={reply.id} style={styles.cleanReplyRow}>
+                                      <Image
+                                        source={require("@assets/images/user1.png")}
+                                        style={styles.replyAvatar}
+                                      />
+                                      <View style={styles.replyContent}>
+                                        <View style={styles.usernameRow}>
+                                          <Text style={styles.replyUsername}>{reply.username}</Text>
+                                          <Text style={styles.levelTextSub}>
+                                            Lv.
+                                            {reply.level}
+                                          </Text>
+                                        </View>
+                                        <Text style={styles.replyText}>{reply.comment}</Text>
+                                        <View style={styles.replyActions}>
+                                          <Text style={styles.commentTime}>1h</Text>
+                                        </View>
+                                      </View>
+                                      <TouchableOpacity
+                                        style={styles.commentLikeButton}
+                                        onPress={() => {
+                                          setCommentLikes((prev) => {
+                                            const newMap = new Map(prev);
+                                            const current = newMap.get(reply.id) || {
+                                              likes: reply.likes,
+                                              isLiked: reply.isLiked,
+                                            };
+                                            newMap.set(reply.id, {
+                                              likes: current.isLiked
+                                                ? current.likes - 1
+                                                : current.likes + 1,
+                                              isLiked: !current.isLiked,
+                                            });
+                                            return newMap;
+                                          });
+                                        }}
+                                      >
+                                        <StarIcon
+                                          filled={replyLikeData.isLiked}
+                                          color="#666"
+                                          size={14}
+                                          themeColor={THEME_COLOR}
+                                        />
+                                        <Text
+                                          style={[
+                                            styles.commentLikeCount,
+                                            replyLikeData.isLiked && {
+                                              color: THEME_COLOR,
+                                            },
+                                          ]}
+                                        >
+                                          {replyLikeData.likes}
+                                        </Text>
+                                      </TouchableOpacity>
+                                    </View>
+                                  );
+                                })}
+                              </View>
+                            )}
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+
+                  {/* Input area remains exactly the same */}
+                  <View style={styles.gamifiedInputWrapper}>
+                    <View style={styles.gamifiedInputContainer}>{/* ... */}</View>
+                  </View>
+                </KeyboardAvoidingView>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+      {/* Share Modal */}
+      <Modal
+        visible={shareModalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={() => {
+          Animated.timing(slideAnim, {
+            toValue: height,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            setShareModalVisible(false);
+            setShowMoreShareOptions(false);
+          });
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            Animated.timing(slideAnim, {
+              toValue: height,
+              duration: 300,
+              useNativeDriver: true,
+            }).start(() => {
+              setShareModalVisible(false);
+              setShowMoreShareOptions(false);
+            });
+          }}
+        >
+          <Animated.View
+            style={[
+              styles.shareModal,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+              {/* Handle Bar */}
+              <View style={styles.handleBar} />
+
+              {/* Header */}
+              <View style={styles.shareHeader}>
+                <Text style={styles.shareHeaderTitle}>Share</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    Animated.timing(slideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setShareModalVisible(false);
+                      setShowMoreShareOptions(false);
+                    });
+                  }}
+                >
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Friends List */}
+              <View style={styles.friendsSection}>
+                <Text style={styles.sectionTitle}>Send to</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.friendsList}
+                >
+                  {[
+                    {
+                      id: 1,
+                      name: "Friend 1",
+                      avatar: require("@assets/images/user1.png"),
+                    },
+                    {
+                      id: 2,
+                      name: "Friend 2",
+                      avatar: require("@assets/images/user2.png"),
+                    },
+                    {
+                      id: 3,
+                      name: "Friend 3",
+                      avatar: require("@assets/images/user1.png"),
+                    },
+                    {
+                      id: 4,
+                      name: "Friend 4",
+                      avatar: require("@assets/images/user2.png"),
+                    },
+                  ].map((friend) => (
+                    <TouchableOpacity key={friend.id} style={styles.friendItem}>
+                      <Image source={friend.avatar} style={styles.friendAvatar} />
+                      <Text style={styles.friendName} numberOfLines={1}>
+                        {friend.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Share Options */}
+              <View style={styles.shareOptionsSection}>
+                <Text style={styles.sectionTitle}>Share to</Text>
+                <ScrollView
+                  ref={shareScrollViewRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.shareOptionsList}
+                >
+                  {/* Initial options: Copy, WhatsApp, WhatsApp Status, Instagram */}
+                  <TouchableOpacity style={styles.shareOption} onPress={() => handleShare("copy")}>
+                    <View style={[styles.shareOptionIconCircle, { backgroundColor: "#66620" }]}>
+                      <Image
+                        source={require("@assets/ShareIcon/copy.png")}
+                        style={styles.shareIconImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={styles.shareOptionName} numberOfLines={1}>
+                      Copy Link
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.shareOption}
+                    onPress={() => handleShare("whatsapp")}
+                  >
+                    <View
+                      style={[
+                        styles.shareOptionIconCircle,
+                        {
+                          backgroundColor: "#25D36620",
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={require("@assets/ShareIcon/whatsapp.png")}
+                        style={styles.shareIconImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={styles.shareOptionName} numberOfLines={1}>
+                      WhatsApp
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.shareOption}
+                    onPress={() => handleShare("whatsappstatus")}
+                  >
+                    <View
+                      style={[
+                        styles.shareOptionIconCircle,
+                        {
+                          backgroundColor: "#25D36620",
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={require("@assets/ShareIcon/status.png")}
+                        style={styles.shareIconImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={styles.shareOptionName} numberOfLines={1}>
+                      Status
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.shareOption}
+                    onPress={() => handleShare("instagram")}
+                  >
+                    <View
+                      style={[
+                        styles.shareOptionIconCircle,
+                        {
+                          backgroundColor: "#E4405F20",
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={require("@assets/ShareIcon/instagram.png")}
+                        style={styles.shareIconImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={styles.shareOptionName} numberOfLines={1}>
+                      Instagram
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* More options: Snapchat, Download, Facebook, Twitter - shown when More is clicked */}
+                  {showMoreShareOptions && (
+                    <>
+                      <TouchableOpacity
+                        style={styles.shareOption}
+                        onPress={() => handleShare("snapchat")}
+                      >
+                        <View
+                          style={[
+                            styles.shareOptionIconCircle,
+                            {
+                              backgroundColor: "#FFEC0620",
+                            },
+                          ]}
+                        >
+                          <Image
+                            source={require("@assets/ShareIcon/snapchat.png")}
+                            style={styles.shareIconImage}
+                            resizeMode="contain"
+                          />
+                        </View>
+                        <Text style={styles.shareOptionName} numberOfLines={1}>
+                          Snapchat
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.shareOption}
+                        onPress={() => handleShare("download")}
+                      >
+                        <View
+                          style={[
+                            styles.shareOptionIconCircle,
+                            {
+                              backgroundColor: "#66620",
+                            },
+                          ]}
+                        >
+                          <Image
+                            source={require("@assets/ShareIcon/download.svg")}
+                            style={styles.shareIconImage}
+                            resizeMode="contain"
+                          />
+                        </View>
+                        <Text style={styles.shareOptionName} numberOfLines={1}>
+                          Download
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.shareOption}
+                        onPress={() => handleShare("facebook")}
+                      >
+                        <View
+                          style={[
+                            styles.shareOptionIconCircle,
+                            {
+                              backgroundColor: "#485a9620",
+                            },
+                          ]}
+                        >
+                          <Image
+                            source={require("@assets/ShareIcon/facebook.svg")}
+                            style={styles.shareIconImage}
+                            resizeMode="contain"
+                          />
+                        </View>
+                        <Text style={styles.shareOptionName} numberOfLines={1}>
+                          Facebook
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.shareOption}
+                        onPress={() => handleShare("twitter")}
+                      >
+                        <View
+                          style={[
+                            styles.shareOptionIconCircle,
+                            {
+                              backgroundColor: "#1DA1F220",
+                            },
+                          ]}
+                        >
+                          <Image
+                            source={require("@assets/ShareIcon/twitter.png")}
+                            style={styles.shareIconImage}
+                            resizeMode="contain"
+                          />
+                        </View>
+                        <Text style={styles.shareOptionName} numberOfLines={1}>
+                          Twitter
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {/* More Button - only show if more options are not visible */}
+                  {!showMoreShareOptions && (
+                    <TouchableOpacity
+                      style={styles.shareOption}
+                      onPress={() => {
+                        setShowMoreShareOptions(true);
+                        // Scroll to show the new icons when "More" is clicked
+                        setTimeout(() => {
+                          shareScrollViewRef.current?.scrollToEnd({
+                            animated: true,
+                          });
+                        }, 100);
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.shareOptionIconCircle,
+                          {
+                            backgroundColor: "#66620",
+                          },
+                        ]}
+                      >
+                        <Text style={styles.shareOptionIconText}>⋯</Text>
+                      </View>
+                      <Text style={styles.shareOptionName} numberOfLines={1}>
+                        More
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </ScrollView>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Three Dots Menu Modal - Bottom Overlay */}
+      <Modal
+        visible={showThreeDotsMenu}
+        transparent={true}
+        animationType="none"
+        onRequestClose={() => {
+          Animated.timing(threeDotsSlideAnim, {
+            toValue: height,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setShowThreeDotsMenu(false));
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            Animated.timing(threeDotsSlideAnim, {
+              toValue: height,
+              duration: 300,
+              useNativeDriver: true,
+            }).start(() => setShowThreeDotsMenu(false));
+          }}
+        >
+          <Animated.View
+            style={[styles.commandPanelModal, { transform: [{ translateY: threeDotsSlideAnim }] }]}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.handleBar} />
+
+              <Text style={styles.commandPanelTitle}>OPTIONS</Text>
+
+              <View style={styles.commandGrid}>
+                <TouchableOpacity
+                  style={styles.commandItem}
+                  onPress={() => {
+                    Animated.timing(threeDotsSlideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setShowThreeDotsMenu(false);
+                      if (currentReelForMenu !== null) {
+                        const reelIndex = reels.findIndex((r) => r.id === currentReelForMenu);
+                        if (reelIndex >= 0) {
+                          setReelViewerInitialIndex(reelIndex);
+                          setReelViewerVisible(true);
+                        }
+                      }
+                    });
+                  }}
+                >
+                  <View style={styles.commandIconBox}>
+                    <FullScreenIcon color="#EC9A15" size={22} />
+                  </View>
+                  <Text style={styles.commandItemText}>Full Screen</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.commandItem}
+                  onPress={() => {
+                    Animated.timing(threeDotsSlideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setShowThreeDotsMenu(false);
+                      Alert.alert("Interested", "Marked as interested! +5 XP");
+                    });
+                  }}
+                >
+                  <View style={styles.commandIconBox}>
+                    <HeartIcon color="#EC9A15" size={22} />
+                  </View>
+                  <Text style={styles.commandItemText}>Interested</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.commandItem}
+                  onPress={() => {
+                    Animated.timing(threeDotsSlideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setShowThreeDotsMenu(false);
+                      Alert.alert("Not Interested", "We'll show you less content like this.");
+                    });
+                  }}
+                >
+                  <View style={styles.commandIconBox}>
+                    <BlockIcon color="#fff" size={22} />
+                  </View>
+                  <Text style={styles.commandItemText}>Not Interested</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.commandItem, styles.commandItemDanger]}
+                  onPress={() => {
+                    Animated.timing(threeDotsSlideAnim, {
+                      toValue: height,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setShowThreeDotsMenu(false);
+                      Alert.alert("Report", "Report this content", [
+                        {
+                          text: "Cancel",
+                          style: "cancel",
+                        },
+                        {
+                          text: "Report",
+                          style: "destructive",
+                          onPress: () => Alert.alert("Reported", "Thank you for reporting."),
+                        },
+                      ]);
+                    });
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.commandIconBox,
+                      {
+                        backgroundColor: "rgba(255, 59, 48, 0.15)",
+                      },
+                    ]}
+                  >
+                    <FlagIcon size={22} />
+                  </View>
+                  <Text style={[styles.commandItemText, styles.commandTextDanger]}>Report</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={styles.commandCancelButton}
+                onPress={() => {
+                  Animated.timing(threeDotsSlideAnim, {
+                    toValue: height,
+                    duration: 300,
+                    useNativeDriver: true,
+                  }).start(() => setShowThreeDotsMenu(false));
+                }}
+              >
+                <Text style={styles.commandCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+      <Modal
+        visible={downloadModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isDownloading && setDownloadModalVisible(false)}
+      >
+        {/* We add the inline justifyContent and alignItems here to force it center */}
+        <View style={[styles.modalOverlay, { justifyContent: "center", alignItems: "center" }]}>
+          <View style={styles.downloadCard}>
+            <Text style={styles.downloadTitle}>Save to Gallery?</Text>
+            <Text style={styles.downloadSubtitle}>This will download the reel to your device.</Text>
+
+            {isDownloading ? (
+              <View style={styles.downloadingState}>
+                <ActivityIndicator size="large" color="#EC9A15" />
+                <Text style={styles.processingText}>Applying Watermark...</Text>
+              </View>
+            ) : (
+              <View style={styles.downloadButtonRow}>
+                <TouchableOpacity
+                  style={styles.downloadCancelBtn}
+                  onPress={() => setDownloadModalVisible(false)}
+                >
+                  <Text style={styles.downloadCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.downloadConfirmBtn}
+                  onPress={() =>
+                    selectedReelForDownload && executeDownloadWithWatermark(selectedReelForDownload)
+                  }
+                >
+                  <Text style={styles.downloadConfirmText}>Download</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+      {/* Bottom Navigation */}
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        tabs={tabs}
+        onOpenDrawer={() => setDrawerVisible(true)}
+      />
+
+      {/* Drawer Menu */}
+      <DrawerMenu visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
+
+      {/* Tip Popup */}
+      {currentTipReelId !== null && (
+        <TipPopup
+          visible={tipModalVisible}
+          onClose={() => {
+            setTipModalVisible(false);
+            setCurrentTipReelId(null);
+          }}
+          reelId={currentTipReelId}
+          onTipSuccess={(amount) => {
+            // Update tip count for the reel
+            if (currentTipReelId !== null) {
+              try {
+                setReels((prevReels) =>
+                  prevReels.map((reel) =>
+                    reel.id === currentTipReelId
+                      ? {
+                          ...reel,
+                          tips: (reel.tips || 0) + 1,
+                        }
+                      : reel
+                  )
+                );
+              } catch (error) {
+                console.error("Error updating tip count:", error);
+              }
+            }
+          }}
+        />
+      )}
+
+      {/* ReelViewer for Full Screen */}
+      <ReelViewer
+        visible={reelViewerVisible}
+        reels={reels.map((reel) => ({
+          ...reel,
+          type: "video" as const,
+          source: reel.video,
+        }))}
+        initialIndex={reelViewerInitialIndex}
+        onClose={() => setReelViewerVisible(false)}
+        hasBottomNav={false}
+        insets={insets}
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    // --- SOFT GLASS CARD STYLES ---
-    logEntryCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.04)",
-        borderRadius: scale(16),
-        padding: scale(14),
-        marginBottom: scale(12),
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.06)",
-    },
-    commentItemInner: {
-        flexDirection: "row",
-    },
+  // --- SOFT GLASS CARD STYLES ---
+  logEntryCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: scale(16),
+    padding: scale(14),
+    marginBottom: scale(12),
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+  },
+  commentItemInner: {
+    flexDirection: "row",
+  },
 
-    // --- CLEAN HIERARCHY STYLES (No Lines) ---
-    viewRepliesButton: {
-        marginTop: scale(10),
-        marginBottom: scale(4),
-        alignSelf: "flex-start",
-    },
-    viewRepliesText: {
-        color: "#EC9A15", // Glowy orange text to act as the primary call-to-action
-        fontSize: getFontSize(12),
-        fontWeight: "700",
-    },
-    levelText: {
-        color: "#EC9A15",
-        fontSize: getFontSize(11),
-        fontWeight: "800",
-        fontStyle: "italic",
-    },
-    levelTextSub: {
-        color: "#888",
-        fontSize: getFontSize(10),
-        fontWeight: "700",
-        fontStyle: "italic",
-    },
-    repliesContainer: {
-        marginTop: scale(12),
-        // 44px indent perfectly aligns the reply avatar with the start of the parent's text
-        // (32px parent avatar width + 12px margin)
-        paddingLeft: scale(44),
-    },
-    logReplyCard: {
-        flexDirection: "row",
-        marginBottom: scale(12), // Spacing between multiple replies
-    },
-    replyAvatar: {
-        width: scale(22), // Scaled down to emphasize it's a sub-comment
-        height: scale(22),
-        borderRadius: scale(11),
-        marginRight: scale(10),
-        marginTop: scale(2), // Aligns the smaller avatar with the top of the text
-    },
-    replyContent: {
-        flex: 1,
-    },
-    replyUsername: {
-        color: "#fff",
-        fontSize: getFontSize(13),
-        fontWeight: "600",
-    },
-    replyText: {
-        color: "#fff",
-        fontSize: getFontSize(13),
-        lineHeight: scale(18),
-        marginTop: scale(2),
-        marginBottom: scale(4),
-    },
-    replyActions: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.lg,
-    },
-    levelBadgeSub: {
-        backgroundColor: "rgba(255, 255, 255, 0.08)",
-        paddingHorizontal: scale(6),
-        paddingVertical: scale(2),
-        borderRadius: scale(6),
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: "rgba(255, 255, 255, 0.15)",
-    },
-    levelBadgeTextSub: {
-        color: "#aaa",
-        fontSize: getFontSize(9),
-        fontWeight: "800",
-        textTransform: "uppercase",
-    },
+  // --- CLEAN HIERARCHY STYLES (No Lines) ---
+  viewRepliesButton: {
+    marginTop: scale(10),
+    marginBottom: scale(4),
+    alignSelf: "flex-start",
+  },
+  viewRepliesText: {
+    color: "#EC9A15", // Glowy orange text to act as the primary call-to-action
+    fontSize: getFontSize(12),
+    fontWeight: "700",
+  },
+  levelText: {
+    color: "#EC9A15",
+    fontSize: getFontSize(11),
+    fontWeight: "800",
+    fontStyle: "italic",
+  },
+  levelTextSub: {
+    color: "#888",
+    fontSize: getFontSize(10),
+    fontWeight: "700",
+    fontStyle: "italic",
+  },
+  repliesContainer: {
+    marginTop: scale(12),
+    // 44px indent perfectly aligns the reply avatar with the start of the parent's text
+    // (32px parent avatar width + 12px margin)
+    paddingLeft: scale(44),
+  },
+  logReplyCard: {
+    flexDirection: "row",
+    marginBottom: scale(12), // Spacing between multiple replies
+  },
+  replyAvatar: {
+    width: scale(22), // Scaled down to emphasize it's a sub-comment
+    height: scale(22),
+    borderRadius: scale(11),
+    marginRight: scale(10),
+    marginTop: scale(2), // Aligns the smaller avatar with the top of the text
+  },
+  replyContent: {
+    flex: 1,
+  },
+  replyUsername: {
+    color: "#fff",
+    fontSize: getFontSize(13),
+    fontWeight: "600",
+  },
+  replyText: {
+    color: "#fff",
+    fontSize: getFontSize(13),
+    lineHeight: scale(18),
+    marginTop: scale(2),
+    marginBottom: scale(4),
+  },
+  replyActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+  },
+  levelBadgeSub: {
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: scale(6),
+    paddingVertical: scale(2),
+    borderRadius: scale(6),
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+  },
+  levelBadgeTextSub: {
+    color: "#aaa",
+    fontSize: getFontSize(9),
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
 
-    viewRepliesLine: {
-        width: scale(24),
-        height: 1,
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        marginRight: scale(8),
-    },
+  viewRepliesLine: {
+    width: scale(24),
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    marginRight: scale(8),
+  },
 
-    repliesSpine: {
-        position: "absolute",
-        left: scale(15), // Hits the exact center of the 32px parent avatar above it
-        top: scale(-12), // Reaches up to the parent comment area
-        bottom: scale(20), // Stops exactly at the middle of the last reply's avatar
-        width: 1.5,
-        backgroundColor: "rgba(255, 255, 255, 0.15)", // Subtle vertical line
-    },
+  repliesSpine: {
+    position: "absolute",
+    left: scale(15), // Hits the exact center of the 32px parent avatar above it
+    top: scale(-12), // Reaches up to the parent comment area
+    bottom: scale(20), // Stops exactly at the middle of the last reply's avatar
+    width: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.15)", // Subtle vertical line
+  },
 
-    replyThreadPeg: {
-        position: "absolute",
-        left: scale(-29), // Reaches backward from the padding to hit the vertical spine
-        top: scale(11), // Hits the exact vertical center of the 24px reply avatar
-        width: scale(20), // Creates the horizontal line with an 8px gap before the avatar
-        height: 1.5,
-        backgroundColor: "rgba(255, 255, 255, 0.15)",
-    },
-    cleanCommentRow: {
-        paddingVertical: scale(14), // Gives breathing room between comments
-        backgroundColor: "transparent",
-    },
-    cleanReplyRow: {
-        flexDirection: "row",
-        marginTop: scale(12),
-    },
-    replyThreadConnector: {
-        position: "absolute",
-        left: 0,
-        top: scale(12), // Centers the line with the middle of the reply avatar
-        width: scale(12),
-        height: 1.5,
-        backgroundColor: "rgba(255, 255, 255, 0.15)", // Horizontal line pointing to the avatar
-    },
+  replyThreadPeg: {
+    position: "absolute",
+    left: scale(-29), // Reaches backward from the padding to hit the vertical spine
+    top: scale(11), // Hits the exact vertical center of the 24px reply avatar
+    width: scale(20), // Creates the horizontal line with an 8px gap before the avatar
+    height: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  cleanCommentRow: {
+    paddingVertical: scale(14), // Gives breathing room between comments
+    backgroundColor: "transparent",
+  },
+  cleanReplyRow: {
+    flexDirection: "row",
+    marginTop: scale(12),
+  },
+  replyThreadConnector: {
+    position: "absolute",
+    left: 0,
+    top: scale(12), // Centers the line with the middle of the reply avatar
+    width: scale(12),
+    height: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.15)", // Horizontal line pointing to the avatar
+  },
 
-    gamifiedModal: {
-        backgroundColor: "#2A1B0D", // Matches Options menu
-        borderTopLeftRadius: scale(24),
-        borderTopRightRadius: scale(24),
-        height: height * 0.7,
-        borderTopWidth: 1,
-        borderColor: "rgba(236, 154, 21, 0.3)", // Orange glow
-        shadowColor: "#EC9A15",
-        shadowOffset: { width: 0, height: -5 },
-        shadowOpacity: 0.15,
-        shadowRadius: 15,
-        elevation: 10,
-        paddingTop: scale(10), // Gives the handle bar breathing room
-    },
-    handleBar: {
-        width: scale(40),
-        height: scale(4),
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        borderRadius: scale(2),
-        alignSelf: "center",
-        marginBottom: scale(8), // Pushes the header down naturally
-    },
-    commentHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: spacing.lg,
-        paddingBottom: spacing.md,
-        // Removed borders here completely
-    },
+  gamifiedModal: {
+    backgroundColor: "#2A1B0D", // Matches Options menu
+    borderTopLeftRadius: scale(24),
+    borderTopRightRadius: scale(24),
+    height: height * 0.7,
+    borderTopWidth: 1,
+    borderColor: "rgba(236, 154, 21, 0.3)", // Orange glow
+    shadowColor: "#EC9A15",
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+    paddingTop: scale(10), // Gives the handle bar breathing room
+  },
+  handleBar: {
+    width: scale(40),
+    height: scale(4),
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: scale(2),
+    alignSelf: "center",
+    marginBottom: scale(8), // Pushes the header down naturally
+  },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    // Removed borders here completely
+  },
 
-    usernameRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: scale(4),
-        gap: scale(6),
-    },
-    levelBadge: {
-        backgroundColor: "rgba(236, 154, 21, 0.15)",
-        paddingHorizontal: scale(6),
-        paddingVertical: scale(2),
-        borderRadius: scale(6),
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: "rgba(236, 154, 21, 0.4)",
-    },
-    levelBadgeText: {
-        color: "#EC9A15",
-        fontSize: getFontSize(9),
-        fontWeight: "800",
-        textTransform: "uppercase",
-    },
-    gamifiedInputWrapper: {
-        paddingHorizontal: spacing.lg,
-        paddingTop: scale(8),
-        paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
-        backgroundColor: "#2A1B0D", // Matches modal base to cover scroll gaps
-    },
-    gamifiedInputContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.4)", // Darker inner well
-        borderRadius: scale(24),
-        paddingHorizontal: scale(6),
-        paddingVertical: scale(6),
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.1)",
-        minHeight: scale(56),
-    },
-    gamifiedInput: {
-        flex: 1,
-        color: "#fff",
-        fontSize: getFontSize(14),
-        paddingHorizontal: scale(12),
-        maxHeight: scale(100),
-    },
-    gamifiedPostButton: {
-        backgroundColor: "rgba(236, 154, 21, 0.2)",
-        paddingHorizontal: scale(16),
-        paddingVertical: scale(10),
-        borderRadius: scale(20),
-        borderWidth: 1,
-        borderColor: "rgba(236, 154, 21, 0.5)",
-    },
-    gamifiedPostButtonDisabled: {
-        backgroundColor: "transparent",
-        borderColor: "transparent",
-    },
-    gamifiedPostButtonText: {
-        color: "#EC9A15",
-        fontSize: getFontSize(12),
-        fontWeight: "800",
-        letterSpacing: 1,
-    },
-    gamifiedPostButtonTextDisabled: {
-        color: "#666",
-    },
-    container: {
-        flex: 1,
-        backgroundColor: "#000",
-    },
-    backButtonContainer: {
-        position: "absolute",
-        top: Platform.OS === "ios" ? scale(50) : scale(40),
-        left: spacing.lg,
-        zIndex: 10,
-    },
-    integratedCommentRow: {
-        paddingVertical: scale(14),
-        borderBottomWidth: StyleSheet.hairlineWidth, // Ultra-thin line
-        borderBottomColor: "rgba(236, 154, 21, 0.15)", // Subtle glowing orange tint
-        backgroundColor: "transparent", // Let the modal background shine through
-    },
-    integratedReplyRow: {
-        flexDirection: "row",
-        marginTop: scale(12),
-        paddingTop: scale(12),
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: "rgba(255, 255, 255, 0.05)", // Very faint white separator for replies
-        paddingLeft: scale(20), // Stronger indent so replies look distinct
-    },
-    backButton: {
-        width: scale(40),
-        height: scale(40),
-        minWidth: scale(40),
-        minHeight: scale(40),
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    flatListContent: {
-        paddingBottom: 0,
-    },
-    reelContainer: {
-        width: width,
-        height: height,
-        position: "relative",
-        backgroundColor: "#000",
-        overflow: "hidden",
-    },
-    reelImage: {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#000",
-        alignSelf: "center",
-    },
-    overlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        paddingHorizontal: 0,
-        paddingBottom: 0,
-        paddingTop: 0,
-    },
-    videoTouchable: {
-        width: "100%",
-        height: "100%",
-    },
-    starAnimationContainer: {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        marginLeft: scale(-40),
-        marginTop: scale(-40),
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-    },
-    playPauseIconContainer: {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        marginLeft: scale(-40),
-        marginTop: scale(-40),
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 999,
-    },
-    playPauseIconWrapper: {
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-        borderRadius: scale(50),
-        width: scale(80),
-        height: scale(80),
-        alignItems: "center",
-        justifyContent: "center",
-    },
+  usernameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: scale(4),
+    gap: scale(6),
+  },
+  levelBadge: {
+    backgroundColor: "rgba(236, 154, 21, 0.15)",
+    paddingHorizontal: scale(6),
+    paddingVertical: scale(2),
+    borderRadius: scale(6),
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(236, 154, 21, 0.4)",
+  },
+  levelBadgeText: {
+    color: "#EC9A15",
+    fontSize: getFontSize(9),
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  gamifiedInputWrapper: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: scale(8),
+    paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
+    backgroundColor: "#2A1B0D", // Matches modal base to cover scroll gaps
+  },
+  gamifiedInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.4)", // Darker inner well
+    borderRadius: scale(24),
+    paddingHorizontal: scale(6),
+    paddingVertical: scale(6),
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    minHeight: scale(56),
+  },
+  gamifiedInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: getFontSize(14),
+    paddingHorizontal: scale(12),
+    maxHeight: scale(100),
+  },
+  gamifiedPostButton: {
+    backgroundColor: "rgba(236, 154, 21, 0.2)",
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(10),
+    borderRadius: scale(20),
+    borderWidth: 1,
+    borderColor: "rgba(236, 154, 21, 0.5)",
+  },
+  gamifiedPostButtonDisabled: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+  },
+  gamifiedPostButtonText: {
+    color: "#EC9A15",
+    fontSize: getFontSize(12),
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  gamifiedPostButtonTextDisabled: {
+    color: "#666",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  backButtonContainer: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? scale(50) : scale(40),
+    left: spacing.lg,
+    zIndex: 10,
+  },
+  integratedCommentRow: {
+    paddingVertical: scale(14),
+    borderBottomWidth: StyleSheet.hairlineWidth, // Ultra-thin line
+    borderBottomColor: "rgba(236, 154, 21, 0.15)", // Subtle glowing orange tint
+    backgroundColor: "transparent", // Let the modal background shine through
+  },
+  integratedReplyRow: {
+    flexDirection: "row",
+    marginTop: scale(12),
+    paddingTop: scale(12),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255, 255, 255, 0.05)", // Very faint white separator for replies
+    paddingLeft: scale(20), // Stronger indent so replies look distinct
+  },
+  backButton: {
+    width: scale(40),
+    height: scale(40),
+    minWidth: scale(40),
+    minHeight: scale(40),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  flatListContent: {
+    paddingBottom: 0,
+  },
+  reelContainer: {
+    width: width,
+    height: height,
+    position: "relative",
+    backgroundColor: "#000",
+    overflow: "hidden",
+  },
+  reelImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000",
+    alignSelf: "center",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    paddingTop: 0,
+  },
+  videoTouchable: {
+    width: "100%",
+    height: "100%",
+  },
+  starAnimationContainer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: scale(-40),
+    marginTop: scale(-40),
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  playPauseIconContainer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: scale(-40),
+    marginTop: scale(-40),
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 999,
+  },
+  playPauseIconWrapper: {
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    borderRadius: scale(50),
+    width: scale(80),
+    height: scale(80),
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-    gamifiedCommentCard: {
-        backgroundColor: "rgba(255, 255, 255, 0.03)", // Glass card effect
-        borderRadius: scale(16),
-        padding: scale(12),
-        marginBottom: scale(12),
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.08)",
-    },
+  gamifiedCommentCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)", // Glass card effect
+    borderRadius: scale(16),
+    padding: scale(12),
+    marginBottom: scale(12),
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
 
-    gamifiedReplyCard: {
-        flexDirection: "row",
-        marginTop: scale(12),
-        paddingTop: scale(12),
-        borderTopWidth: 1,
-        borderTopColor: "rgba(255, 255, 255, 0.05)",
-        paddingLeft: scale(8), // Slight indent
-    },
+  gamifiedReplyCard: {
+    flexDirection: "row",
+    marginTop: scale(12),
+    paddingTop: scale(12),
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.05)",
+    paddingLeft: scale(8), // Slight indent
+  },
 
-    threeDotsButton: {
-        position: "absolute",
-        top: Platform.OS === "ios" ? scale(50) : scale(40),
-        right: spacing.lg,
-        width: scale(44),
-        height: scale(44),
-        minWidth: scale(44),
-        minHeight: scale(44),
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 10,
-        backgroundColor: "rgba(0, 0, 0, 0.3)",
-        borderRadius: scale(22),
-    },
-    // Action Icons Container - Fixed position, horizontally aligned, no background
-    actionIconsContainer: {
-        position: "absolute",
-        right: scale(1),
-        left: spacing.lg,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        zIndex: 10,
-    },
-    // Tip Button - Left aligned
-    tipButton: {
-        width: "100%", // Explicitly fill the flex wrapper
-        backgroundColor: "#EC9A15",
-        paddingVertical: scale(12),
-        borderRadius: scale(25),
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: spacing.sm,
-    },
-    tipButtonText: {
-        color: "#fff",
-        fontSize: getFontSize(15),
-        fontWeight: "700",
-    },
-    bottomInfoContainer: {
-        width: width * 0.75, // Force the width so it breaks text early
-        marginBottom: scale(12),
-        paddingRight: scale(16), // Extra padding to keep it off the right edge
-    },
-    // Action Icons Group - Right aligned - Standardized gaps
-    actionIconsGroup: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: scale(16), // Consistent gap between icons
-    },
-    actionIconButton: {
-        alignItems: "center",
-        justifyContent: "center",
-        gap: scale(4), // Gap between icon and count
-        width: scale(50),
-        height: scale(50),
-        minWidth: scale(50),
-        minHeight: scale(50),
-    },
-    // Horizontal Line - Centered, small, after icons
-    horizontalLine: {
-        position: "absolute",
-        alignSelf: "center",
-        width: scale(180),
-        height: scale(0.6),
-        backgroundColor: "#fff",
-        opacity: 0.6,
-        zIndex: 10,
-    },
-    questTracker: {
-        position: "absolute",
-        top: Platform.OS === "ios" ? scale(100) : scale(90), // Positioned below back button
-        left: spacing.lg,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        paddingHorizontal: scale(10),
-        paddingVertical: scale(6),
-        borderRadius: scale(12),
-        borderWidth: 1,
-        borderColor: "rgba(236, 154, 21, 0.4)",
-        zIndex: 10,
-    },
-    questIcon: {
-        fontSize: getFontSize(18),
-        marginRight: scale(6),
-    },
-    questTitle: {
-        color: "#EC9A15",
-        fontSize: getFontSize(10),
-        fontWeight: "800",
-        textTransform: "uppercase",
-    },
-    questProgress: {
-        color: "#fff",
-        fontSize: getFontSize(11),
-        fontWeight: "500",
-    },
-    floatingXP: {
-        position: "absolute",
-        top: -20,
-        left: 10,
-        zIndex: 20,
-    },
-    floatingXPText: {
-        color: "#FFD700", // Bright gold
-        fontSize: getFontSize(16),
-        fontWeight: "900",
-        fontStyle: "italic",
-        textShadowColor: "rgba(0, 0, 0, 0.8)",
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
-    },
-    actionIconCount: {
-        color: "#fff",
-        fontSize: getFontSize(11), // Shrunk from 13 to 11
-        fontWeight: "600",
-        textShadowColor: "rgba(0, 0, 0, 0.8)",
-        textShadowOffset: { width: 0, height: scale(1) },
-        textShadowRadius: scale(3),
-        marginTop: scale(2),
-        marginBottom: scale(10), // Give it some space before the next icon
-        textAlign: "center",
-    },
-    // Music Bar - Fixed position above action icons
-    musicBarContainer: {
-        position: "absolute",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.sm,
-        paddingHorizontal: scale(12),
-        paddingVertical: scale(8),
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        borderRadius: scale(20),
-        zIndex: 10,
-        maxWidth: scale(200),
-        minWidth: scale(120),
-    },
-    actionButtons: {
-        position: "absolute",
-        right: scale(12),
-        bottom: Platform.OS === "ios" ? scale(100) : scale(80),
-        justifyContent: "flex-end",
-        alignItems: "center",
-        gap: scale(28),
-    },
-    actionButton: {
-        alignItems: "center",
-        gap: scale(6),
-        minWidth: scale(50),
-    },
-    actionCount: {
-        color: "#fff",
-        fontSize: getFontSize(13),
-        fontWeight: "600",
-        textShadowColor: "rgba(0, 0, 0, 0.5)",
-        textShadowOffset: { width: 0, height: scale(1) },
-        textShadowRadius: scale(2),
-    },
-    threeDotsMenuModal: {
-        backgroundColor: "#3C2610",
-        borderTopLeftRadius: scale(20),
-        borderTopRightRadius: scale(20),
-        paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
-        maxHeight: height * 0.5,
-    },
-    menuItem: {
-        paddingVertical: spacing.lg,
-        paddingHorizontal: spacing.xl,
-        borderBottomWidth: scale(1),
-        borderBottomColor: "#2a2a2a",
-        borderWidth: scale(1),
-        borderColor: "transparent",
-        minHeight: scale(50),
-    },
-    menuItemText: {
-        color: "#fff",
-        fontSize: getFontSize(16),
-        textAlign: "center",
-    },
-    menuItemTextDanger: {
-        color: "#FF3B30",
-    },
+  threeDotsButton: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? scale(50) : scale(40),
+    right: spacing.lg,
+    width: scale(44),
+    height: scale(44),
+    minWidth: scale(44),
+    minHeight: scale(44),
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: scale(22),
+  },
+  // Action Icons Container - Fixed position, horizontally aligned, no background
+  actionIconsContainer: {
+    position: "absolute",
+    right: scale(1),
+    left: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 10,
+  },
+  // Tip Button - Left aligned
+  tipButton: {
+    width: "100%", // Explicitly fill the flex wrapper
+    backgroundColor: "#EC9A15",
+    paddingVertical: scale(12),
+    borderRadius: scale(25),
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  tipButtonText: {
+    color: "#fff",
+    fontSize: getFontSize(15),
+    fontWeight: "700",
+  },
+  bottomInfoContainer: {
+    width: width * 0.75, // Force the width so it breaks text early
+    marginBottom: scale(12),
+    paddingRight: scale(16), // Extra padding to keep it off the right edge
+  },
+  // Action Icons Group - Right aligned - Standardized gaps
+  actionIconsGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(16), // Consistent gap between icons
+  },
+  actionIconButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: scale(4), // Gap between icon and count
+    width: scale(50),
+    height: scale(50),
+    minWidth: scale(50),
+    minHeight: scale(50),
+  },
+  // Horizontal Line - Centered, small, after icons
+  horizontalLine: {
+    position: "absolute",
+    alignSelf: "center",
+    width: scale(180),
+    height: scale(0.6),
+    backgroundColor: "#fff",
+    opacity: 0.6,
+    zIndex: 10,
+  },
+  questTracker: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? scale(100) : scale(90), // Positioned below back button
+    left: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(6),
+    borderRadius: scale(12),
+    borderWidth: 1,
+    borderColor: "rgba(236, 154, 21, 0.4)",
+    zIndex: 10,
+  },
+  questIcon: {
+    fontSize: getFontSize(18),
+    marginRight: scale(6),
+  },
+  questTitle: {
+    color: "#EC9A15",
+    fontSize: getFontSize(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  questProgress: {
+    color: "#fff",
+    fontSize: getFontSize(11),
+    fontWeight: "500",
+  },
+  floatingXP: {
+    position: "absolute",
+    top: -20,
+    left: 10,
+    zIndex: 20,
+  },
+  floatingXPText: {
+    color: "#FFD700", // Bright gold
+    fontSize: getFontSize(16),
+    fontWeight: "900",
+    fontStyle: "italic",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  actionIconCount: {
+    color: "#fff",
+    fontSize: getFontSize(11), // Shrunk from 13 to 11
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: scale(1) },
+    textShadowRadius: scale(3),
+    marginTop: scale(2),
+    marginBottom: scale(10), // Give it some space before the next icon
+    textAlign: "center",
+  },
+  // Music Bar - Fixed position above action icons
+  musicBarContainer: {
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(8),
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: scale(20),
+    zIndex: 10,
+    maxWidth: scale(200),
+    minWidth: scale(120),
+  },
+  actionButtons: {
+    position: "absolute",
+    right: scale(12),
+    bottom: Platform.OS === "ios" ? scale(100) : scale(80),
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: scale(28),
+  },
+  actionButton: {
+    alignItems: "center",
+    gap: scale(6),
+    minWidth: scale(50),
+  },
+  actionCount: {
+    color: "#fff",
+    fontSize: getFontSize(13),
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: scale(1) },
+    textShadowRadius: scale(2),
+  },
+  threeDotsMenuModal: {
+    backgroundColor: "#3C2610",
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
+    paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
+    maxHeight: height * 0.5,
+  },
+  menuItem: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderBottomWidth: scale(1),
+    borderBottomColor: "#2a2a2a",
+    borderWidth: scale(1),
+    borderColor: "transparent",
+    minHeight: scale(50),
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: getFontSize(16),
+    textAlign: "center",
+  },
+  menuItemTextDanger: {
+    color: "#FF3B30",
+  },
 
-    captionContainer: {
-        marginTop: scale(6),
-        marginBottom: scale(4),
-    },
-    profileRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 0,
-        gap: scale(10),
-        flexWrap: "nowrap",
-    },
-    followButtonBox: {
-        backgroundColor: "#EC9A15",
-        paddingHorizontal: spacing.lg,
-        paddingVertical: scale(6),
-        borderRadius: scale(6),
-        marginLeft: spacing.sm,
-        minHeight: scale(28),
-    },
-    followButtonBoxText: {
-        color: "#fff",
-        fontSize: getFontSize(13),
-        fontWeight: "600",
-    },
-    profileImageContainer: {
-        position: "relative",
-    },
-    profileImage: {
-        width: scale(40),
-        height: scale(40),
-        borderRadius: scale(20),
-        borderWidth: scale(1),
-        borderColor: "#fff",
-    },
-    commandPanelModal: {
-        backgroundColor: "#2A1B0D", // Deep rich brown/black
-        borderTopLeftRadius: scale(24),
-        borderTopRightRadius: scale(24),
-        paddingHorizontal: spacing.lg,
-        paddingBottom: Platform.OS === "ios" ? scale(40) : scale(24),
-        borderTopWidth: 1,
-        borderColor: "rgba(236, 154, 21, 0.3)", // Glowing top edge
-        shadowColor: "#EC9A15",
-        shadowOffset: { width: 0, height: -5 },
-        shadowOpacity: 0.15,
-        shadowRadius: 15,
-        elevation: 10,
-    },
-    commandPanelTitle: {
-        color: "#9CA3AF",
-        fontSize: getFontSize(12),
-        fontWeight: "800",
-        letterSpacing: 1.5,
-        marginBottom: scale(16),
-        marginLeft: scale(4),
-    },
-    commandGrid: {
-        gap: scale(10),
-    },
-    commandItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.05)", // Glass effect
-        borderRadius: scale(16),
-        padding: scale(12),
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.08)",
-    },
-    commandItemDanger: {
-        backgroundColor: "rgba(255, 59, 48, 0.05)",
-        borderColor: "rgba(255, 59, 48, 0.2)",
-    },
-    commandIconBox: {
-        width: scale(40),
-        height: scale(40),
-        borderRadius: scale(12),
-        backgroundColor: "rgba(236, 154, 21, 0.15)", // Subtle neon orange backdrop
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: scale(14),
-    },
-    commandItemText: {
-        color: "#fff",
-        fontSize: getFontSize(16),
-        fontWeight: "600",
-    },
-    commandTextDanger: {
-        color: "#FF3B30",
-    },
-    commandCancelButton: {
-        marginTop: scale(20),
-        paddingVertical: scale(16),
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        borderRadius: scale(25),
-    },
-    downloadCard: {
-        width: wp(80),
-        backgroundColor: "#1E1111",
-        borderRadius: scale(16),
-        padding: scale(20),
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "rgba(236, 154, 21, 0.3)",
-    },
-    downloadTitle: {
-        color: "#fff",
-        fontSize: getFontSize(18),
-        fontWeight: "bold",
-        marginBottom: scale(8),
-    },
-    downloadSubtitle: {
-        color: "#CAD7D8",
-        fontSize: getFontSize(13),
-        textAlign: "center",
-        marginBottom: scale(20),
-    },
-    downloadingState: {
-        alignItems: "center",
-        marginVertical: scale(10),
-    },
-    processingText: {
-        color: "#EC9A15",
-        marginTop: scale(12),
-        fontSize: getFontSize(14),
-        fontWeight: "600",
-    },
-    downloadButtonRow: {
-        flexDirection: "row",
-        gap: scale(12),
-        width: "100%",
-    },
-    downloadCancelBtn: {
-        flex: 1,
-        paddingVertical: scale(12),
-        borderRadius: scale(8),
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        alignItems: "center",
-    },
-    downloadConfirmBtn: {
-        flex: 1,
-        paddingVertical: scale(12),
-        borderRadius: scale(8),
-        backgroundColor: "#EC9A15",
-        alignItems: "center",
-    },
-    downloadCancelText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: getFontSize(14),
-    },
-    downloadConfirmText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: getFontSize(14),
-    },
-    commandCancelText: {
-        color: "#fff",
-        fontSize: getFontSize(16),
-        fontWeight: "700",
-    },
-    followButton: {
-        position: "absolute",
-        bottom: scale(-2),
-        right: scale(-2),
-        width: scale(22),
-        height: scale(22),
-        borderRadius: scale(11),
-        backgroundColor: "#EC9A15",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: scale(1),
-        borderColor: "#000",
-    },
-    followButtonText: {
-        color: "#fff",
-        fontSize: getFontSize(14),
-        fontWeight: "700",
-    },
-    username: {
-        color: "#ffffff", // explicitly set white
-        fontSize: getFontSize(15),
-        fontWeight: "600",
-        textShadowColor: "rgba(0, 0, 0, 0.8)", // Darker shadow for visibility
-        textShadowOffset: { width: 0, height: scale(1) },
-        textShadowRadius: scale(2),
-    },
-    caption: {
-        color: "#ffffff", // explicitly set white
-        fontSize: getFontSize(14),
-        marginTop: 0,
-        marginBottom: 0,
-        lineHeight: scale(20),
-        textShadowColor: "rgba(0, 0, 0, 0.8)",
-        textShadowOffset: { width: 0, height: scale(1) },
-        textShadowRadius: scale(3),
-    },
-    showMoreText: {
-        color: "#EC9A15",
-        fontSize: getFontSize(14),
-        fontWeight: "600",
-        marginTop: scale(4),
-        marginBottom: scale(10),
-    },
-    musicRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: scale(6),
-        marginTop: scale(4),
-        marginBottom: spacing.sm,
-    },
-    musicName: {
-        color: "#ffffff", // explicitly set white
-        fontSize: getFontSize(13),
-        flex: 1,
-        fontWeight: "500",
-        textShadowColor: "rgba(0, 0, 0, 0.8)",
-        textShadowOffset: { width: 0, height: scale(1) },
-        textShadowRadius: scale(3),
-    },
-    // Modal Styles
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        justifyContent: "flex-end",
-    },
-    commentModal: {
-        backgroundColor: "#3C2610",
-        borderTopLeftRadius: scale(20),
-        borderTopRightRadius: scale(20),
-        height: height * 0.7,
-        paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
-    },
-    shareModal: {
-        backgroundColor: "#3C2610",
-        borderTopLeftRadius: scale(20),
-        borderTopRightRadius: scale(20),
-        maxHeight: height * 0.6,
-        paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
-    },
+  captionContainer: {
+    marginTop: scale(6),
+    marginBottom: scale(4),
+  },
+  profileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 0,
+    gap: scale(10),
+    flexWrap: "nowrap",
+  },
+  followButtonBox: {
+    backgroundColor: "#EC9A15",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: scale(6),
+    borderRadius: scale(6),
+    marginLeft: spacing.sm,
+    minHeight: scale(28),
+  },
+  followButtonBoxText: {
+    color: "#fff",
+    fontSize: getFontSize(13),
+    fontWeight: "600",
+  },
+  profileImageContainer: {
+    position: "relative",
+  },
+  profileImage: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    borderWidth: scale(1),
+    borderColor: "#fff",
+  },
+  commandPanelModal: {
+    backgroundColor: "#2A1B0D", // Deep rich brown/black
+    borderTopLeftRadius: scale(24),
+    borderTopRightRadius: scale(24),
+    paddingHorizontal: spacing.lg,
+    paddingBottom: Platform.OS === "ios" ? scale(40) : scale(24),
+    borderTopWidth: 1,
+    borderColor: "rgba(236, 154, 21, 0.3)", // Glowing top edge
+    shadowColor: "#EC9A15",
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  commandPanelTitle: {
+    color: "#9CA3AF",
+    fontSize: getFontSize(12),
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    marginBottom: scale(16),
+    marginLeft: scale(4),
+  },
+  commandGrid: {
+    gap: scale(10),
+  },
+  commandItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)", // Glass effect
+    borderRadius: scale(16),
+    padding: scale(12),
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  commandItemDanger: {
+    backgroundColor: "rgba(255, 59, 48, 0.05)",
+    borderColor: "rgba(255, 59, 48, 0.2)",
+  },
+  commandIconBox: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(12),
+    backgroundColor: "rgba(236, 154, 21, 0.15)", // Subtle neon orange backdrop
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: scale(14),
+  },
+  commandItemText: {
+    color: "#fff",
+    fontSize: getFontSize(16),
+    fontWeight: "600",
+  },
+  commandTextDanger: {
+    color: "#FF3B30",
+  },
+  commandCancelButton: {
+    marginTop: scale(20),
+    paddingVertical: scale(16),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: scale(25),
+  },
+  downloadCard: {
+    width: wp(80),
+    backgroundColor: "#1E1111",
+    borderRadius: scale(16),
+    padding: scale(20),
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(236, 154, 21, 0.3)",
+  },
+  downloadTitle: {
+    color: "#fff",
+    fontSize: getFontSize(18),
+    fontWeight: "bold",
+    marginBottom: scale(8),
+  },
+  downloadSubtitle: {
+    color: "#CAD7D8",
+    fontSize: getFontSize(13),
+    textAlign: "center",
+    marginBottom: scale(20),
+  },
+  downloadingState: {
+    alignItems: "center",
+    marginVertical: scale(10),
+  },
+  processingText: {
+    color: "#EC9A15",
+    marginTop: scale(12),
+    fontSize: getFontSize(14),
+    fontWeight: "600",
+  },
+  downloadButtonRow: {
+    flexDirection: "row",
+    gap: scale(12),
+    width: "100%",
+  },
+  downloadCancelBtn: {
+    flex: 1,
+    paddingVertical: scale(12),
+    borderRadius: scale(8),
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+  },
+  downloadConfirmBtn: {
+    flex: 1,
+    paddingVertical: scale(12),
+    borderRadius: scale(8),
+    backgroundColor: "#EC9A15",
+    alignItems: "center",
+  },
+  downloadCancelText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: getFontSize(14),
+  },
+  downloadConfirmText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: getFontSize(14),
+  },
+  commandCancelText: {
+    color: "#fff",
+    fontSize: getFontSize(16),
+    fontWeight: "700",
+  },
+  followButton: {
+    position: "absolute",
+    bottom: scale(-2),
+    right: scale(-2),
+    width: scale(22),
+    height: scale(22),
+    borderRadius: scale(11),
+    backgroundColor: "#EC9A15",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: scale(1),
+    borderColor: "#000",
+  },
+  followButtonText: {
+    color: "#fff",
+    fontSize: getFontSize(14),
+    fontWeight: "700",
+  },
+  username: {
+    color: "#ffffff", // explicitly set white
+    fontSize: getFontSize(15),
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.8)", // Darker shadow for visibility
+    textShadowOffset: { width: 0, height: scale(1) },
+    textShadowRadius: scale(2),
+  },
+  caption: {
+    color: "#ffffff", // explicitly set white
+    fontSize: getFontSize(14),
+    marginTop: 0,
+    marginBottom: 0,
+    lineHeight: scale(20),
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: scale(1) },
+    textShadowRadius: scale(3),
+  },
+  showMoreText: {
+    color: "#EC9A15",
+    fontSize: getFontSize(14),
+    fontWeight: "600",
+    marginTop: scale(4),
+    marginBottom: scale(10),
+  },
+  musicRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(6),
+    marginTop: scale(4),
+    marginBottom: spacing.sm,
+  },
+  musicName: {
+    color: "#ffffff", // explicitly set white
+    fontSize: getFontSize(13),
+    flex: 1,
+    fontWeight: "500",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: scale(1) },
+    textShadowRadius: scale(3),
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "flex-end",
+  },
+  commentModal: {
+    backgroundColor: "#3C2610",
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
+    height: height * 0.7,
+    paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
+  },
+  shareModal: {
+    backgroundColor: "#3C2610",
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
+    maxHeight: height * 0.6,
+    paddingBottom: Platform.OS === "ios" ? scale(32) : scale(20),
+  },
 
-    commentHeaderTitle: {
-        color: "#fff",
-        fontSize: getFontSize(18),
-        fontWeight: "700",
-    },
-    closeButton: {
-        color: "#fff",
-        fontSize: getFontSize(24),
-        fontWeight: "300",
-        minWidth: scale(44),
-        minHeight: scale(44),
-        textAlign: "center",
-        textAlignVertical: "center",
-    },
-    commentsList: {
-        flex: 1,
-        paddingHorizontal: spacing.lg,
-        maxHeight: height * 0.5,
-    },
-    commentItem: {
-        flexDirection: "row",
-        paddingVertical: scale(12),
-        borderBottomWidth: scale(1),
-        borderBottomColor: "#2a2a2a",
-        minHeight: scale(60),
-    },
-    commentAvatar: {
-        width: scale(32),
-        height: scale(32),
-        borderRadius: scale(16),
-        marginRight: scale(12),
-    },
-    commentContent: {
-        flex: 1,
-    },
-    commentUsername: {
-        color: "#fff",
-        fontSize: getFontSize(14),
-        fontWeight: "600",
-        marginBottom: scale(4),
-    },
-    commentText: {
-        color: "#fff",
-        fontSize: getFontSize(14),
-        marginBottom: scale(6),
-        lineHeight: scale(20),
-    },
-    commentActions: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.lg,
-    },
-    commentTime: {
-        color: "#999",
-        fontSize: getFontSize(12),
-    },
-    commentReply: {
-        color: "#999",
-        fontSize: getFontSize(12),
-        fontWeight: "600",
-    },
-    commentLikeButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: scale(4),
-        minWidth: scale(44),
-        minHeight: scale(44),
-        justifyContent: "center",
-    },
-    commentLikeCount: {
-        color: "#999",
-        fontSize: getFontSize(12),
-    },
-    commentInputContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.lg,
-        paddingTop: scale(12),
-        borderTopWidth: scale(1),
-        borderTopColor: "#333",
-        gap: scale(12),
-        minHeight: scale(60),
-    },
-    commentInputAvatar: {
-        width: scale(32),
-        height: scale(32),
-        borderRadius: scale(16),
-    },
-    commentInput: {
-        flex: 1,
-        backgroundColor: "#2a2a2a",
-        borderRadius: scale(20),
-        paddingHorizontal: spacing.lg,
-        paddingVertical: scale(10),
-        color: "#fff",
-        fontSize: getFontSize(14),
-        maxHeight: scale(100),
-        minHeight: scale(40),
-    },
-    postButton: {
-        paddingHorizontal: spacing.lg,
-        minWidth: scale(44),
-        minHeight: scale(44),
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    flexButtonWrapper: {
-        flex: 1, // This tells both buttons to grow equally
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    postButtonDisabled: {
-        opacity: 0.5,
-    },
-    postButtonText: {
-        color: "#EC9A15",
-        fontSize: getFontSize(14),
-        fontWeight: "600",
-    },
-    postButtonTextDisabled: {
-        color: "#666",
-    },
-    shareHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: spacing.lg,
-        paddingBottom: spacing.lg,
-        borderBottomWidth: scale(1),
-        borderBottomColor: "#333",
-        minHeight: scale(50),
-    },
-    shareHeaderTitle: {
-        color: "#fff",
-        fontSize: getFontSize(18),
-        fontWeight: "700",
-    },
-    friendsSection: {
-        paddingVertical: spacing.lg,
-        borderBottomWidth: scale(1),
-        borderBottomColor: "#2a2a2a",
-    },
-    sectionTitle: {
-        color: "#fff",
-        fontSize: getFontSize(14),
-        fontWeight: "600",
-        paddingHorizontal: spacing.lg,
-        marginBottom: scale(12),
-    },
-    friendsList: {
-        paddingHorizontal: spacing.lg,
-    },
-    friendItem: {
-        alignItems: "center",
-        marginRight: spacing.lg,
-        width: scale(70),
-    },
-    friendAvatar: {
-        width: scale(60),
-        height: scale(60),
-        borderRadius: scale(30),
-        marginBottom: spacing.sm,
-    },
-    friendName: {
-        color: "#fff",
-        fontSize: getFontSize(12),
-        textAlign: "center",
-    },
-    shareOptionsSection: {
-        paddingVertical: spacing.lg,
-    },
-    shareOptionsList: {
-        paddingHorizontal: spacing.lg,
-    },
-    shareOption: {
-        alignItems: "center",
-        marginRight: scale(20),
-        width: scale(70),
-    },
-    shareOptionIconCircle: {
-        width: scale(60),
-        height: scale(60),
-        borderRadius: scale(30),
-        justifyContent: "center",
-        alignItems: "center",
-        marginBottom: spacing.sm,
-    },
-    shareOptionIconText: {
-        fontSize: getFontSize(28),
-        color: "#fff",
-    },
-    shareOptionName: {
-        color: "#fff",
-        fontSize: getFontSize(12),
-        textAlign: "center",
-    },
-    shareIconImage: {
-        width: scale(24),
-        height: scale(24),
-    },
-    replyItem: {
-        flexDirection: "row",
-        paddingVertical: scale(8),
-        paddingLeft: scale(44),
-        marginTop: scale(8),
-        borderTopWidth: scale(1),
-        borderTopColor: "#2a2a2a",
-    },
+  commentHeaderTitle: {
+    color: "#fff",
+    fontSize: getFontSize(18),
+    fontWeight: "700",
+  },
+  closeButton: {
+    color: "#fff",
+    fontSize: getFontSize(24),
+    fontWeight: "300",
+    minWidth: scale(44),
+    minHeight: scale(44),
+    textAlign: "center",
+    textAlignVertical: "center",
+  },
+  commentsList: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+    maxHeight: height * 0.5,
+  },
+  commentItem: {
+    flexDirection: "row",
+    paddingVertical: scale(12),
+    borderBottomWidth: scale(1),
+    borderBottomColor: "#2a2a2a",
+    minHeight: scale(60),
+  },
+  commentAvatar: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+    marginRight: scale(12),
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentUsername: {
+    color: "#fff",
+    fontSize: getFontSize(14),
+    fontWeight: "600",
+    marginBottom: scale(4),
+  },
+  commentText: {
+    color: "#fff",
+    fontSize: getFontSize(14),
+    marginBottom: scale(6),
+    lineHeight: scale(20),
+  },
+  commentActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+  },
+  commentTime: {
+    color: "#999",
+    fontSize: getFontSize(12),
+  },
+  commentReply: {
+    color: "#999",
+    fontSize: getFontSize(12),
+    fontWeight: "600",
+  },
+  commentLikeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(4),
+    minWidth: scale(44),
+    minHeight: scale(44),
+    justifyContent: "center",
+  },
+  commentLikeCount: {
+    color: "#999",
+    fontSize: getFontSize(12),
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingTop: scale(12),
+    borderTopWidth: scale(1),
+    borderTopColor: "#333",
+    gap: scale(12),
+    minHeight: scale(60),
+  },
+  commentInputAvatar: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: "#2a2a2a",
+    borderRadius: scale(20),
+    paddingHorizontal: spacing.lg,
+    paddingVertical: scale(10),
+    color: "#fff",
+    fontSize: getFontSize(14),
+    maxHeight: scale(100),
+    minHeight: scale(40),
+  },
+  postButton: {
+    paddingHorizontal: spacing.lg,
+    minWidth: scale(44),
+    minHeight: scale(44),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  flexButtonWrapper: {
+    flex: 1, // This tells both buttons to grow equally
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  postButtonDisabled: {
+    opacity: 0.5,
+  },
+  postButtonText: {
+    color: "#EC9A15",
+    fontSize: getFontSize(14),
+    fontWeight: "600",
+  },
+  postButtonTextDisabled: {
+    color: "#666",
+  },
+  shareHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: scale(1),
+    borderBottomColor: "#333",
+    minHeight: scale(50),
+  },
+  shareHeaderTitle: {
+    color: "#fff",
+    fontSize: getFontSize(18),
+    fontWeight: "700",
+  },
+  friendsSection: {
+    paddingVertical: spacing.lg,
+    borderBottomWidth: scale(1),
+    borderBottomColor: "#2a2a2a",
+  },
+  sectionTitle: {
+    color: "#fff",
+    fontSize: getFontSize(14),
+    fontWeight: "600",
+    paddingHorizontal: spacing.lg,
+    marginBottom: scale(12),
+  },
+  friendsList: {
+    paddingHorizontal: spacing.lg,
+  },
+  friendItem: {
+    alignItems: "center",
+    marginRight: spacing.lg,
+    width: scale(70),
+  },
+  friendAvatar: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(30),
+    marginBottom: spacing.sm,
+  },
+  friendName: {
+    color: "#fff",
+    fontSize: getFontSize(12),
+    textAlign: "center",
+  },
+  shareOptionsSection: {
+    paddingVertical: spacing.lg,
+  },
+  shareOptionsList: {
+    paddingHorizontal: spacing.lg,
+  },
+  shareOption: {
+    alignItems: "center",
+    marginRight: scale(20),
+    width: scale(70),
+  },
+  shareOptionIconCircle: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(30),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  shareOptionIconText: {
+    fontSize: getFontSize(28),
+    color: "#fff",
+  },
+  shareOptionName: {
+    color: "#fff",
+    fontSize: getFontSize(12),
+    textAlign: "center",
+  },
+  shareIconImage: {
+    width: scale(24),
+    height: scale(24),
+  },
+  replyItem: {
+    flexDirection: "row",
+    paddingVertical: scale(8),
+    paddingLeft: scale(44),
+    marginTop: scale(8),
+    borderTopWidth: scale(1),
+    borderTopColor: "#2a2a2a",
+  },
 
-    rightActionContainer: {
-        position: "absolute",
-        right: scale(6),
-        bottom: Platform.OS === "ios" ? scale(150) : scale(140),
-        alignItems: "center",
-        gap: scale(20),
-        zIndex: 10,
-    },
-    rightActionButton: {
-        alignItems: "center",
-        justifyContent: "center",
-        gap: scale(4),
-    },
-    // Row for Tip & Vote pills
-    bottomButtonsRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: scale(12), // Gap between the two buttons
-        width: "100%", // Forces full width
-    },
-    // The Vote states
-    voteButtonActive: {
-        backgroundColor: "#EC9A15",
-    },
-    voteButtonInactive: {
-        backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark semi-transparent pill
-        borderWidth: 1,
-        borderColor: "#EC9A15",
-    },
-    // Update your bottom content to give it a bit more width
-    bottomContent: {
-        position: "absolute",
-        left: spacing.lg,
-        right: spacing.lg, // This locks the container to both edges
-        justifyContent: "flex-end",
-        zIndex: 10,
-        marginBottom: scale(4),
-    },
+  rightActionContainer: {
+    position: "absolute",
+    right: scale(6),
+    bottom: Platform.OS === "ios" ? scale(150) : scale(140),
+    alignItems: "center",
+    gap: scale(20),
+    zIndex: 10,
+  },
+  rightActionButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: scale(4),
+  },
+  // Row for Tip & Vote pills
+  bottomButtonsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: scale(12), // Gap between the two buttons
+    width: "100%", // Forces full width
+  },
+  // The Vote states
+  voteButtonActive: {
+    backgroundColor: "#EC9A15",
+  },
+  voteButtonInactive: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark semi-transparent pill
+    borderWidth: 1,
+    borderColor: "#EC9A15",
+  },
+  // Update your bottom content to give it a bit more width
+  bottomContent: {
+    position: "absolute",
+    left: spacing.lg,
+    right: spacing.lg, // This locks the container to both edges
+    justifyContent: "flex-end",
+    zIndex: 10,
+    marginBottom: scale(4),
+  },
 });
