@@ -18,12 +18,8 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     console.log("[API] GetDetails with token:", token.substring(0, 20) + "...");
 
-    // Use backend URL - prefer HTTPS for production
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL_PROD ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      "http://103.194.228.68:3552/v1/api/";
-    const detailsEndpoint = `${backendUrl}admin/getDetails`;
+    // Use hardcoded backend URL - works for both local and Vercel
+    const detailsEndpoint = "http://103.194.228.68:3552/v1/api/admin/getDetails";
 
     console.log("[API] Proxying to backend:", detailsEndpoint);
 

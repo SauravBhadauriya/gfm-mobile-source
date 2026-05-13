@@ -2,9 +2,5 @@
   "buildCommand": "npm run build:admin",
   "outputDirectory": "apps/gully-fame-admin/.next",
   "framework": "nextjs",
-  "installCommand": "npm install",
-  "env": {
-    "NEXT_PUBLIC_API_BASE_URL": "@next_public_api_base_url",
-    "NEXT_PUBLIC_API_BASE_URL_PROD": "@next_public_api_base_url_prod"
-  }
+  "installCommand": "npm install"
 }
