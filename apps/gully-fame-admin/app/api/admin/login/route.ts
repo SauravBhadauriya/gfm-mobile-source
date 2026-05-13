@@ -7,8 +7,17 @@ export async function POST(request: NextRequest) {
 
     console.log("[API] Login attempt:", { email, role });
 
-    // Use hardcoded backend URL - works for both local and Vercel
-    const loginEndpoint = "http://103.194.228.68:3552/v1/api/admin/login";
+    // Determine backend URL based on environment
+    let loginEndpoint = "http://103.194.228.68:3552/v1/api/admin/login";
+
+    // Check if running on Vercel (production)
+    if (process.env.VERCEL_ENV === "production") {
+      // For production, try to use environment variable or public URL
+      loginEndpoint = process.env.BACKEND_URL || "http://103.194.228.68:3552/v1/api/admin/login";
+      console.log("[API] Production mode - using:", loginEndpoint);
+    } else {
+      console.log("[API] Development mode - using local backend");
+    }
 
     console.log("[API] Proxying to backend:", loginEndpoint);
 
