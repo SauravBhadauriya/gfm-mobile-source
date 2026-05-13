@@ -116,18 +116,8 @@ export async function loginAdmin(
   password: string,
   role: "ADMIN" | "SPONSOR" = "ADMIN"
 ): Promise<ApiResponse<{ token?: string; admin?: AdminUser }>> {
-  // Try local API first (for development/testing)
-  const localEndpoint = "/api/admin/login";
-  const remoteEndpoint = `${BASE_URL}admin/login`;
-
-  let endpoint = remoteEndpoint;
-  let useLocal = false;
-
-  // In development, try local first
-  if (process.env.NODE_ENV === "development") {
-    endpoint = localEndpoint;
-    useLocal = true;
-  }
+  // Use local API route which proxies to backend
+  const endpoint = "/api/admin/login";
 
   const startTime = Date.now();
   const logPrefix = `[authApi] POST admin/login`;
@@ -137,7 +127,7 @@ export async function loginAdmin(
       console.log(`${logPrefix} - Starting request`);
       console.log(`${logPrefix} - Email:`, email);
       console.log(`${logPrefix} - Role:`, role);
-      console.log(`${logPrefix} - Using ${useLocal ? "LOCAL" : "REMOTE"} endpoint:`, endpoint);
+      console.log(`${logPrefix} - Using local API route:`, endpoint);
     }
 
     const requestBody = {

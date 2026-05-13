@@ -5,57 +5,34 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password, role } = body;
 
-    console.log("[Mock API] Login attempt:", { email, role });
+    console.log("[API] Login attempt:", { email, role });
 
-    // Mock credentials
-    const validCredentials = {
-      admin: {
-        email: "admin@gullyfame.com",
-        password: "admin123",
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://103.194.228.68:3552/v1/api/";
+    const loginEndpoint = `${backendUrl}admin/login`;
+
+    console.log("[API] Proxying to backend:", loginEndpoint);
+
+    const response = await fetch(loginEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
-      sponsor: {
-        email: "sponsor@gullyfame.com",
-        password: "sponsor123",
-      },
-    };
+      body: JSON.stringify({
+        email,
+        password,
+        role,
+      }),
+    });
 
-    const roleKey = (role || "ADMIN").toLowerCase() as "admin" | "sponsor";
-    const creds = validCredentials[roleKey];
+    const data = await response.json();
 
-    if (!creds || creds.email !== email || creds.password !== password) {
-      return NextResponse.json(
-        {
-          code: 0,
-          message: "Invalid email or password",
-          data: null,
-        },
-        { status: 401 }
-      );
-    }
+    console.log("[API] Backend response status:", response.status);
+    console.log("[API] Backend response:", data);
 
-    // Generate mock token
-    const token = `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    return NextResponse.json(
-      {
-        code: 1,
-        message: "Login successful",
-        data: {
-          token,
-          admin: {
-            id: `${roleKey}_123`,
-            _id: `${roleKey}_123`,
-            email,
-            name: roleKey === "admin" ? "Admin User" : "Sponsor User",
-            role: roleKey,
-            sponsorCode: roleKey === "sponsor" ? "SPONSOR_001" : undefined,
-          },
-        },
-      },
-      { status: 200 }
-    );
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("[Mock API] Error:", error);
+    console.error("[API] Error:", error);
     return NextResponse.json(
       {
         code: 0,

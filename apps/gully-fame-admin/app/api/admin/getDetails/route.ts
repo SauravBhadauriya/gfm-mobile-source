@@ -16,30 +16,29 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    console.log("[Mock API] GetDetails with token:", token.substring(0, 20) + "...");
+    console.log("[API] GetDetails with token:", token.substring(0, 20) + "...");
 
-    // Determine role from token (mock logic)
-    const isAdmin = token.includes("admin") || Math.random() > 0.5;
-    const roleKey = isAdmin ? "admin" : "sponsor";
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://103.194.228.68:3552/v1/api/";
+    const detailsEndpoint = `${backendUrl}admin/getDetails`;
 
-    return NextResponse.json(
-      {
-        code: 1,
-        message: "Admin details fetched successfully",
-        data: {
-          id: `${roleKey}_123`,
-          _id: `${roleKey}_123`,
-          email: roleKey === "admin" ? "admin@gullyfame.com" : "sponsor@gullyfame.com",
-          name: roleKey === "admin" ? "Admin User" : "Sponsor User",
-          role: roleKey,
-          sponsorCode: roleKey === "sponsor" ? "SPONSOR_001" : undefined,
-          createdAt: new Date().toISOString(),
-        },
+    console.log("[API] Proxying to backend:", detailsEndpoint);
+
+    const response = await fetch(detailsEndpoint, {
+      method: "GET",
+      headers: {
+        Authorization: authHeader,
+        Accept: "application/json",
       },
-      { status: 200 }
-    );
+    });
+
+    const data = await response.json();
+
+    console.log("[API] Backend response status:", response.status);
+    console.log("[API] Backend response:", data);
+
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("[Mock API] Error:", error);
+    console.error("[API] Error:", error);
     return NextResponse.json(
       {
         code: 0,
