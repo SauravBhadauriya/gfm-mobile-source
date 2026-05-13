@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import { User, Key, Ban, Eye, Search, ChevronLeft, ChevronRight, Loader2, Shield, Calendar, Wallet } from 'lucide-react';
-import { getUserRole } from '@/lib/auth';
-import { getUsers, updateUserStatus, resetUserPassword, type User } from '@/lib/userApi';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  UserIcon,
+  Key,
+  Ban,
+  Eye,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Shield,
+  Calendar,
+  Wallet,
+} from "lucide-react";
+import { getUserRole } from "@/lib/auth";
+import { getUsers, updateUserStatus, resetUserPassword, type User } from "@/lib/userApi";
+import { useRouter } from "next/navigation";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -14,9 +26,9 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,29 +38,29 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params: any = {
         page,
         limit,
       };
-      
+
       if (searchTerm) params.search = searchTerm;
-      if (filterRole !== 'all') params.role = filterRole;
-      if (filterStatus !== 'all') params.status = filterStatus;
-      
+      if (filterRole !== "all") params.role = filterRole;
+      if (filterStatus !== "all") params.status = filterStatus;
+
       const result = await getUsers(params);
-      
+
       if (result.success && result.data) {
         setUsers(result.data.items || []);
         setTotal(result.data.total || 0);
         setTotalPages(result.data.totalPages || 1);
       } else {
-        setError(result.message || 'Failed to fetch users');
+        setError(result.message || "Failed to fetch users");
         setUsers([]);
       }
     } catch (err: any) {
-      console.error('Error fetching users:', err);
-      setError(err.message || 'Failed to load users');
+      console.error("Error fetching users:", err);
+      setError(err.message || "Failed to load users");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -61,57 +73,57 @@ export default function UsersPage() {
 
   const handleStatusUpdate = async (userId: string, currentStatus: string) => {
     if (!confirm(`Change status for this user?`)) return;
-    
+
     try {
-      const newStatus = currentStatus === 'active' ? 'banned' : 'active';
+      const newStatus = currentStatus === "active" ? "banned" : "active";
       const result = await updateUserStatus(userId, newStatus);
-      
+
       if (result.success) {
         alert(`User status updated to ${newStatus}`);
         fetchUsers();
       } else {
-        alert(result.message || 'Failed to update status');
+        alert(result.message || "Failed to update status");
       }
     } catch (err: any) {
-      console.error('Error updating status:', err);
-      alert('Failed to update user status');
+      console.error("Error updating status:", err);
+      alert("Failed to update user status");
     }
   };
 
   const handlePasswordReset = async (userId: string, userName: string) => {
     const newPassword = prompt(`Enter new password for ${userName}:`);
     if (!newPassword || newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+      alert("Password must be at least 6 characters");
       return;
     }
-    
+
     if (!confirm(`Reset password for ${userName}?`)) return;
-    
+
     try {
       const result = await resetUserPassword(userId, newPassword);
-      
+
       if (result.success) {
-        alert('Password reset successfully!');
+        alert("Password reset successfully!");
       } else {
-        alert(result.message || 'Failed to reset password');
+        alert(result.message || "Failed to reset password");
       }
     } catch (err: any) {
-      console.error('Error resetting password:', err);
-      alert('Failed to reset password');
+      console.error("Error resetting password:", err);
+      alert("Failed to reset password");
     }
   };
 
-  if (userRole !== 'admin') {
+  if (userRole !== "admin") {
     return <div>Access Denied</div>;
   }
 
   const getUserName = (user: User) => {
-    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Unknown';
+    return `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email || "Unknown";
   };
 
   const getUserDisplayRole = (role: string) => {
-    if (role === 'participants' || role === 'participant') return 'Participant';
-    if (role === 'fan') return 'Fan';
+    if (role === "participants" || role === "participant") return "Participant";
+    if (role === "fan") return "Fan";
     return role;
   };
 
@@ -141,7 +153,7 @@ export default function UsersPage() {
               value={searchTerm}
               onChange={handleSearch}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   fetchUsers();
                 }
               }}
@@ -201,9 +213,15 @@ export default function UsersPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Status
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       <div className="flex items-center space-x-1">
                         <Shield className="h-4 w-4" />
@@ -216,7 +234,9 @@ export default function UsersPage() {
                         <span>Joined</span>
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -230,37 +250,52 @@ export default function UsersPage() {
                     users.map((user) => (
                       <tr key={user.id || user._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{getUserName(user)}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {getUserName(user)}
+                          </div>
                           <div className="text-sm text-gray-500">{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.role === 'participants' || user.role === 'participant' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              user.role === "participants" || user.role === "participant"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
                             {getUserDisplayRole(user.role)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.status === 'active' ? 'bg-green-100 text-green-800' :
-                            user.status === 'banned' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {user.status || 'N/A'}
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              user.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : user.status === "banned"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {user.status || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.kycStatus === 'approved' ? 'bg-green-100 text-green-800' :
-                            user.kycStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                            user.kycStatus === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {user.kycStatus || 'pending'}
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              user.kycStatus === "approved"
+                                ? "bg-green-100 text-green-800"
+                                : user.kycStatus === "rejected"
+                                  ? "bg-red-100 text-red-800"
+                                  : user.kycStatus === "completed"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {user.kycStatus || "pending"}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.createdAt ? formatDate(user.createdAt) : 'N/A'}
+                          {user.createdAt ? formatDate(user.createdAt) : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <button
@@ -268,19 +303,23 @@ export default function UsersPage() {
                             className="text-blue-600 hover:text-blue-900"
                             title="View Profile"
                           >
-                            <User className="h-4 w-4 inline" />
+                            <UserIcon className="h-4 w-4 inline" />
                           </button>
                           <button
-                            onClick={() => handlePasswordReset(user.id || user._id, getUserName(user))}
+                            onClick={() =>
+                              handlePasswordReset(user.id || user._id, getUserName(user))
+                            }
                             className="text-green-600 hover:text-green-900"
                             title="Reset Password"
                           >
                             <Key className="h-4 w-4 inline" />
                           </button>
                           <button
-                            onClick={() => handleStatusUpdate(user.id || user._id, user.status || 'active')}
+                            onClick={() =>
+                              handleStatusUpdate(user.id || user._id, user.status || "active")
+                            }
                             className="text-red-600 hover:text-red-900"
-                            title={user.status === 'active' ? 'Ban User' : 'Activate User'}
+                            title={user.status === "active" ? "Ban User" : "Activate User"}
                           >
                             <Ban className="h-4 w-4 inline" />
                           </button>
@@ -314,13 +353,16 @@ export default function UsersPage() {
                 <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(page * limit, total)}</span> of{' '}
+                      Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
+                      <span className="font-medium">{Math.min(page * limit, total)}</span> of{" "}
                       <span className="font-medium">{total}</span> results
                     </p>
                   </div>
                   <div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <nav
+                      className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                      aria-label="Pagination"
+                    >
                       <button
                         onClick={() => setPage(Math.max(1, page - 1))}
                         disabled={page === 1}
@@ -345,8 +387,8 @@ export default function UsersPage() {
                             onClick={() => setPage(pageNum)}
                             className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                               page === pageNum
-                                ? 'z-10 bg-primary-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
-                                : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                                ? "z-10 bg-primary-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                                : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
                             }`}
                           >
                             {pageNum}
@@ -371,4 +413,3 @@ export default function UsersPage() {
     </DashboardLayout>
   );
 }
-

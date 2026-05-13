@@ -1,4 +1,4 @@
-package com.anonymous.gullyfamemobile
+package com.gullyfame.mobile
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

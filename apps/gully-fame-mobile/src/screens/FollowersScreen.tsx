@@ -64,7 +64,9 @@ const FollowersScreen: React.FC<FollowersScreenProps> = ({ route, navigation }) 
         // Initialize following states
         const states: { [key: string]: boolean } = {};
         followingResponse.data.items.forEach((user) => {
-          states[user._id] = true;
+          if (user && user._id) {
+            states[user._id] = true;
+          }
         });
         setFollowingStates(states);
       }
@@ -129,36 +131,43 @@ const FollowersScreen: React.FC<FollowersScreenProps> = ({ route, navigation }) 
   };
 
   // ✅ CREATED BY KIRO - Render user item
-  const renderUserItem = (user: User, isFollowing: boolean) => (
-    <View key={user._id} style={styles.userItem}>
-      {user.avatar && <Image source={{ uri: user.avatar }} style={styles.userAvatar} />}
+  const renderUserItem = (user: User, isFollowing: boolean) => {
+    // Safety check for user and _id
+    if (!user || !user._id) {
+      return null;
+    }
 
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{user.name}</Text>
-        {user.username && <Text style={styles.userUsername}>@{user.username}</Text>}
-        {user.bio && (
-          <Text style={styles.userBio} numberOfLines={1}>
-            {user.bio}
+    return (
+      <View key={user._id} style={styles.userItem}>
+        {user.avatar && <Image source={{ uri: user.avatar }} style={styles.userAvatar} />}
+
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{user.name}</Text>
+          {user.username && <Text style={styles.userUsername}>@{user.username}</Text>}
+          {user.bio && (
+            <Text style={styles.userBio} numberOfLines={1}>
+              {user.bio}
+            </Text>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.actionButton, isFollowing && styles.actionButtonUnfollow]}
+          onPress={() => {
+            if (isFollowing) {
+              handleUnfollowUser(user._id);
+            } else {
+              handleFollowUser(user._id);
+            }
+          }}
+        >
+          <Text style={[styles.actionButtonText, isFollowing && styles.actionButtonTextUnfollow]}>
+            {isFollowing ? "Following" : "Follow"}
           </Text>
-        )}
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[styles.actionButton, isFollowing && styles.actionButtonUnfollow]}
-        onPress={() => {
-          if (isFollowing) {
-            handleUnfollowUser(user._id);
-          } else {
-            handleFollowUser(user._id);
-          }
-        }}
-      >
-        <Text style={[styles.actionButtonText, isFollowing && styles.actionButtonTextUnfollow]}>
-          {isFollowing ? "Following" : "Follow"}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   // ✅ CREATED BY KIRO - Render empty state
   const renderEmptyState = (message: string) => (
@@ -218,8 +227,8 @@ const FollowersScreen: React.FC<FollowersScreenProps> = ({ route, navigation }) 
       ) : (
         <FlatList
           data={displayList}
-          renderItem={({ item }) => renderUserItem(item, followingStates[item._id] || false)}
-          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => renderUserItem(item, followingStates[item?._id] || false)}
+          keyExtractor={(item) => item?._id || Math.random().toString()}
           onRefresh={handleRefresh}
           refreshing={refreshing}
           scrollEnabled={true}

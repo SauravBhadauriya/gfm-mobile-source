@@ -201,54 +201,61 @@ export default function CommentsScreen({ route, navigation }: CommentsScreenProp
   };
 
   // ✅ CREATED BY KIRO - Render comment item
-  const renderCommentItem = (comment: Comment) => (
-    <View key={comment._id} style={styles.commentItem}>
-      {/* User Avatar */}
-      {comment.userAvatar ? (
-        <Image source={{ uri: comment.userAvatar }} style={styles.userAvatar} />
-      ) : (
-        <View style={styles.userAvatarPlaceholder}>
-          <Text style={styles.avatarPlaceholderText}>👤</Text>
-        </View>
-      )}
+  const renderCommentItem = (comment: Comment) => {
+    // Safety check for comment and _id
+    if (!comment || !comment._id) {
+      return null;
+    }
 
-      {/* Comment Content */}
-      <View style={styles.commentContent}>
-        {/* Header */}
-        <View style={styles.commentHeader}>
-          <Text style={styles.userName}>{comment.userName}</Text>
-          <Text style={styles.timestamp}>{new Date(comment.createdAt).toLocaleDateString()}</Text>
-        </View>
+    return (
+      <View key={comment._id} style={styles.commentItem}>
+        {/* User Avatar */}
+        {comment.userAvatar ? (
+          <Image source={{ uri: comment.userAvatar }} style={styles.userAvatar} />
+        ) : (
+          <View style={styles.userAvatarPlaceholder}>
+            <Text style={styles.avatarPlaceholderText}>👤</Text>
+          </View>
+        )}
 
-        {/* Comment Text */}
-        <Text style={styles.commentText}>{comment.text}</Text>
+        {/* Comment Content */}
+        <View style={styles.commentContent}>
+          {/* Header */}
+          <View style={styles.commentHeader}>
+            <Text style={styles.userName}>{comment.userName}</Text>
+            <Text style={styles.timestamp}>{new Date(comment.createdAt).toLocaleDateString()}</Text>
+          </View>
 
-        {/* Actions */}
-        <View style={styles.commentActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleLikeComment(comment._id)}
-          >
-            <Text style={styles.actionIcon}>{likedComments[comment._id] ? "❤️" : "🤍"}</Text>
-            <Text style={styles.actionText}>{comment.likeCount || 0}</Text>
-          </TouchableOpacity>
+          {/* Comment Text */}
+          <Text style={styles.commentText}>{comment.text}</Text>
 
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>💬</Text>
-            <Text style={styles.actionText}>Reply</Text>
-          </TouchableOpacity>
+          {/* Actions */}
+          <View style={styles.commentActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleLikeComment(comment._id)}
+            >
+              <Text style={styles.actionIcon}>{likedComments[comment._id] ? "❤️" : "🤍"}</Text>
+              <Text style={styles.actionText}>{comment.likeCount || 0}</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDeleteComment(comment._id)}
-          >
-            <Text style={styles.actionIcon}>🗑️</Text>
-            <Text style={styles.actionText}>Delete</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionIcon}>💬</Text>
+              <Text style={styles.actionText}>Reply</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDeleteComment(comment._id)}
+            >
+              <Text style={styles.actionIcon}>🗑️</Text>
+              <Text style={styles.actionText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   // ✅ CREATED BY KIRO - Render empty state
   const renderEmptyState = () => (
@@ -289,7 +296,7 @@ export default function CommentsScreen({ route, navigation }: CommentsScreenProp
         <FlatList
           data={comments}
           renderItem={({ item }) => renderCommentItem(item)}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item?._id || Math.random().toString()}
           onRefresh={handleRefresh}
           refreshing={refreshing}
           onEndReached={handleLoadMore}

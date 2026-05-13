@@ -1,305 +1,276 @@
-import { ResizeMode, Video } from "expo-av";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import type { CameraClip } from "../../types/camera.types";
-import { getClipAtTimelineTime } from "../../utils/timelineHelpers";
-import FilteredImage from "../FilteredImage";
-import FilteredVideo from "../FilteredVideo";
+import { ResizeMode, Video } from 'expo-av';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { CameraClip } from '../../types/camera.types';
+import { getClipAtTimelineTime } from '../../utils/timelineHelpers';
+import FilteredImage from '../FilteredImage';
+import FilteredVideo from '../FilteredVideo';
 
 interface MultiClipPlayerProps {
-    clips: CameraClip[];
-    currentTime: number;
-    isPlaying: boolean;
-    onTimeUpdate?: (time: number) => void;
-    onLoad?: () => void;
-    onEnd?: () => void;
-    filter?: import("../../types/filters").FilterConfig;
-    isDraggingTimeline?: boolean;
+  clips: CameraClip[];
+  currentTime: number; // Timeline time
+  isPlaying: boolean;
+  onTimeUpdate?: (time: number) => void;
+  onLoad?: () => void;
+  onEnd?: () => void;
+  filter?: import('../../types/filters').FilterConfig;
+  isDraggingTimeline?: boolean; // Flag to indicate timeline dragging
 }
 
+/**
+ * Multi-clip video player that seamlessly plays across clip boundaries
+ */
 const MultiClipPlayer: React.FC<MultiClipPlayerProps> = ({
-    clips,
-    currentTime,
-    isPlaying,
-    onTimeUpdate,
-    onLoad,
-    onEnd,
-    filter,
-    isDraggingTimeline = false,
+  clips,
+  currentTime,
+  isPlaying,
+  onTimeUpdate,
+  onLoad,
+  onEnd,
+  filter,
+  isDraggingTimeline = false,
 }) => {
-    const videoRef0 = useRef<Video>(null);
-    const videoRef1 = useRef<Video>(null);
+  const videoRefs = useRef<Map<string, React.RefObject<Video>>>(new Map());
+  const [currentClipId, setCurrentClipId] = useState<string | null>(null);
+  const [currentClipLocalTime, setCurrentClipLocalTime] = useState(0);
+  const isSeekingRef = useRef(false);
+  const playbackStatusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastUpdateTimeRef = useRef(0);
+  const isDraggingTimelineRef = useRef(false);
+  
+  // Update dragging state
+  React.useEffect(() => {
+    isDraggingTimelineRef.current = isDraggingTimeline;
+  }, [isDraggingTimeline]);
 
-    const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
-    const [layer0Clip, setLayer0Clip] = useState<CameraClip | null>(null);
-    const [layer1Clip, setLayer1Clip] = useState<CameraClip | null>(null);
+  // Find current clip at timeline time
+  const currentClipData = React.useMemo(() => {
+    return getClipAtTimelineTime(clips, currentTime);
+  }, [clips, currentTime]);
 
-    const isSeekingRef = useRef(false);
-    const lastReportedTimeRef = useRef(-1);
-    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Update current clip when timeline time changes
+  useEffect(() => {
+    if (currentClipData) {
+      const { clip, localTime } = currentClipData;
+      
+      if (currentClipId !== clip.id) {
+        // Switch to new clip
+        setCurrentClipId(clip.id);
+        setCurrentClipLocalTime(localTime);
+        
+        // Pause all other clips
+        videoRefs.current.forEach((ref, id) => {
+          if (id !== clip.id && ref?.current) {
+            ref.current.pauseAsync().catch(console.warn);
+          }
+        });
+      } else {
+        // Same clip, just update time
+        setCurrentClipLocalTime(localTime);
+      }
+    } else {
+      setCurrentClipId(null);
+    }
+  }, [currentClipData, currentClipId]);
 
-    const currentClipData = useMemo(
-        () => getClipAtTimelineTime(clips, currentTime),
-        [clips, currentTime],
-    );
+  // Seek to position when currentTime changes externally - throttled during dragging
+  useEffect(() => {
+    if (isSeekingRef.current || !currentClipData) return;
+    
+    const { clip, localTime } = currentClipData;
+    const videoRef = videoRefs.current.get(clip.id);
+    
+    if (videoRef?.current && clip.type === 'video') {
+      // During timeline dragging, only seek when dragging stops
+      if (isDraggingTimeline) {
+        return;
+      }
+      
+      isSeekingRef.current = true;
+      videoRef.current.setPositionAsync(localTime * 1000).then(() => {
+        isSeekingRef.current = false;
+      }).catch(() => {
+        isSeekingRef.current = false;
+      });
+    }
+  }, [currentTime, currentClipData, isDraggingTimeline]);
 
-    // ==========================================
-    // 1. THE FLIP-FLOP ENGINE (Clip Assignment)
-    // ==========================================
-    useEffect(() => {
-        if (!currentClipData) return;
-        const currentClip = currentClipData.clip;
-        const currentIndex = clips.findIndex((c) => c.id === currentClip.id);
-        const nextClip =
-            currentIndex !== -1 && currentIndex < clips.length - 1
-                ? clips[currentIndex + 1]
-                : null;
-
-        // Has the timeline crossed into the pre-loaded next clip?
-        if (activeLayer === 0 && layer1Clip?.id === currentClip.id) {
-            setActiveLayer(1);
-            setLayer0Clip(nextClip);
-        } else if (activeLayer === 1 && layer0Clip?.id === currentClip.id) {
-            setActiveLayer(0);
-            setLayer1Clip(nextClip);
-        }
-        // Forced jump or initial load
-        else if (
-            layer0Clip?.id !== currentClip.id &&
-            layer1Clip?.id !== currentClip.id
-        ) {
-            setActiveLayer(0);
-            setLayer0Clip(currentClip);
-            setLayer1Clip(nextClip);
+  // Handle play/pause
+  useEffect(() => {
+    if (!currentClipData) return;
+    
+    const { clip } = currentClipData;
+    
+    // For images, auto-advance to next clip after 3 seconds when playing
+    if (clip.type === 'photo' && isPlaying) {
+      const imageDisplayTime = 3000; // 3 seconds
+      const timeout = setTimeout(() => {
+        const currentIndex = clips.findIndex((c) => c.id === clip.id);
+        if (currentIndex < clips.length - 1) {
+          const nextClip = clips[currentIndex + 1];
+          const nextClipStart = nextClip.timelineStart ?? 0;
+          onTimeUpdate?.(nextClipStart);
         } else {
-            // Keep preloads up to date if they were null
-            if (activeLayer === 0 && layer1Clip?.id !== nextClip?.id)
-                setLayer1Clip(nextClip);
-            if (activeLayer === 1 && layer0Clip?.id !== nextClip?.id)
-                setLayer0Clip(nextClip);
+          // End of timeline - parent component should handle stopping playback
+          onEnd?.();
         }
-    }, [currentClipData?.clip.id, clips]);
+      }, imageDisplayTime);
+      return () => clearTimeout(timeout);
+    }
+    
+    const videoRef = videoRefs.current.get(clip.id);
+    
+    if (videoRef?.current && clip.type === 'video') {
+      if (isPlaying) {
+        videoRef.current.playAsync().catch(console.warn);
+      } else {
+        videoRef.current.pauseAsync().catch(console.warn);
+      }
+    }
+  }, [isPlaying, currentClipData, clips, onTimeUpdate, onEnd]);
 
-    // ==========================================
-    // 2. PRE-SEEKING (Prepare the background player)
-    // ==========================================
-    useEffect(() => {
-        if (
-            activeLayer !== 0 &&
-            layer0Clip &&
-            videoRef0.current &&
-            layer0Clip.type === "video"
-        ) {
-            videoRef0.current
-                .setPositionAsync((layer0Clip.trimStart ?? 0) * 1000)
-                .catch(() => {});
-        }
-    }, [layer0Clip, activeLayer]);
+  // Setup playback status monitoring
+  useEffect(() => {
+    if (!isPlaying || !currentClipData) {
+      if (playbackStatusIntervalRef.current) {
+        clearInterval(playbackStatusIntervalRef.current);
+        playbackStatusIntervalRef.current = null;
+      }
+      return;
+    }
 
-    useEffect(() => {
-        if (
-            activeLayer !== 1 &&
-            layer1Clip &&
-            videoRef1.current &&
-            layer1Clip.type === "video"
-        ) {
-            videoRef1.current
-                .setPositionAsync((layer1Clip.trimStart ?? 0) * 1000)
-                .catch(() => {});
-        }
-    }, [layer1Clip, activeLayer]);
-
-    // ==========================================
-    // 3. PLAY / PAUSE ROUTER
-    // ==========================================
-    useEffect(() => {
-        const activeRef = activeLayer === 0 ? videoRef0 : videoRef1;
-        const inactiveRef = activeLayer === 0 ? videoRef1 : videoRef0;
-
-        // Always pause the background player instantly
-        inactiveRef.current?.pauseAsync().catch(() => {});
-
-        if (currentClipData?.clip.type === "video" && activeRef.current) {
-            if (isPlaying && !isDraggingTimeline) {
-                activeRef.current.playAsync().catch(() => {});
-            } else {
-                activeRef.current.pauseAsync().catch(() => {});
+    // Poll for playback status updates - throttled for performance
+    playbackStatusIntervalRef.current = setInterval(() => {
+      if (!currentClipData || isDraggingTimelineRef.current) return;
+      
+      const { clip, localTime: clipLocalTime } = currentClipData;
+      const videoRef = videoRefs.current.get(clip.id);
+      
+      if (videoRef?.current) {
+        videoRef.current.getStatusAsync().then((status: any) => {
+          if (status.isLoaded && status.positionMillis !== undefined) {
+            const localTime = status.positionMillis / 1000;
+            setCurrentClipLocalTime(localTime);
+            
+            // Throttle timeline updates to reduce lag
+            const now = Date.now();
+            if (now - lastUpdateTimeRef.current < 100) return; // Update max every 100ms
+            lastUpdateTimeRef.current = now;
+            
+            // Calculate timeline time from local time
+            const timelineStart = clip.timelineStart ?? 0;
+            const trimStart = clip.trimStart ?? 0;
+            const timelineTime = timelineStart + (localTime - trimStart);
+            
+            // Update timeline time
+            onTimeUpdate?.(Math.max(0, timelineTime));
+            
+            // Check if clip ended
+            if (status.didJustFinish || (localTime >= (clip.trimEnd ?? clip.duration))) {
+              // Move to next clip or end
+              const currentIndex = clips.findIndex((c) => c.id === clip.id);
+              if (currentIndex < clips.length - 1) {
+                // Switch to next clip
+                const nextClip = clips[currentIndex + 1];
+                const nextClipStart = nextClip.timelineStart ?? 0;
+                onTimeUpdate?.(nextClipStart);
+              } else {
+                // End of timeline
+                onEnd?.();
+              }
             }
-        }
-    }, [isPlaying, activeLayer, isDraggingTimeline, currentClipData?.clip.id]);
+          }
+        }).catch(console.warn);
+      }
+    }, 100); // Reduced to 10fps for better performance
 
-    // ==========================================
-    // 4. SEEKING (Only when paused or dragging)
-    // ==========================================
-    useEffect(() => {
-        if (!currentClipData || isSeekingRef.current) return;
-
-        // 🔥 CRITICAL FIX: DO NOT SEEK IF PLAYING! This prevents the rubber-banding.
-        if (isPlaying && !isDraggingTimeline) return;
-
-        const activeRef = activeLayer === 0 ? videoRef0 : videoRef1;
-        const { clip, localTime } = currentClipData;
-
-        if (clip.type === "video" && activeRef.current) {
-            isSeekingRef.current = true;
-            activeRef.current.setPositionAsync(localTime * 1000).finally(() => {
-                isSeekingRef.current = false;
-            });
-        }
-    }, [currentTime, isDraggingTimeline, activeLayer, isPlaying]);
-
-    // ==========================================
-    // 5. THE TIME KEEPER (Polling active layer)
-    // ==========================================
-    useEffect(() => {
-        if (pollingIntervalRef.current)
-            clearInterval(pollingIntervalRef.current);
-
-        if (!isPlaying || isDraggingTimeline || !currentClipData) return;
-
-        pollingIntervalRef.current = setInterval(async () => {
-            if (isSeekingRef.current) return;
-
-            const { clip } = currentClipData;
-
-            // Handle Photo Duration
-            if (clip.type === "photo") {
-                const newTime = currentTime + 0.1;
-                const clipEnd = clip.timelineEnd ?? 0;
-
-                if (newTime >= clipEnd) {
-                    const currentIndex = clips.findIndex(
-                        (c) => c.id === clip.id,
-                    );
-                    if (currentIndex < clips.length - 1)
-                        onTimeUpdate?.(
-                            clips[currentIndex + 1].timelineStart ?? 0,
-                        );
-                    else onEnd?.();
-                } else {
-                    onTimeUpdate?.(newTime);
-                }
-                return;
-            }
-
-            // Handle Video Duration
-            const activeRef = activeLayer === 0 ? videoRef0 : videoRef1;
-            if (!activeRef.current) return;
-
-            try {
-                const status: any = await activeRef.current.getStatusAsync();
-                if (status.isLoaded && status.positionMillis !== undefined) {
-                    const localTime = status.positionMillis / 1000;
-                    const timelineStart = clip.timelineStart ?? 0;
-                    const trimStart = clip.trimStart ?? 0;
-                    const calculatedGlobalTime =
-                        timelineStart + (localTime - trimStart);
-
-                    // Prevent backwards jitter
-                    if (
-                        calculatedGlobalTime > lastReportedTimeRef.current ||
-                        Math.abs(
-                            calculatedGlobalTime - lastReportedTimeRef.current,
-                        ) > 1
-                    ) {
-                        lastReportedTimeRef.current = calculatedGlobalTime;
-                        onTimeUpdate?.(calculatedGlobalTime);
-                    }
-
-                    if (
-                        status.didJustFinish ||
-                        localTime >= (clip.trimEnd ?? clip.duration) - 0.05
-                    ) {
-                        const currentIndex = clips.findIndex(
-                            (c) => c.id === clip.id,
-                        );
-                        if (currentIndex < clips.length - 1) {
-                            const nextStart =
-                                clips[currentIndex + 1].timelineStart ?? 0;
-
-                            if (lastReportedTimeRef.current < nextStart) {
-                                const jumpTime = nextStart + 0.05;
-                                lastReportedTimeRef.current = jumpTime;
-                                onTimeUpdate?.(jumpTime);
-                            }
-                        } else {
-                            onEnd?.();
-                        }
-                    }
-                }
-            } catch (error) {}
-        }, 150);
-
-        return () => clearInterval(pollingIntervalRef.current!);
-    }, [
-        isPlaying,
-        isDraggingTimeline,
-        currentClipData,
-        activeLayer,
-        currentTime,
-    ]);
-
-    // ==========================================
-    // RENDER HELPERS
-    // ==========================================
-    const renderLayer = (
-        clip: CameraClip | null,
-        isLayerActive: boolean,
-        videoRef: React.RefObject<Video>,
-    ) => {
-        if (!clip) return null;
-        const activeFilter = clip.filterPreset || filter;
-
-        return (
-            <View
-                style={[
-                    StyleSheet.absoluteFill,
-                    {
-                        zIndex: isLayerActive ? 10 : 1,
-                        opacity: isLayerActive ? 1 : 0,
-                    },
-                ]}
-                pointerEvents="none"
-            >
-                {clip.type === "video" ? (
-                    <FilteredVideo
-                        key={clip.id} // Prevents Expo-AV from caching stale frames
-                        videoRef={videoRef}
-                        source={{ uri: clip.uri }}
-                        style={styles.media}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay={false}
-                        isLooping={false}
-                        rate={1}
-                        filter={activeFilter}
-                        onLoad={() => {
-                            if (isLayerActive) onLoad?.();
-                        }}
-                    />
-                ) : (
-                    <FilteredImage
-                        key={clip.id}
-                        source={{ uri: clip.uri }}
-                        style={styles.media}
-                        resizeMode="contain"
-                        filter={filter}
-                    />
-                )}
-            </View>
-        );
+    return () => {
+      if (playbackStatusIntervalRef.current) {
+        clearInterval(playbackStatusIntervalRef.current);
+        playbackStatusIntervalRef.current = null;
+      }
     };
+  }, [isPlaying, currentClipData, clips, onTimeUpdate, onEnd]);
 
+  // Handle video load
+  const handleVideoLoad = useCallback((clipId: string, status: any) => {
+    if (status.isLoaded && clipId === currentClipId) {
+      // Seek to correct position
+      const localTime = currentClipLocalTime;
+      const videoRef = videoRefs.current.get(clipId);
+      if (videoRef?.current) {
+        videoRef.current.setPositionAsync(localTime * 1000).catch(console.warn);
+        
+        if (isPlaying) {
+          videoRef.current.playAsync().catch(console.warn);
+        }
+      }
+      
+      onLoad?.();
+    }
+  }, [currentClipId, currentClipLocalTime, isPlaying, onLoad]);
+
+  // Render current clip
+  if (!currentClipData) {
+    return <View style={styles.container} />;
+  }
+
+  const { clip } = currentClipData;
+
+  // Create or get video ref
+  const videoRef = useMemo(() => {
+    if (clip.type === 'video') {
+      let ref = videoRefs.current.get(clip.id);
+      if (!ref) {
+        ref = React.createRef<Video>() as React.RefObject<Video>;
+        videoRefs.current.set(clip.id, ref);
+      }
+      return ref as React.RefObject<Video>;
+    }
+    return null;
+  }, [clip.id, clip.type]);
+
+  if (clip.type === 'video') {
     return (
-        <View style={styles.container}>
-            {renderLayer(layer0Clip, activeLayer === 0, videoRef0)}
-            {renderLayer(layer1Clip, activeLayer === 1, videoRef1)}
-        </View>
+      <View style={styles.container}>
+        <FilteredVideo
+              videoRef={videoRef as React.RefObject<Video | null>}
+          source={{ uri: clip.uri }}
+          style={styles.media}
+          resizeMode={ResizeMode.CONTAIN}
+          shouldPlay={false}
+          isLooping={false}
+          rate={1}
+          onLoad={(status) => handleVideoLoad(clip.id, status)}
+          filter={filter}
+        />
+      </View>
     );
+  } else {
+    return (
+      <View style={styles.container}>
+        <FilteredImage
+          source={{ uri: clip.uri }}
+          style={styles.media}
+          resizeMode="contain"
+          filter={filter}
+        />
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#000000", position: "relative" },
-    media: { width: "100%", height: "100%" },
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  media: {
+    width: '100%',
+    height: '100%',
+  },
 });
 
+// Memoize to prevent unnecessary re-renders
 export default memo(MultiClipPlayer);
+

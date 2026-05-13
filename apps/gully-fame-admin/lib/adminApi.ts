@@ -1,29 +1,13 @@
-export type { ApiResponse } from './apiTypes';
-export type { Banner } from './bannerApi';
-export type { Category } from './categoryApi';
-export type { LogoResponse, SplashResponse } from './brandingApi';
+export type { ApiResponse } from "./apiTypes";
+export type { Banner } from "./bannerApi";
+export type { Category } from "./categoryApi";
+export type { LogoResponse, SplashResponse } from "./brandingApi";
 
-export {
-  createBanner,
-  getBanners,
-  getBanner,
-  updateBanner,
-  deleteBanner,
-} from './bannerApi';
+export { createBanner, getBanners, getBanner, updateBanner, deleteBanner } from "./bannerApi";
 
-export {
-  createCategory,
-  getCategories,
-  deleteCategory,
-} from './categoryApi';
+export { createCategory, getCategories, deleteCategory } from "./categoryApi";
 
-export {
-  uploadLogo,
-  uploadSplashScreen,
-  getLogo,
-  getSplash,
-  getLastUpdatedSection,
-} from './brandingApi';
+export { uploadLogo, uploadSplash, getLogo, getSplash } from "./brandingApi";
 
 export {
   getRecentActivity,
@@ -35,7 +19,7 @@ export {
   type LatestCompetition,
   type ContestJoined,
   type NewCompetitionHeld,
-} from './dashboardApi';
+} from "./dashboardApi";
 
 export {
   getUsers,
@@ -52,4 +36,5 @@ export {
   type UserListResponse,
   type KycStatus,
   type UserEarningsResponse,
-} from './userApi';
+} from "./userApi";
+

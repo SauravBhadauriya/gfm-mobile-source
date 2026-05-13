@@ -174,3 +174,4 @@ export async function updateCompetitionRules(competitionRules: string): Promise<
   const requestBody = { competitionRules };
   return makePostRequest('Competition Rules', endpoint, requestBody);
 }
+

@@ -35,6 +35,9 @@ const apiClient: AxiosInstance = axios.create({
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    // ✅ KIRO: Edit by kiro - Added User-Agent and X-Requested-With headers for better compatibility
+    "User-Agent": "GullyFame-Mobile/1.0",
+    "X-Requested-With": "XMLHttpRequest",
   },
 });
 
@@ -48,11 +51,17 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       // ✅ KIRO: Edit by kiro - Added detailed logging for debugging mobile builds
-      console.log("[axios] Request:", {
+      console.log("[axios] Request Details:", {
         method: config.method?.toUpperCase(),
         url: config.url,
         baseURL: config.baseURL,
         fullURL: `${config.baseURL}${config.url}`,
+        headers: {
+          "Content-Type": config.headers?.["Content-Type"],
+          "User-Agent": config.headers?.["User-Agent"],
+          "X-Requested-With": config.headers?.["X-Requested-With"],
+          Authorization: config.headers?.Authorization ? "Bearer [TOKEN]" : "None",
+        },
       });
 
       if (!config.skipAuth) {
@@ -60,6 +69,7 @@ apiClient.interceptors.request.use(
         if (token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
+          console.log("[axios] Token attached to request");
         }
       }
       return config;
@@ -76,12 +86,35 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
+    console.log("[axios] Response Success:", {
+      status: response.status,
+      url: response.config.url,
+    });
     return response;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      _retryCount?: number;
     };
+
+    // ✅ KIRO: Edit by kiro - Added retry logic for network errors (max 2 retries)
+    if (!error.response && !originalRequest._retry) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+
+      if (originalRequest._retryCount < 2) {
+        originalRequest._retry = true;
+        console.log(
+          `[axios] Retrying request (attempt ${originalRequest._retryCount}/2):`,
+          originalRequest.url
+        );
+
+        // Wait 1 second before retrying
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        return apiClient(originalRequest);
+      }
+    }
 
     // ✅ FIXED BY KIRO: Token Refresh Mechanism with proper error handling
     // Ye code 401 error par token refresh karta hai

@@ -1,6 +1,6 @@
-import apiClient from '../axios';
-import { ApiResponse } from '../types';
-import { setAuthToken } from '../axios';
+import apiClient from "../axios";
+import { ApiResponse } from "../types";
+import { setAuthToken } from "../axios";
 
 export interface RegisterRequest {
   firstName: string;
@@ -8,7 +8,7 @@ export interface RegisterRequest {
   mobile: string;
   email: string;
   password: string;
-  role: 'participants' | 'fan';
+  role: "participants" | "fan";
 }
 
 export interface RegisterResponse {
@@ -137,24 +137,22 @@ export interface ApiResponseWithTxnId<T> {
 export const authService = {
   registerUser: async (data: RegisterRequest) => {
     try {
-      console.log('[authService] POST /auth/register');
-      const response = await apiClient.post<ApiResponse<RegisterResponse>>(
-        '/auth/register',
-        data,
-        { skipAuth: true }
-      );
+      console.log("[authService] POST /auth/register");
+      const response = await apiClient.post<ApiResponse<RegisterResponse>>("/auth/register", data, {
+        skipAuth: true,
+      });
 
       return {
         success: true,
         data: response.data.data || response.data,
         fullResponse: response.data,
-        message: response.data.message || 'Registration successful',
+        message: response.data.message || "Registration successful",
       };
     } catch (error: any) {
-      console.error('[authService] registerUser error:', error.message);
+      console.error("[authService] registerUser error:", error.message);
       return {
         success: false,
-        error: error.message || 'Registration failed',
+        error: error.message || "Registration failed",
         status: error.status,
         data: error.data,
       };
@@ -163,29 +161,47 @@ export const authService = {
 
   verifyOtp: async (data: VerifyOtpRequest) => {
     try {
-      if (!data.txnId || typeof data.txnId !== 'string' || data.txnId.trim() === "") {
-        throw new Error('Transaction ID is required for OTP verification');
+      if (!data.txnId || typeof data.txnId !== "string" || data.txnId.trim() === "") {
+        throw new Error("Transaction ID is required for OTP verification");
       }
 
-      console.log('[authService] POST /auth/verifyOtp');
+      console.log("[authService] POST /auth/verifyOtp");
       const requestBody: any = {
         txnId: data.txnId.trim(),
-        otp: typeof data.otp === 'string' ? parseInt(data.otp, 10) : data.otp,
+        otp: typeof data.otp === "string" ? parseInt(data.otp, 10) : data.otp,
       };
 
       const response = await apiClient.post<ApiResponse<VerifyOtpResponse>>(
-        '/auth/verifyOtp',
+        "/auth/verifyOtp",
         requestBody,
         { skipAuth: true }
       );
 
+      // ✅ KIRO: Edit by kiro - Added null safety checks for response data
       const responseAny = response.data as any;
       const responseData = responseAny.data || responseAny;
-      let finalData = responseData;
-      
-      if (responseData?.token && responseData?.userId && !responseData?.user) {
+
+      // ✅ KIRO: Edit by kiro - Added detailed logging to debug response structure
+      console.log("[authService] verifyOtp response:", {
+        hasData: !!responseData,
+        hasToken: !!responseData?.token,
+        hasUserId: !!responseData?.userId,
+        hasUser: !!responseData?.user,
+        responseKeys: responseData ? Object.keys(responseData) : [],
+      });
+
+      // ❌ OLD CODE - Could crash if responseData is null
+      // let finalData = responseData;
+      // if (responseData?.token && responseData?.userId && !responseData?.user) {
+
+      // ✅ NEW CODE - Safe null checks before accessing properties
+      let finalData = responseData || {};
+
+      if (responseData && responseData.token && responseData.userId && !responseData.user) {
         try {
           await setAuthToken(responseData.token);
+          console.log("[authService] Token stored, fetching user profile...");
+
           const userProfileResult = await authService.getUserProfile(responseData.userId);
           if (userProfileResult.success && userProfileResult.data) {
             const fetchedUserData = userProfileResult.data;
@@ -194,23 +210,34 @@ export const authService = {
                 ...responseData,
                 user: fetchedUserData,
               };
+              console.log("[authService] User profile fetched and merged");
             }
           }
         } catch (error) {
-          console.error('[authService] Error fetching user profile:', error);
+          console.error("[authService] Error fetching user profile:", error);
+          // ✅ KIRO: Edit by kiro - Continue with token-only response if profile fetch fails
+          console.log("[authService] Continuing with token-only response");
+        }
+      } else if (responseData && responseData.token) {
+        // ✅ KIRO: Edit by kiro - If we have token but no userId, store token anyway
+        try {
+          await setAuthToken(responseData.token);
+          console.log("[authService] Token stored (no userId available)");
+        } catch (error) {
+          console.error("[authService] Error storing token:", error);
         }
       }
 
       return {
         success: true,
         data: finalData,
-        message: response.data.message || 'OTP verified successfully',
+        message: response.data.message || "OTP verified successfully",
       };
     } catch (error: any) {
-      console.error('[authService] verifyOtp error:', error.message);
+      console.error("[authService] verifyOtp error:", error.message);
       return {
         success: false,
-        error: error.message || 'OTP verification failed',
+        error: error.message || "OTP verification failed",
         status: error.status,
         data: error.data,
       };
@@ -219,7 +246,7 @@ export const authService = {
 
   login: async (data: LoginRequest) => {
     try {
-      console.log('[authService] POST /auth/login');
+      console.log("[authService] POST /auth/login");
       const requestBody: any = {
         userId: data.userId.trim(),
         viaPassword: data.viaPassword,
@@ -230,7 +257,7 @@ export const authService = {
       }
 
       const response = await apiClient.post<ApiResponse<LoginResponse>>(
-        '/auth/login',
+        "/auth/login",
         requestBody,
         { skipAuth: true }
       );
@@ -242,13 +269,15 @@ export const authService = {
         success: true,
         data: responseData,
         fullResponse: response.data,
-        message: response.data.message || 'Login successful',
+        message: response.data.message || "Login successful",
       };
     } catch (error: any) {
-      console.error('[authService] login error:', error.message);
-      let errorMessage = error.message || 'Login failed';
+      console.error("[authService] login error:", error.message);
+      let errorMessage = error.message || "Login failed";
       if (error.isNetworkError) {
-        errorMessage = error.message || 'Network error: Unable to connect to server. Please check your internet connection.';
+        errorMessage =
+          error.message ||
+          "Network error: Unable to connect to server. Please check your internet connection.";
       }
 
       return {
@@ -263,9 +292,9 @@ export const authService = {
 
   socialLogin: async (data: SocialLoginRequest) => {
     try {
-      console.log('[authService] POST /auth/login/social');
+      console.log("[authService] POST /auth/login/social");
       const response = await apiClient.post<ApiResponse<SocialLoginResponse>>(
-        '/auth/login/social',
+        "/auth/login/social",
         data,
         { skipAuth: true }
       );
@@ -274,13 +303,13 @@ export const authService = {
         success: true,
         data: response.data.data,
         fullResponse: response.data,
-        message: response.data.message || 'Social login successful',
+        message: response.data.message || "Social login successful",
       };
     } catch (error: any) {
-      console.error('[authService] socialLogin error:', error.message);
+      console.error("[authService] socialLogin error:", error.message);
       return {
         success: false,
-        error: error.message || 'Social login failed',
+        error: error.message || "Social login failed",
         status: error.status,
         data: error.data,
       };
@@ -289,24 +318,23 @@ export const authService = {
 
   getUserProfile: async (userId?: string) => {
     const endpointsToTry = [
-      '/user/profile',
-      '/users/profile',
-      '/auth/user/profile',
-      '/auth/user',
-      '/user',
+      "/user/profile",
+      "/users/profile",
+      "/auth/user/profile",
+      "/auth/user",
+      "/user",
     ];
 
     for (const endpoint of endpointsToTry) {
       try {
         console.log(`[authService] GET ${endpoint}`);
-        const response = await apiClient.get<ApiResponse<GetUserProfileResponse>>(
-          endpoint,
-          { skipAuth: false }
-        );
+        const response = await apiClient.get<ApiResponse<GetUserProfileResponse>>(endpoint, {
+          skipAuth: false,
+        });
 
         const responseAny = response.data as any;
-        
-        if (typeof responseAny === 'string') {
+
+        if (typeof responseAny === "string") {
           continue;
         }
 
@@ -327,7 +355,7 @@ export const authService = {
               dob: userData.dob || "",
               bio: userData.bio || "",
             },
-            message: 'User profile fetched successfully',
+            message: "User profile fetched successfully",
           };
         } else {
           continue;
@@ -337,10 +365,10 @@ export const authService = {
       }
     }
 
-    console.error('[authService] All profile endpoints failed');
+    console.error("[authService] All profile endpoints failed");
     return {
       success: false,
-      error: 'All profile endpoints failed or returned invalid data',
+      error: "All profile endpoints failed or returned invalid data",
       status: null,
       data: null,
     };
@@ -348,9 +376,9 @@ export const authService = {
 
   updateProfile: async (data: UpdateProfileRequest) => {
     try {
-      console.log('[authService] PUT /user/profile');
+      console.log("[authService] PUT /user/profile");
       const response = await apiClient.put<ApiResponse<UpdateProfileResponse>>(
-        '/user/profile',
+        "/user/profile",
         data,
         { skipAuth: false }
       );
@@ -361,25 +389,25 @@ export const authService = {
       // After profile update, check if KYC should be auto-verified
       // Import dynamically to avoid circular dependencies
       try {
-        const { autoVerifyKycIfComplete } = await import('../../utils/kycValidation');
+        const { autoVerifyKycIfComplete } = await import("../../utils/kycValidation");
         await autoVerifyKycIfComplete();
       } catch (kycError) {
         // Non-critical, just log
         if (__DEV__) {
-          console.log('[authService] Could not auto-verify KYC:', kycError);
+          console.log("[authService] Could not auto-verify KYC:", kycError);
         }
       }
 
       return {
         success: true,
         data: userData,
-        message: response.data.message || 'Profile updated successfully',
+        message: response.data.message || "Profile updated successfully",
       };
     } catch (error: any) {
-      console.error('[authService] updateProfile error:', error.message);
+      console.error("[authService] updateProfile error:", error.message);
       return {
         success: false,
-        error: error.message || 'Failed to update profile',
+        error: error.message || "Failed to update profile",
         status: error.status,
         data: error.data,
       };
@@ -388,10 +416,10 @@ export const authService = {
 
   changePassword: async (data: { currentPassword: string; newPassword: string }) => {
     const endpointsToTry = [
-      '/user/change-password',
-      '/auth/change-password',
-      '/user/password',
-      '/auth/password',
+      "/user/change-password",
+      "/auth/change-password",
+      "/user/password",
+      "/auth/password",
     ];
 
     for (const endpoint of endpointsToTry) {
@@ -409,12 +437,12 @@ export const authService = {
         return {
           success: true,
           data: response.data.data || response.data,
-          message: response.data.message || 'Password changed successfully',
+          message: response.data.message || "Password changed successfully",
         };
       } catch (error: any) {
         if (endpointsToTry.indexOf(endpoint) === endpointsToTry.length - 1) {
-          console.error('[authService] changePassword error:', error.message);
-          const errorMsg = error.data?.message || error.message || 'Failed to change password';
+          console.error("[authService] changePassword error:", error.message);
+          const errorMsg = error.data?.message || error.message || "Failed to change password";
           return {
             success: false,
             error: errorMsg,
@@ -428,7 +456,7 @@ export const authService = {
 
     return {
       success: false,
-      error: 'Failed to change password. Please try again.',
+      error: "Failed to change password. Please try again.",
       status: null,
       data: null,
     };
@@ -436,9 +464,9 @@ export const authService = {
 
   forgotPassword: async (userId: string) => {
     try {
-      console.log('[authService] POST /auth/forgot-password');
+      console.log("[authService] POST /auth/forgot-password");
       const response = await apiClient.post<ApiResponse<any>>(
-        '/auth/forgot-password',
+        "/auth/forgot-password",
         { userId: userId.trim() },
         { skipAuth: true }
       );
@@ -446,13 +474,13 @@ export const authService = {
       return {
         success: true,
         data: response.data.data || response.data,
-        message: response.data.message || 'Password reset link sent successfully',
+        message: response.data.message || "Password reset link sent successfully",
       };
     } catch (error: any) {
-      console.error('[authService] forgotPassword error:', error.message);
+      console.error("[authService] forgotPassword error:", error.message);
       return {
         success: false,
-        error: error.data?.message || error.message || 'Failed to send password reset link',
+        error: error.data?.message || error.message || "Failed to send password reset link",
         status: error.status,
         data: error.data,
       };
@@ -461,9 +489,9 @@ export const authService = {
 
   resetPassword: async (password: string) => {
     try {
-      console.log('[authService] PUT /auth/reset-password');
+      console.log("[authService] PUT /auth/reset-password");
       const response = await apiClient.put<ApiResponse<any>>(
-        '/auth/reset-password',
+        "/auth/reset-password",
         { password: password },
         { skipAuth: false }
       );
@@ -471,13 +499,14 @@ export const authService = {
       return {
         success: true,
         data: response.data.data || response.data,
-        message: response.data.message || 'Password updated successfully. Please login with new password!',
+        message:
+          response.data.message || "Password updated successfully. Please login with new password!",
       };
     } catch (error: any) {
-      console.error('[authService] resetPassword error:', error.message);
+      console.error("[authService] resetPassword error:", error.message);
       return {
         success: false,
-        error: error.data?.message || error.message || 'Failed to reset password',
+        error: error.data?.message || error.message || "Failed to reset password",
         status: error.status,
         data: error.data,
       };
@@ -486,9 +515,9 @@ export const authService = {
 
   resendOtp: async (userId: string) => {
     try {
-      console.log('[authService] POST /auth/resendOtp');
+      console.log("[authService] POST /auth/resendOtp");
       const response = await apiClient.post<ApiResponse<{ txnId: string }>>(
-        '/auth/resendOtp',
+        "/auth/resendOtp",
         { userId: userId.trim() },
         { skipAuth: true }
       );
@@ -499,17 +528,16 @@ export const authService = {
       return {
         success: true,
         data: { txnId },
-        message: response.data.message || 'OTP resent successfully',
+        message: response.data.message || "OTP resent successfully",
       };
     } catch (error: any) {
-      console.error('[authService] resendOtp error:', error.message);
+      console.error("[authService] resendOtp error:", error.message);
       return {
         success: false,
-        error: error.data?.message || error.message || 'Failed to resend OTP',
+        error: error.data?.message || error.message || "Failed to resend OTP",
         status: error.status,
         data: error.data,
       };
     }
   },
 };
-

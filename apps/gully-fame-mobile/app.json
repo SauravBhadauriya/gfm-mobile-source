@@ -2,7 +2,7 @@
   "expo": {
     "name": "gully-fame-mobile",
     "slug": "gully-fame-mobile",
-    "owner": "sauravbhadauriya",
+    "owner": "sauravbhadauriya17",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -27,7 +27,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.gullyfame.mobile",
-      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -43,7 +46,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "88ebf36e-d7be-4a00-be18-f737a9bdf207"
+        "projectId": "0e605ece-f6ff-4df4-b81e-3c3709a9c379"
       }
     }
   }

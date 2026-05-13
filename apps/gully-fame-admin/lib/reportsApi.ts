@@ -90,7 +90,7 @@ async function makeRequest<T>(
     }
 
     const url = `${BASE_URL}${endpoint}`;
-    const headers = getAuthHeaders();
+    const headers = getAuthHeaders() as any;
     headers['Content-Type'] = 'application/json';
 
     const options: RequestInit = {
@@ -243,4 +243,6 @@ export async function updateReportStatus(
     error: response.error || 'API returned unsuccessful response',
   };
 }
+
+
 

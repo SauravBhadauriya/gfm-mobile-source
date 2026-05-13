@@ -1,72 +1,57 @@
-import React from "react";
-import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import FilterButton from './preview-actions/FilterButton';
+import MusicButton from './preview-actions/MusicButton';
+import OverlayButton from './preview-actions/OverlayButton';
+import StickerButton from './preview-actions/StickerButton';
+import TextButton from './preview-actions/TextButton';
+
+import type { FilterConfig } from '../types/filters';
 
 interface PreviewActionButtonsProps {
-    displayUri?: string;
-    onFilterClick?: () => void; // Changed from passing a filter object to just a click trigger
-    onOverlay?: () => void;
-    onText?: () => void;
-    onSticker?: () => void;
-    onMusic?: () => void;
+  displayUri?: string;
+  onFilter?: (filter: FilterConfig) => void;
+  onOverlay?: () => void;
+  onText?: () => void;
+  onSticker?: (sticker?: string | number) => void;
+  onMusic?: () => void;
 }
 
-const ToolButton = ({
-    icon,
-    label,
-    onPress,
-}: {
-    icon: string;
-    label: string;
-    onPress?: () => void;
-}) => (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
-        <View style={styles.iconContainer}>
-            <Text style={styles.iconText}>{icon}</Text>
-        </View>
-        <Text style={styles.label}>{label}</Text>
-    </TouchableOpacity>
-);
-
+/**
+ * Bottom action buttons bar for preview editor
+ * Contains filter, overlay, text, sticker, and music buttons
+ */
 const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
-    onFilterClick,
-    onOverlay,
-    onText,
-    onSticker,
-    onMusic,
+  displayUri,
+  onFilter,
+  onOverlay,
+  onText,
+  onSticker,
+  onMusic,
 }) => {
-    return (
-        <View style={styles.container}>
-            <ToolButton icon="✨" label="Filter" onPress={onFilterClick} />
-            <ToolButton icon="🖼️" label="Overlay" onPress={onOverlay} />
-            <ToolButton icon="T" label="Text" onPress={onText} />
-            <ToolButton icon="😃" label="Sticker" onPress={onSticker} />
-        </View>
-    );
+  return (
+    <View style={styles.container}>
+      <FilterButton mediaUri={displayUri || ''} onFilterApply={onFilter || (() => {})} />
+      <OverlayButton onPress={onOverlay} />
+      <TextButton onPress={onText} />
+      <StickerButton onPress={onSticker} onStickerSelect={onSticker} />
+      <MusicButton onPress={onMusic} />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        paddingVertical: 10,
-        paddingHorizontal: 8,
-        backgroundColor: "#000000",
-        borderTopWidth: 1,
-        borderTopColor: "rgba(255, 255, 255, 0.05)",
-    },
-    button: { alignItems: "center", gap: 6 },
-    iconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    iconText: { fontSize: 16 },
-    label: { color: "#ffffff", fontSize: 10, fontWeight: "500" },
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: '#000000',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
 });
 
 export default PreviewActionButtons;
+

@@ -112,77 +112,100 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
   };
 
   // ✅ CREATED BY KIRO - Render user item
-  const renderUserItem = (user: SearchUser) => (
-    <TouchableOpacity
-      key={user._id}
-      style={styles.resultItem}
-      onPress={() => navigation?.navigate("ProfileScreen", { userId: user._id })}
-    >
-      {user.avatar && <Image source={{ uri: user.avatar }} style={styles.userAvatar} />}
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{user.name}</Text>
-        {user.username && <Text style={styles.userUsername}>@{user.username}</Text>}
-        {user.followerCount !== undefined && (
-          <Text style={styles.userStats}>{user.followerCount} followers</Text>
-        )}
-      </View>
-      {user.isFollowing ? (
-        <View style={styles.followingBadge}>
-          <Text style={styles.followingText}>Following</Text>
-        </View>
-      ) : (
-        <View style={styles.followButton}>
-          <Text style={styles.followButtonText}>Follow</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const renderUserItem = (user: SearchUser) => {
+    // Safety check for user and _id
+    if (!user || !user._id) {
+      return null;
+    }
 
-  // ✅ CREATED BY KIRO - Render reel item
-  const renderReelItem = (reel: SearchReel) => (
-    <TouchableOpacity
-      key={reel._id}
-      style={styles.reelItem}
-      onPress={() => navigation?.navigate("ReelDetailScreen", { reelId: reel._id })}
-    >
-      {reel.thumbnail && <Image source={{ uri: reel.thumbnail }} style={styles.reelThumbnail} />}
-      <View style={styles.reelOverlay}>
-        <Text style={styles.playIcon}>▶</Text>
-      </View>
-      <View style={styles.reelInfo}>
-        <Text style={styles.reelTitle} numberOfLines={1}>
-          {reel.title}
-        </Text>
-        {reel.views !== undefined && <Text style={styles.reelStats}>{reel.views} views</Text>}
-      </View>
-    </TouchableOpacity>
-  );
-
-  // ✅ CREATED BY KIRO - Render competition item
-  const renderCompetitionItem = (competition: SearchCompetition) => (
-    <TouchableOpacity
-      key={competition._id}
-      style={styles.resultItem}
-      onPress={() =>
-        navigation?.navigate("CompetitionDetailScreen", {
-          competitionId: competition._id,
-        })
-      }
-    >
-      {competition.image && (
-        <Image source={{ uri: competition.image }} style={styles.competitionImage} />
-      )}
-      <View style={styles.competitionInfo}>
-        <Text style={styles.competitionTitle}>{competition.title}</Text>
-        <View style={styles.competitionMeta}>
-          <Text style={styles.competitionStatus}>{competition.status}</Text>
-          {competition.participantCount !== undefined && (
-            <Text style={styles.competitionStats}>{competition.participantCount} participants</Text>
+    return (
+      <TouchableOpacity
+        key={user._id}
+        style={styles.resultItem}
+        onPress={() => navigation?.navigate("ProfileScreen", { userId: user._id })}
+      >
+        {user.avatar && <Image source={{ uri: user.avatar }} style={styles.userAvatar} />}
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{user.name}</Text>
+          {user.username && <Text style={styles.userUsername}>@{user.username}</Text>}
+          {user.followerCount !== undefined && (
+            <Text style={styles.userStats}>{user.followerCount} followers</Text>
           )}
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+        {user.isFollowing ? (
+          <View style={styles.followingBadge}>
+            <Text style={styles.followingText}>Following</Text>
+          </View>
+        ) : (
+          <View style={styles.followButton}>
+            <Text style={styles.followButtonText}>Follow</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  // ✅ CREATED BY KIRO - Render reel item
+  const renderReelItem = (reel: SearchReel) => {
+    // Safety check for reel and _id
+    if (!reel || !reel._id) {
+      return null;
+    }
+
+    return (
+      <TouchableOpacity
+        key={reel._id}
+        style={styles.reelItem}
+        onPress={() => navigation?.navigate("ReelDetailScreen", { reelId: reel._id })}
+      >
+        {reel.thumbnail && <Image source={{ uri: reel.thumbnail }} style={styles.reelThumbnail} />}
+        <View style={styles.reelOverlay}>
+          <Text style={styles.playIcon}>▶</Text>
+        </View>
+        <View style={styles.reelInfo}>
+          <Text style={styles.reelTitle} numberOfLines={1}>
+            {reel.title}
+          </Text>
+          {reel.views !== undefined && <Text style={styles.reelStats}>{reel.views} views</Text>}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // ✅ CREATED BY KIRO - Render competition item
+  const renderCompetitionItem = (competition: SearchCompetition) => {
+    // Safety check for competition and _id
+    if (!competition || !competition._id) {
+      return null;
+    }
+
+    return (
+      <TouchableOpacity
+        key={competition._id}
+        style={styles.resultItem}
+        onPress={() =>
+          navigation?.navigate("CompetitionDetailScreen", {
+            competitionId: competition._id,
+          })
+        }
+      >
+        {competition.image && (
+          <Image source={{ uri: competition.image }} style={styles.competitionImage} />
+        )}
+        <View style={styles.competitionInfo}>
+          <Text style={styles.competitionTitle}>{competition.title}</Text>
+          <View style={styles.competitionMeta}>
+            <Text style={styles.competitionStatus}>{competition.status}</Text>
+            {competition.participantCount !== undefined && (
+              <Text style={styles.competitionStats}>
+                {competition.participantCount} participants
+              </Text>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   // ✅ CREATED BY KIRO - Render hashtag item
   const renderHashtagItem = (hashtag: SearchHashtag) => (

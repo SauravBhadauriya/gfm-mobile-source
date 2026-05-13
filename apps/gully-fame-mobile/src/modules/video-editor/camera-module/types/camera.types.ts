@@ -1,15 +1,15 @@
-export type CameraModuleScreenName = "Home" | "Camera" | "Preview";
+export type CameraModuleScreenName = 'Home' | 'Camera' | 'Preview';
 
 // High-level camera configuration types
-export type CameraMode = "photo" | "video";
-export type FlashMode = "on" | "off";
+export type CameraMode = 'photo' | 'video';
+export type FlashMode = 'on' | 'off';
 
 // Permission status values returned by expo-camera
-export type PermissionStatus = "undetermined" | "denied" | "granted";
+export type PermissionStatus = 'undetermined' | 'denied' | 'granted';
 
 // Clip-level models used by the camera module
-export type ClipType = "photo" | "video";
-export type ClipSource = "camera" | "gallery";
+export type ClipType = 'photo' | 'video';
+export type ClipSource = 'camera' | 'gallery';
 
 /**
  * Represents a speed segment within a video recording.
@@ -18,9 +18,9 @@ export type ClipSource = "camera" | "gallery";
  * - speed: Playback speed multiplier (0.3, 0.5, 1, 2, 3)
  */
 export interface SpeedSegment {
-    startTime: number;
-    endTime: number;
-    speed: number;
+  startTime: number;
+  endTime: number;
+  speed: number;
 }
 
 /**
@@ -41,23 +41,21 @@ export interface SpeedSegment {
  * - thumbnailUri: optional cached thumbnail URI for timeline preview
  */
 export interface CameraClip {
-    id: string;
-    uri: string;
-    duration: number;
-    type: ClipType;
-    source: ClipSource;
-    speed?: number; // Legacy: single speed multiplier (0.3, 0.5, 1, 2, 3)
-    speedSegments?: SpeedSegment[]; // Speed segments for variable-speed playback
-    filterPreset?: import("./filters").FilterPreset; // Selected filter preset for export
-    trimStart?: number; // Start trim point in original clip (seconds, default: 0)
-    trimEnd?: number; // End trim point in original clip (seconds, default: duration)
-    timelineStart?: number; // Start time in composed timeline (calculated)
-    timelineEnd?: number; // End time in composed timeline (calculated)
-    thumbnailUri?: string; // Cached thumbnail for timeline display
-    textOverlays?: import("./textOverlay.types").TextOverlay[]; // Text overlays added to the clip
-    stickerOverlays?: import("./stickerOverlay.types").StickerOverlay[];
-    pipOverlays?: import("./pipOverlay.types").PipOverlay[];
-    aspectRatio?: "9:16" | "16:9" | "1:1" | "2.35:1";
+  id: string;
+  uri: string;
+  duration: number;
+  type: ClipType;
+  source: ClipSource;
+  speed?: number; // Legacy: single speed multiplier (0.3, 0.5, 1, 2, 3)
+  speedSegments?: SpeedSegment[]; // Speed segments for variable-speed playback
+  filterPreset?: import('./filters').FilterPreset; // Selected filter preset for export
+  trimStart?: number; // Start trim point in original clip (seconds, default: 0)
+  trimEnd?: number; // End trim point in original clip (seconds, default: duration)
+  timelineStart?: number; // Start time in composed timeline (calculated)
+  timelineEnd?: number; // End time in composed timeline (calculated)
+  thumbnailUri?: string; // Cached thumbnail for timeline display
+  textOverlays?: import('./textOverlay.types').TextOverlay[]; // Text overlays added to the clip
 }
 
 export type CameraClipArray = CameraClip[];
+

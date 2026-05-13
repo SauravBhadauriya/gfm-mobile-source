@@ -1,729 +1,707 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback } from 'react';
 import {
-    Modal,
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    ScrollView,
-    KeyboardAvoidingView,
-    Platform,
-    Keyboard,
-} from "react-native";
-import Svg, { Path } from "react-native-svg";
-import type {
-    TextOverlay,
-    TextAlign,
-    FontWeight,
-} from "../types/textOverlay.types";
-import Slider from "@react-native-community/slider";
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  SafeAreaView,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import type { TextOverlay, TextAlign, FontWeight } from '../types/textOverlay.types';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 interface TextEditorModalProps {
-    visible: boolean;
-    overlay: TextOverlay | null;
-    onSave: (overlay: TextOverlay) => void;
-    onDelete?: (overlayId: string) => void;
-    onClose: () => void;
-    containerWidth: number;
-    containerHeight: number;
+  visible: boolean;
+  overlay: TextOverlay | null;
+  onSave: (overlay: TextOverlay) => void;
+  onDelete?: (overlayId: string) => void;
+  onClose: () => void;
+  containerWidth: number;
+  containerHeight: number;
 }
 
 const COLORS = [
-    "#FFFFFF",
-    "#000000",
-    "#FF0000",
-    "#00FF00",
-    "#0000FF",
-    "#FFFF00",
-    "#FF00FF",
-    "#00FFFF",
-    "#FFA500",
-    "#800080",
-    "#FFC0CB",
-    "#A52A2A",
-    "#FFD700",
-    "#808080",
+  '#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF',
+  '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080',
+  '#FFC0CB', '#A52A2A', '#FFD700', '#808080', '#FF1493', '#00CED1'
 ];
 
+const FONT_SIZES = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
+
 /**
- * Modern, transparent text editor that overlays directly on the video preview.
+ * Beautiful text editor modal for creating/editing text overlays
  */
 const TextEditorModal: React.FC<TextEditorModalProps> = ({
-    visible,
-    overlay,
-    onSave,
-    onDelete,
-    onClose,
-    containerWidth,
-    containerHeight,
+  visible,
+  overlay,
+  onSave,
+  onDelete,
+  onClose,
+  containerWidth,
+  containerHeight,
 }) => {
-    const [text, setText] = useState(overlay?.text || "");
-    const [color, setColor] = useState(overlay?.color || "#FFFFFF");
-    const [backgroundColor, setBackgroundColor] = useState(
-        overlay?.backgroundColor || "",
-    );
-    const [textAlign, setTextAlign] = useState<TextAlign>(
-        overlay?.textAlign || "center",
-    );
-    const [activeTab, setActiveTab] = useState<
-        "style" | "color" | "background"
-    >("color");
-    const [fontSize, setFontSize] = useState(overlay?.fontSize || 16);
-    const [fontWeight, setFontWeight] = useState(
-        parseInt(overlay?.fontWeight as string) || 400,
-    );
-    const [fontStyle, setFontStyle] = useState<"normal" | "italic">(
-        (overlay as any)?.fontStyle || "normal",
-    );
-    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-    const inputRef = useRef<TextInput>(null);
-    useEffect(() => {
-        const showSubscription = Keyboard.addListener(
-            Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-            () => setIsKeyboardVisible(true),
-        );
-        const hideSubscription = Keyboard.addListener(
-            Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-            () => setIsKeyboardVisible(false),
-        );
+  const [text, setText] = useState(overlay?.text || '');
+  const [fontSize, setFontSize] = useState(overlay?.fontSize || 24);
+  const [fontWeight, setFontWeight] = useState<FontWeight>(overlay?.fontWeight || 'normal');
+  const [color, setColor] = useState(overlay?.color || '#FFFFFF');
+  const [backgroundColor, setBackgroundColor] = useState(overlay?.backgroundColor || '');
+  const [textAlign, setTextAlign] = useState<TextAlign>(overlay?.textAlign || 'center');
+  const [rotation, setRotation] = useState(overlay?.rotation || 0);
+  const [opacity, setOpacity] = useState(overlay?.opacity ?? 1);
+  const [strokeColor, setStrokeColor] = useState(overlay?.strokeColor || '');
+  const [strokeWidth, setStrokeWidth] = useState(overlay?.strokeWidth || 0);
+  const [x, setX] = useState(overlay?.x ?? 0.5);
+  const [y, setY] = useState(overlay?.y ?? 0.5);
 
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
-    // Focus input automatically when modal opens for a new text
-    useEffect(() => {
-        if (visible) {
-            if (!overlay) {
-                setText("");
-                setColor("#FFFFFF");
-                setBackgroundColor("");
-                setTextAlign("center");
-                setFontSize(16);
-                setFontWeight(400);
-                setFontStyle("normal");
-            } else {
-                setText(overlay.text);
-                setColor(overlay.color);
-                setBackgroundColor(overlay.backgroundColor || "");
-                setTextAlign(overlay.textAlign);
-                setFontSize(overlay.fontSize);
-                setFontWeight(parseInt(overlay.fontWeight as string) || 400);
-                setFontStyle((overlay as any).fontStyle || "normal");
-            }
+  // Reset state when overlay changes
+  React.useEffect(() => {
+    if (overlay) {
+      setText(overlay.text || '');
+      setFontSize(overlay.fontSize || 24);
+      setFontWeight(overlay.fontWeight || 'normal');
+      setColor(overlay.color || '#FFFFFF');
+      setBackgroundColor(overlay.backgroundColor || '');
+      setTextAlign(overlay.textAlign || 'center');
+      setRotation(overlay.rotation || 0);
+      setOpacity(overlay.opacity ?? 1);
+      setStrokeColor(overlay.strokeColor || '');
+      setStrokeWidth(overlay.strokeWidth || 0);
+      setX(overlay.x ?? 0.5);
+      setY(overlay.y ?? 0.5);
+    } else {
+      // Reset to defaults for new overlay
+      setText('');
+      setFontSize(24);
+      setFontWeight('normal');
+      setColor('#FFFFFF');
+      setBackgroundColor('');
+      setTextAlign('center');
+      setRotation(0);
+      setOpacity(1);
+      setStrokeColor('');
+      setStrokeWidth(0);
+      setX(0.5);
+      setY(0.5);
+    }
+  }, [overlay]);
 
-            // Slight delay to allow modal animation to finish before popping keyboard
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 100);
-        }
-    }, [visible, overlay]);
+  const handleSave = useCallback(() => {
+    if (!text.trim()) {
+      onClose();
+      return;
+    }
 
-    const handleSave = useCallback(() => {
-        if (!text.trim()) {
-            onClose();
-            return;
-        }
-
-        const updatedOverlay: TextOverlay = {
-            ...(overlay || {}),
-            id: overlay?.id || `text-${Date.now()}`,
-            text: text.trim(),
-            x: overlay?.x ?? 0.5,
-            y: overlay?.y ?? 0.5,
-            fontSize,
-            fontWeight: fontWeight.toString() as FontWeight,
-            color,
-            textAlign,
-            rotation: overlay?.rotation || 0,
-            opacity: overlay?.opacity ?? 1,
-            startTime: overlay?.startTime,
-            endTime: overlay?.endTime,
-
-            // If background is cleared, we explicitly remove it
-            backgroundColor: backgroundColor ? backgroundColor : undefined,
-            strokeColor: "#000000",
-            strokeWidth: backgroundColor ? 0 : 2,
-        };
-        (updatedOverlay as any).fontStyle = fontStyle;
-
-        onSave(updatedOverlay);
-    }, [
-        text,
-        color,
-        backgroundColor,
-        textAlign,
-        fontSize,
-        fontWeight,
-        fontStyle,
-        overlay,
-        onSave,
-        onClose,
-    ]);
-
-    const handleDelete = useCallback(() => {
-        if (overlay?.id && onDelete) {
-            onDelete(overlay.id);
-        } else {
-            onClose();
-        }
-    }, [overlay, onDelete, onClose]);
-
-    const toggleTextAlign = () => {
-        setTextAlign((prev) =>
-            prev === "center" ? "left" : prev === "left" ? "right" : "center",
-        );
+    const updatedOverlay: TextOverlay = {
+      id: overlay?.id || `text-${Date.now()}`,
+      text: text.trim(),
+      x,
+      y,
+      fontSize,
+      fontWeight,
+      color,
+      textAlign,
+      rotation,
+      opacity,
+      startTime: overlay?.startTime,
+      endTime: overlay?.endTime,
+      ...(backgroundColor ? { backgroundColor } : {}),
+      ...(strokeColor && strokeWidth > 0 ? { strokeColor, strokeWidth } : {}),
     };
 
-    return (
-        <Modal
-            visible={visible}
-            animationType="fade"
-            transparent={true} // 🔥 CRITICAL: Allows seeing the video underneath
-            onRequestClose={handleSave} // Android back button saves and closes
-        >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
-                {/* Dim the background slightly so text pops */}
-                <TouchableOpacity
-                    style={StyleSheet.absoluteFill}
-                    activeOpacity={1}
-                    onPress={Keyboard.dismiss} // Tapping outside dismisses keyboard
+    onSave(updatedOverlay);
+    onClose();
+  }, [
+    text,
+    x,
+    y,
+    fontSize,
+    fontWeight,
+    color,
+    backgroundColor,
+    textAlign,
+    rotation,
+    opacity,
+    strokeColor,
+    strokeWidth,
+    overlay,
+    onSave,
+    onClose,
+  ]);
+
+  const handleDelete = useCallback(() => {
+    if (overlay?.id && onDelete) {
+      onDelete(overlay.id);
+    }
+    onClose();
+  }, [overlay, onDelete, onClose]);
+
+  const previewOverlay: TextOverlay = {
+    id: 'preview',
+    text: text || 'Enter text',
+    x,
+    y,
+    fontSize,
+    fontWeight,
+    color,
+    backgroundColor,
+    textAlign,
+    rotation,
+    opacity,
+    strokeColor,
+    strokeWidth,
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onClose} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Text</Text>
+          <TouchableOpacity onPress={handleSave} style={styles.headerButton}>
+            <Text style={[styles.headerButtonText, styles.headerButtonTextPrimary]}>
+              Done
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Preview Area */}
+        <View style={styles.previewContainer}>
+          <View style={[styles.previewFrame, { width: containerWidth, height: containerHeight }]}>
+            <View style={styles.previewBackground}>
+              <Text style={styles.previewLabel}>Preview</Text>
+            </View>
+            {text && (
+              <View
+                style={{
+                  position: 'absolute',
+                  left: x * containerWidth,
+                  top: y * containerHeight,
+                  opacity,
+                  transform: [{ rotate: `${rotation}deg` }],
+                }}
+              >
+                {backgroundColor && (
+                  <View
+                    style={[
+                      styles.previewBackgroundBox,
+                      { backgroundColor },
+                    ]}
+                  />
+                )}
+                <Text
+                  style={{
+                    fontSize,
+                    fontWeight,
+                    color,
+                    textAlign,
+                    ...(strokeColor && strokeWidth > 0
+                      ? {
+                          textShadowColor: strokeColor,
+                          textShadowOffset: { width: 0, height: 0 },
+                          textShadowRadius: strokeWidth,
+                        }
+                      : {}),
+                  }}
                 >
-                    <View style={styles.backdropDimmer} />
+                  {text}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <ScrollView style={styles.editor} showsVerticalScrollIndicator={false}>
+          {/* Text Input */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Text</Text>
+            <TextInput
+              style={styles.textInput}
+              value={text}
+              onChangeText={setText}
+              placeholder="Enter your text"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              multiline
+              autoFocus
+            />
+          </View>
+
+          {/* Font Size */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Size</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsRow}>
+              {FONT_SIZES.map((size) => (
+                <TouchableOpacity
+                  key={size}
+                  style={[
+                    styles.optionButton,
+                    fontSize === size && styles.optionButtonActive,
+                  ]}
+                  onPress={() => setFontSize(size)}
+                >
+                  <Text
+                    style={[
+                      styles.optionButtonText,
+                      fontSize === size && styles.optionButtonTextActive,
+                    ]}
+                  >
+                    {size}
+                  </Text>
                 </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-                {/* Top Action Bar */}
-                <View style={styles.topBar}>
-                    <TouchableOpacity
-                        onPress={onClose}
-                        style={styles.iconButton}
-                    >
-                        <Text style={styles.cancelText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={handleSave}
-                        style={styles.doneButton}
-                    >
-                        <Text style={styles.doneButtonText}>Done</Text>
-                    </TouchableOpacity>
-                </View>
+          {/* Font Weight */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Style</Text>
+            <View style={styles.optionsRow}>
+              {(['normal', 'bold'] as FontWeight[]).map((weight) => (
+                <TouchableOpacity
+                  key={weight}
+                  style={[
+                    styles.styleButton,
+                    fontWeight === weight && styles.styleButtonActive,
+                  ]}
+                  onPress={() => setFontWeight(weight)}
+                >
+                  <Text
+                    style={[
+                      styles.styleButtonText,
+                      fontWeight === weight && styles.styleButtonTextActive,
+                      weight === 'bold' && { fontWeight: 'bold' },
+                    ]}
+                  >
+                    {weight === 'normal' ? 'Regular' : 'Bold'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
-                {/* Direct Text Input Area (Centered on screen) */}
-                <View style={styles.inputArea} pointerEvents="box-none">
-                    <View
-                        style={[
-                            styles.inputWrapper,
-                            backgroundColor
-                                ? {
-                                      backgroundColor,
-                                      padding: 8,
-                                      borderRadius: 8,
-                                  }
-                                : {},
-                        ]}
-                    >
-                        <TextInput
-                            ref={inputRef}
-                            style={[
-                                styles.textInput,
-                                {
-                                    color: color,
-                                    textAlign: textAlign,
-                                    fontSize: fontSize,
-                                    fontWeight: fontWeight.toString() as any,
-                                    fontStyle: fontStyle,
-                                    textShadowColor: backgroundColor
-                                        ? "transparent"
-                                        : "rgba(0,0,0,0.8)",
-                                    textShadowOffset: { width: 1, height: 1 },
-                                    textShadowRadius: 3,
-                                },
-                            ]}
-                            value={text}
-                            onChangeText={setText}
-                            placeholder="Type here..."
-                            placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                            multiline
-                            autoCapitalize="sentences"
+          {/* Text Color */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Color</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorRow}>
+              {COLORS.map((col) => (
+                <TouchableOpacity
+                  key={col}
+                  style={[
+                    styles.colorButton,
+                    color === col && styles.colorButtonActive,
+                    { backgroundColor: col },
+                  ]}
+                  onPress={() => setColor(col)}
+                >
+                  {color === col && (
+                    <View style={styles.colorCheck}>
+                      <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                        <Path
+                          d="M20 6L9 17l-5-5"
+                          stroke={col === '#FFFFFF' || col === '#FFFF00' || col === '#FFC0CB' || col === '#FFD700' ? '#000000' : '#FFFFFF'}
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
+                      </Svg>
                     </View>
-                </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-                {/* Floating Toolbar (Moves with Keyboard) */}
-                <View style={styles.toolbar}>
-                    {/* Quick Actions Row */}
-                    <View style={styles.quickActions}>
-                        <TouchableOpacity
-                            onPress={toggleTextAlign}
-                            style={styles.quickButton}
-                        >
-                            <Svg
-                                width={20}
-                                height={20}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                            >
-                                {textAlign === "left" && (
-                                    <Path
-                                        d="M3 6h18M3 12h12M3 18h18"
-                                        stroke="#fff"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                    />
-                                )}
-                                {textAlign === "center" && (
-                                    <Path
-                                        d="M3 6h18M7 12h10M3 18h18"
-                                        stroke="#fff"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                    />
-                                )}
-                                {textAlign === "right" && (
-                                    <Path
-                                        d="M3 6h18M9 12h12M3 18h18"
-                                        stroke="#fff"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                    />
-                                )}
-                            </Svg>
-                        </TouchableOpacity>
-                        {!isKeyboardVisible && (
-                            <View style={styles.tabGroup}>
-                                <TouchableOpacity
-                                    onPress={() => setActiveTab("color")}
-                                    style={[
-                                        styles.tabButton,
-                                        activeTab === "color" &&
-                                            styles.tabButtonActive,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.tabText,
-                                            activeTab === "color" &&
-                                                styles.tabTextActive,
-                                        ]}
-                                    >
-                                        Text
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => setActiveTab("background")}
-                                    style={[
-                                        styles.tabButton,
-                                        activeTab === "background" &&
-                                            styles.tabButtonActive,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.tabText,
-                                            activeTab === "background" &&
-                                                styles.tabTextActive,
-                                        ]}
-                                    >
-                                        Highlight
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => setActiveTab("style")}
-                                    style={[
-                                        styles.tabButton,
-                                        activeTab === "style" &&
-                                            styles.tabButtonActive,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.tabText,
-                                            activeTab === "style" &&
-                                                styles.tabTextActive,
-                                        ]}
-                                    >
-                                        Style
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-
-                        {overlay ? (
-                            <TouchableOpacity
-                                onPress={handleDelete}
-                                style={styles.quickButton}
-                            >
-                                <Svg
-                                    width={20}
-                                    height={20}
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                >
-                                    <Path
-                                        d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                                        stroke="#ff4444"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </Svg>
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={{ width: 36 }} />
-                        )}
+          {/* Background Color */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Background</Text>
+              <TouchableOpacity
+                onPress={() => setBackgroundColor('')}
+                style={styles.clearButton}
+              >
+                <Text style={styles.clearButtonText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorRow}>
+              <TouchableOpacity
+                style={[
+                  styles.colorButton,
+                  !backgroundColor && styles.colorButtonActive,
+                  styles.transparentButton,
+                ]}
+                onPress={() => setBackgroundColor('')}
+              >
+                {!backgroundColor && (
+                  <View style={styles.colorCheck}>
+                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                      <Path
+                        d="M20 6L9 17l-5-5"
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </Svg>
+                  </View>
+                )}
+                <Text style={styles.transparentLabel}>None</Text>
+              </TouchableOpacity>
+              {COLORS.map((col) => (
+                <TouchableOpacity
+                  key={col}
+                  style={[
+                    styles.colorButton,
+                    backgroundColor === col && styles.colorButtonActive,
+                    { backgroundColor: col },
+                  ]}
+                  onPress={() => setBackgroundColor(col)}
+                >
+                  {backgroundColor === col && (
+                    <View style={styles.colorCheck}>
+                      <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                        <Path
+                          d="M20 6L9 17l-5-5"
+                          stroke={col === '#FFFFFF' || col === '#FFFF00' || col === '#FFC0CB' || col === '#FFD700' ? '#000000' : '#FFFFFF'}
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
                     </View>
-                    {!isKeyboardVisible && (
-                        <>
-                            {activeTab === "style" ? (
-                                <View style={styles.styleControlsContainer}>
-                                    {/* Font Size Slider */}
-                                    <View style={styles.sliderRow}>
-                                        <Text style={styles.sliderLabel}>
-                                            Size
-                                        </Text>
-                                        <Slider
-                                            style={styles.slider}
-                                            minimumValue={12}
-                                            maximumValue={72}
-                                            step={1}
-                                            value={fontSize}
-                                            onValueChange={setFontSize}
-                                            minimumTrackTintColor="#ec9a15"
-                                            thumbTintColor="#ec9a15"
-                                        />
-                                        <Text style={styles.sliderValue}>
-                                            {fontSize}
-                                        </Text>
-                                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-                                    {/* Font Weight Slider */}
-                                    <View style={styles.sliderRow}>
-                                        <Text style={styles.sliderLabel}>
-                                            Weight
-                                        </Text>
-                                        <Slider
-                                            style={styles.slider}
-                                            minimumValue={300}
-                                            maximumValue={900}
-                                            step={50}
-                                            value={fontWeight}
-                                            onValueChange={setFontWeight}
-                                            minimumTrackTintColor="#ec9a15"
-                                            thumbTintColor="#ec9a15"
-                                        />
-                                        <Text style={styles.sliderValue}>
-                                            {fontWeight}
-                                        </Text>
-                                    </View>
-
-                                    {/* Font Style Pills */}
-                                    <View style={styles.pillContainer}>
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.pillBtn,
-                                                fontStyle === "normal" &&
-                                                    styles.pillBtnActive,
-                                            ]}
-                                            onPress={() =>
-                                                setFontStyle("normal")
-                                            }
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.pillText,
-                                                    fontStyle === "normal" &&
-                                                        styles.pillTextActive,
-                                                ]}
-                                            >
-                                                Regular
-                                            </Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.pillBtn,
-                                                fontStyle === "italic" &&
-                                                    styles.pillBtnActive,
-                                            ]}
-                                            onPress={() =>
-                                                setFontStyle("italic")
-                                            }
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.pillText,
-                                                    { fontStyle: "italic" },
-                                                    fontStyle === "italic" &&
-                                                        styles.pillTextActive,
-                                                ]}
-                                            >
-                                                Italic
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            ) : (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={styles.colorScroll}
-                                >
-                                    {activeTab === "background" && (
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.colorBubble,
-                                                !backgroundColor &&
-                                                    styles.colorBubbleActive,
-                                            ]}
-                                            onPress={() =>
-                                                setBackgroundColor("")
-                                            }
-                                        >
-                                            <Svg
-                                                width={20}
-                                                height={20}
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                            >
-                                                <Path
-                                                    d="M18 6L6 18M6 6l12 12"
-                                                    stroke="#ffffff"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                />
-                                            </Svg>
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {COLORS.map((c) => {
-                                        const isActive =
-                                            activeTab === "color"
-                                                ? color === c
-                                                : backgroundColor === c;
-                                        return (
-                                            <TouchableOpacity
-                                                key={c}
-                                                style={[
-                                                    styles.colorBubble,
-                                                    { backgroundColor: c },
-                                                    isActive &&
-                                                        styles.colorBubbleActive,
-                                                ]}
-                                                onPress={() =>
-                                                    activeTab === "color"
-                                                        ? setColor(c)
-                                                        : setBackgroundColor(c)
-                                                }
-                                            >
-                                                {isActive && (
-                                                    <View
-                                                        style={
-                                                            styles.colorCheck
-                                                        }
-                                                    >
-                                                        <Svg
-                                                            width={14}
-                                                            height={14}
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                        >
-                                                            <Path
-                                                                d="M20 6L9 17l-5-5"
-                                                                stroke={
-                                                                    c ===
-                                                                        "#FFFFFF" ||
-                                                                    c ===
-                                                                        "#FFFF00"
-                                                                        ? "#000000"
-                                                                        : "#FFFFFF"
-                                                                }
-                                                                strokeWidth="3"
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                            />
-                                                        </Svg>
-                                                    </View>
-                                                )}
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </ScrollView>
-                            )}
-                        </>
+          {/* Alignment */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Alignment</Text>
+            <View style={styles.optionsRow}>
+              {(['left', 'center', 'right'] as TextAlign[]).map((align) => (
+                <TouchableOpacity
+                  key={align}
+                  style={[
+                    styles.alignButton,
+                    textAlign === align && styles.alignButtonActive,
+                  ]}
+                  onPress={() => setTextAlign(align)}
+                >
+                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                    {align === 'left' && (
+                      <Path
+                        d="M3 6h18M3 12h12M3 18h18"
+                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     )}
-                </View>
-            </KeyboardAvoidingView>
-        </Modal>
-    );
+                    {align === 'center' && (
+                      <Path
+                        d="M3 6h18M7 12h10M3 18h18"
+                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    )}
+                    {align === 'right' && (
+                      <Path
+                        d="M3 6h18M9 12h12M3 18h18"
+                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    )}
+                  </Svg>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Opacity */}
+          <View style={styles.section}>
+            <View style={styles.sliderHeader}>
+              <Text style={styles.sectionTitle}>Opacity</Text>
+              <Text style={styles.sliderValue}>{Math.round(opacity * 100)}%</Text>
+            </View>
+            <View style={styles.sliderContainer}>
+              {[0, 0.25, 0.5, 0.75, 1].map((value) => (
+                <TouchableOpacity
+                  key={value}
+                  style={[
+                    styles.sliderDot,
+                    opacity >= value && styles.sliderDotActive,
+                  ]}
+                  onPress={() => setOpacity(value)}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Delete Button */}
+          {overlay && onDelete && (
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+              <Text style={styles.deleteButtonText}>Delete Text</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "space-between",
-    },
-    backdropDimmer: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0, 0, 0, 0.4)", // Dims the video slightly
-    },
-    topBar: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: Platform.OS === "ios" ? 60 : 40,
-        paddingBottom: 16, // 🔥 Gives the header some thickness
-        backgroundColor: "#000000", // 🔥 Completely masks the underlying Back/Next buttons!
-        zIndex: 10,
-    },
-    sliderValue: {
-        color: "#ec9a15",
-        fontSize: 14,
-        fontWeight: "bold",
-        width: 36,
-        textAlign: "right",
-    },
-    iconButton: {
-        padding: 8,
-    },
-    styleControlsContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        gap: 16,
-    },
-    sliderRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    sliderLabel: {
-        color: "#fff",
-        fontSize: 14,
-        fontWeight: "600",
-        width: 50,
-    },
-    slider: {
-        flex: 1,
-        height: 40,
-    },
-    pillContainer: {
-        flexDirection: "row",
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        borderRadius: 20,
-        padding: 4,
-        alignSelf: "flex-start",
-    },
-    pillBtn: {
-        paddingHorizontal: 20,
-        paddingVertical: 8,
-        borderRadius: 16,
-    },
-    pillBtnActive: {
-        backgroundColor: "#ec9a15",
-    },
-    pillText: {
-        color: "#888",
-        fontWeight: "bold",
-    },
-    pillTextActive: {
-        color: "#000",
-    },
-    cancelText: {
-        color: "#ffffff",
-        fontSize: 16,
-    },
-    doneButton: {
-        backgroundColor: "#ec9a15",
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    doneButtonText: {
-        color: "#000000",
-        fontWeight: "bold",
-        fontSize: 14,
-    },
-    inputArea: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 20,
-    },
-    inputWrapper: {
-        minWidth: "60%",
-        maxWidth: "100%",
-    },
-    textInput: {
-        fontSize: 36,
-        fontWeight: "bold",
-        maxHeight: 200,
-    },
-    toolbar: {
-        backgroundColor: "#1a1a1a",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        paddingBottom: Platform.OS === "ios" ? 34 : 24,
-        paddingTop: 12,
-    },
-    quickActions: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        marginBottom: 16,
-    },
-    quickButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    tabGroup: {
-        flexDirection: "row",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        borderRadius: 20,
-        padding: 4,
-    },
-    tabButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    tabButtonActive: {
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-    },
-    tabText: {
-        color: "#888",
-        fontSize: 12,
-        fontWeight: "600",
-    },
-    tabTextActive: {
-        color: "#fff",
-    },
-    colorScroll: {
-        paddingHorizontal: 16,
-        gap: 12,
-    },
-    colorBubble: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        borderWidth: 2,
-        borderColor: "rgba(255,255,255,0.2)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    colorBubbleActive: {
-        borderColor: "#ffffff",
-        transform: [{ scale: 1.1 }],
-    },
-    colorCheck: {
-        position: "absolute",
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  headerButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  headerButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  headerButtonTextPrimary: {
+    color: '#ec9a15',
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  previewContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0a0a0a',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  previewFrame: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  previewBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewLabel: {
+    color: 'rgba(255, 255, 255, 0.3)',
+    fontSize: 14,
+  },
+  previewBackgroundBox: {
+    position: 'absolute',
+    top: -4,
+    left: -8,
+    right: -8,
+    bottom: -4,
+    borderRadius: 4,
+  },
+  editor: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  section: {
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  textInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    color: '#ffffff',
+    fontSize: 16,
+    minHeight: 60,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  optionButtonActive: {
+    backgroundColor: '#ec9a15',
+    borderColor: '#ec9a15',
+  },
+  optionButtonText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  optionButtonTextActive: {
+    color: '#ffffff',
+  },
+  styleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+  },
+  styleButtonActive: {
+    backgroundColor: '#ec9a15',
+    borderColor: '#ec9a15',
+  },
+  styleButtonText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  styleButtonTextActive: {
+    color: '#ffffff',
+  },
+  colorRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  colorButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  colorButtonActive: {
+    borderColor: '#ec9a15',
+    transform: [{ scale: 1.1 }],
+  },
+  transparentButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  transparentLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 10,
+  },
+  colorCheck: {
+    position: 'absolute',
+  },
+  clearButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    color: '#ec9a15',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  alignButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alignButtonActive: {
+    backgroundColor: '#ec9a15',
+    borderColor: '#ec9a15',
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sliderValue: {
+    color: '#ec9a15',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  sliderDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  sliderDotActive: {
+    backgroundColor: '#ec9a15',
+    borderColor: '#ec9a15',
+    transform: [{ scale: 1.2 }],
+  },
+  deleteButton: {
+    marginTop: 32,
+    marginBottom: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 68, 68, 0.2)',
+    borderWidth: 1.5,
+    borderColor: '#ff4444',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#ff4444',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
 
 export default TextEditorModal;
+

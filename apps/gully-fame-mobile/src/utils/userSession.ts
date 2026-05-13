@@ -40,9 +40,33 @@ export const saveUserSession = async (
     await setAuthToken(token);
     await AsyncStorage.setItem("isLoggedIn", "true");
 
+    // Extract userId - try multiple field names
+    let userId = userData?.id || (userData as any)?._id || "";
+
+    // If we still don't have userId, try to fetch it from the profile endpoint
+    if (!userId) {
+      if (__DEV__) {
+        console.log("⚠️ No userId found in userData, attempting to fetch from profile endpoint");
+      }
+      try {
+        const { authService } = await import("@api/services/authService");
+        const profileResult = await authService.getUserProfile();
+        if (profileResult.success && profileResult.data) {
+          userId = profileResult.data.id || (profileResult.data as any)._id || "";
+          if (__DEV__) {
+            console.log("✅ Retrieved userId from profile endpoint:", userId);
+          }
+        }
+      } catch (profileError) {
+        if (__DEV__) {
+          console.log("⚠️ Could not fetch profile, continuing with empty userId");
+        }
+      }
+    }
+
     const sessionData: UserSession = {
       token: token,
-      userId: userData?.id || (userData as any)?._id || "",
+      userId: userId,
       firstName: userData?.firstName || "",
       lastName: userData?.lastName || "",
       email: userData?.email || fallbackEmail || "",
