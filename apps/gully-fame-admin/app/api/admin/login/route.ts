@@ -7,7 +7,11 @@ export async function POST(request: NextRequest) {
 
     console.log("[API] Login attempt:", { email, role });
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://103.194.228.68:3552/v1/api/";
+    // Use backend URL - prefer HTTPS for production
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL_PROD ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      "http://103.194.228.68:3552/v1/api/";
     const loginEndpoint = `${backendUrl}admin/login`;
 
     console.log("[API] Proxying to backend:", loginEndpoint);

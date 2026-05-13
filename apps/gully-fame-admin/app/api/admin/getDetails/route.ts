@@ -18,7 +18,11 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     console.log("[API] GetDetails with token:", token.substring(0, 20) + "...");
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://103.194.228.68:3552/v1/api/";
+    // Use backend URL - prefer HTTPS for production
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL_PROD ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      "http://103.194.228.68:3552/v1/api/";
     const detailsEndpoint = `${backendUrl}admin/getDetails`;
 
     console.log("[API] Proxying to backend:", detailsEndpoint);
