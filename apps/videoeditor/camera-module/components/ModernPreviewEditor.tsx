@@ -57,7 +57,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   canUndo = false,
   canRedo = false,
 }) => {
-  // ============ STATE ============
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -67,12 +66,10 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     clip.filterPreset || null
   );
 
-  // Sync selectedFilter with clip.filterPreset when clip changes
   React.useEffect(() => {
     setSelectedFilter(clip.filterPreset || null);
   }, [clip.filterPreset]);
 
-  // ============ REFS ============
   const videoRef = useRef<Video>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const isDragging = useRef(false);
@@ -91,13 +88,11 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   });
   const [showTrimHandles, setShowTrimHandles] = useState(false);
 
-  // Animation values
   const playButtonScale = useRef(new Animated.Value(1)).current;
   const timelineOpacity = useRef(new Animated.Value(1)).current;
 
   const isVideo = clip.type === "video";
 
-  // Handle delete with confirmation
   const handleDeletePress = useCallback(() => {
     setShowDeleteModal(true);
   }, []);
@@ -111,12 +106,10 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     setShowDeleteModal(false);
   }, []);
 
-  // Get speed segments if available
   const speedSegments = React.useMemo(() => {
     return clip.speedSegments && clip.speedSegments.length > 0 ? clip.speedSegments : null;
   }, [clip.speedSegments]);
 
-  // Get speed for current video time
   const getSpeedAtTime = React.useCallback(
     (time: number): number => {
       if (!speedSegments) return selectedSpeed;
@@ -126,13 +119,11 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           return seg.speed;
         }
       }
-      // Return last segment's speed if past the end
       return speedSegments[speedSegments.length - 1]?.speed ?? selectedSpeed;
     },
     [speedSegments, selectedSpeed]
   );
 
-  // Speed labels
   const speedLabels: Record<number, string> = {
     0.5: "0.5x",
     1: "1x",
@@ -141,9 +132,7 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     5: "5x",
   };
 
-  // ============ GENERATE FRAMES ============
   const frames = React.useMemo(() => {
-    // For images, return empty array (no timeline needed)
     if (!isVideo) {
       return [];
     }
@@ -157,14 +146,12 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
 
   const totalWidth = frames.length > 0 ? frames.length * FRAME_WIDTH : 0;
 
-  // ============ FORMAT TIME ============
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // ============ VIDEO LOADED ============
   const handleLoad = useCallback(
     (status: any) => {
       if (status.isLoaded && status.durationMillis) {
@@ -183,15 +170,12 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [speedSegments, getSpeedAtTime]
   );
 
-  // ============ IMAGE LOADED ============
-  // For images, set ready state immediately
   React.useEffect(() => {
     if (!isVideo) {
       setIsReady(true);
     }
   }, [isVideo]);
 
-  // ============ PLAYBACK STATUS ============
   const handlePlaybackStatus = useCallback(
     (status: any) => {
       if (!status.isLoaded || isDragging.current) return;
@@ -281,7 +265,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [isPlaying, totalWidth, speedSegments, getSpeedAtTime, selectedSpeed]
   );
 
-  // ============ PLAY/PAUSE ============
   const togglePlayPause = useCallback(async () => {
     if (!videoRef.current || !isReady) return;
 
@@ -315,7 +298,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     }
   }, [isPlaying, isReady, currentTime, duration, speedSegments, getSpeedAtTime]);
 
-  // ============ SEEK TO TIME ============
   const seekTo = useCallback(
     async (time: number) => {
       if (!videoRef.current || !isReady) return;
@@ -339,7 +321,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [isReady, duration, speedSegments, getSpeedAtTime]
   );
 
-  // ============ TIMELINE SCROLL ============
   const handleScroll = useCallback(
     (event: any) => {
       if (!isDragging.current || !isReady || duration === 0) return;
@@ -359,7 +340,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [isReady, duration, totalWidth, seekTo]
   );
 
-  // ============ SCROLL BEGIN ============
   const handleScrollBegin = useCallback(() => {
     isDragging.current = true;
     wasPlaying.current = isPlaying;
@@ -370,7 +350,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     }
   }, [isPlaying]);
 
-  // ============ SCROLL END ============
   const handleScrollEnd = useCallback(
     (event: any) => {
       const scrollX = event.nativeEvent.contentOffset.x;
@@ -391,14 +370,11 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [duration, totalWidth, seekTo]
   );
 
-  // ============ SPEED CHANGE ============
-  // Only applies if NOT using speed segments (segments override manual speed)
   const handleSpeedChange = useCallback(
     (speed: number) => {
       setSelectedSpeed(speed);
       onSpeedChange?.(speed);
 
-      // Only apply if not using speed segments
       if (!speedSegments && videoRef.current && isReady) {
         videoRef.current.setRateAsync(speed, true);
         currentPlaybackRateRef.current = speed;
@@ -407,7 +383,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [isReady, onSpeedChange, speedSegments]
   );
 
-  // ============ ADD CLIP HANDLERS ============
   const handleAddPress = useCallback(() => {
     setShowAddClipOverlay(true);
   }, []);
@@ -424,17 +399,12 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     [onAddClipFromGallery]
   );
 
-  // ============ ACTION BUTTON HANDLERS ============
   const handleFilter = useCallback(
     (filter: FilterConfig) => {
       console.log("Filter selected:", filter.name, filter);
-      // Store the selected filter preset as metadata
-      // Preview uses react-native-color-matrix-image-filters for visual display
-      // At export time, use applyPresetToImage/applyPresetToVideo with FFmpeg
       if (filter.name === "Original" || !hasFilterChanges(filter)) {
         console.log("Setting filter to null (Original)");
         setSelectedFilter(null);
-        // Update clip to remove filter
         if (onClipUpdate) {
           const { filterPreset, ...clipWithoutFilter } = clip;
           onClipUpdate({ ...clipWithoutFilter });
@@ -442,7 +412,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
       } else {
         console.log("Setting filter:", filter);
         setSelectedFilter(filter);
-        // Store filterPreset in clip metadata
         if (onClipUpdate) {
           onClipUpdate({ ...clip, filterPreset: filter });
         }
@@ -522,11 +491,8 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   }, []);
 
   const handleTrim = useCallback(() => {
-    // Toggle trim handles visibility
-    // When enabled, user can use timeline to set trim points
     setShowTrimHandles(!showTrimHandles);
     if (!showTrimHandles && isVideo && videoRef.current) {
-      // Pause video when entering trim mode for precision
       videoRef.current.pauseAsync();
       setIsPlaying(false);
     }
@@ -535,8 +501,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   const handleSticker = useCallback((sticker?: string | number) => {
     if (sticker !== undefined) {
       console.log("Sticker selected:", sticker);
-      // TODO: Add sticker to the preview/export
-      // You can store stickers in clip metadata or manage them separately
     }
   }, []);
 
@@ -544,12 +508,10 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     console.log("Music pressed");
   }, []);
 
-  // Calculate playhead position
   const playheadLeft = duration > 0 ? (currentTime / duration) * totalWidth : 0;
 
   return (
     <View style={styles.container}>
-      {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.topButton} onPress={onBack}>
           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -573,7 +535,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Media Preview */}
       <TouchableOpacity
         style={styles.previewContainer}
         activeOpacity={1}
@@ -607,7 +568,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           />
         )}
 
-        {/* Play Overlay with animated button */}
         {!isPlaying && isVideo && (
           <View style={styles.playOverlay}>
             <Animated.View style={{ transform: [{ scale: playButtonScale }] }}>
@@ -638,7 +598,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           </View>
         )}
 
-        {/* Progress bar overlay when playing */}
         {isPlaying && isVideo && duration > 0 && (
           <View style={styles.progressBarOverlay}>
             <View style={styles.progressBarTrack}>
@@ -649,7 +608,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           </View>
         )}
 
-        {/* Enhanced Time Display */}
         {isVideo && isReady && (
           <View style={styles.timeDisplay}>
             <View style={styles.timeDisplayInner}>
@@ -660,7 +618,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           </View>
         )}
 
-        {/* Text Overlays */}
         {isReady && clip.textOverlays && clip.textOverlays.length > 0 && (
           <DraggableTextOverlays
             overlays={clip.textOverlays}
@@ -674,7 +631,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         )}
       </TouchableOpacity>
 
-      {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.actionButton}
@@ -730,10 +686,8 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Timeline Section - Same layout for both videos and images */}
       {isReady && (
         <View style={styles.timelineSection}>
-          {/* Timeline Controls */}
           <View style={styles.timelineControls}>
             <TouchableOpacity
               style={[styles.timelineControl, !canUndo && styles.timelineControlDisabled]}
@@ -752,7 +706,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
               </Svg>
             </TouchableOpacity>
 
-            {/* Play/Pause button - only for videos */}
             {isVideo ? (
               <TouchableOpacity style={styles.playButtonBottom} onPress={togglePlayPause}>
                 {isPlaying ? (
@@ -787,7 +740,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Enhanced Draggable Timeline - only for videos */}
           {isVideo && duration > 0 && (
             <Animated.View style={[styles.timelineWrapper, { opacity: timelineOpacity }]}>
               <ScrollView
@@ -805,10 +757,8 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
                 ]}
               >
                 <View style={styles.timelineTrack}>
-                  {/* Left Padding */}
                   <View style={{ width: SCREEN_WIDTH / 2 }} />
 
-                  {/* Enhanced Frames with gradient */}
                   {frames.map((frame, index) => {
                     const isActive =
                       currentTime >= frame.time &&
@@ -826,12 +776,10 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
                     );
                   })}
 
-                  {/* Right Padding */}
                   <View style={{ width: SCREEN_WIDTH / 2 }} />
                 </View>
               </ScrollView>
 
-              {/* Enhanced Center Indicator with glow */}
               <View style={styles.centerIndicator}>
                 <View style={styles.centerIndicatorGlow} />
                 <View style={styles.centerLine} />
@@ -840,7 +788,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
             </Animated.View>
           )}
 
-          {/* Speed Controls - only for videos */}
           {isVideo && (
             <View style={styles.speedControls}>
               {[0.5, 1, 2, 3, 5].map((speed) => (
@@ -864,7 +811,6 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         </View>
       )}
 
-      {/* Preview Action Buttons (Filter, Overlay, Text, Sticker, Music) */}
       {isReady && (
         <PreviewActionButtons
           displayUri={clip.uri}
