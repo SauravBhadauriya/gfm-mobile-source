@@ -1,15 +1,15 @@
-export type CameraModuleScreenName = 'Home' | 'Camera' | 'Preview';
+export type CameraModuleScreenName = "Home" | "Camera" | "Preview";
 
 // High-level camera configuration types
-export type CameraMode = 'photo' | 'video';
-export type FlashMode = 'on' | 'off';
+export type CameraMode = "photo" | "video";
+export type FlashMode = "on" | "off";
 
 // Permission status values returned by expo-camera
-export type PermissionStatus = 'undetermined' | 'denied' | 'granted';
+export type PermissionStatus = "undetermined" | "denied" | "granted";
 
 // Clip-level models used by the camera module
-export type ClipType = 'photo' | 'video';
-export type ClipSource = 'camera' | 'gallery';
+export type ClipType = "photo" | "video";
+export type ClipSource = "camera" | "gallery";
 
 /**
  * Represents a speed segment within a video recording.
@@ -39,6 +39,9 @@ export interface SpeedSegment {
  * - timelineStart: start time in the composed timeline (calculated, in seconds)
  * - timelineEnd: end time in the composed timeline (calculated, in seconds)
  * - thumbnailUri: optional cached thumbnail URI for timeline preview
+ * - textOverlays: text overlays added to the clip
+ * - audioTracks: audio tracks (music, voiceover, sound effects) added to the clip
+ * - transitions: transitions applied to this clip
  */
 export interface CameraClip {
   id: string;
@@ -48,14 +51,15 @@ export interface CameraClip {
   source: ClipSource;
   speed?: number; // Legacy: single speed multiplier (0.3, 0.5, 1, 2, 3)
   speedSegments?: SpeedSegment[]; // Speed segments for variable-speed playback
-  filterPreset?: import('./filters').FilterPreset; // Selected filter preset for export
+  filterPreset?: import("./filters").FilterPreset; // Selected filter preset for export
   trimStart?: number; // Start trim point in original clip (seconds, default: 0)
   trimEnd?: number; // End trim point in original clip (seconds, default: duration)
   timelineStart?: number; // Start time in composed timeline (calculated)
   timelineEnd?: number; // End time in composed timeline (calculated)
   thumbnailUri?: string; // Cached thumbnail for timeline display
-  textOverlays?: import('./textOverlay.types').TextOverlay[]; // Text overlays added to the clip
+  textOverlays?: import("./textOverlay.types").TextOverlay[]; // Text overlays added to the clip
+  audioTracks?: import("./music.types").AudioTrack[]; // Audio tracks (music, voiceover, sound effects)
+  transitions?: import("./transitions.types").ClipTransition[]; // Transitions applied to this clip
 }
 
 export type CameraClipArray = CameraClip[];
-

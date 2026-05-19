@@ -5,6 +5,9 @@
     "build": "turbo build",
     "build:admin": "cd apps/gully-fame-admin && npm run build",
     "dev": "turbo dev",
+    "start": "turbo dev",
+    "start:admin": "cd apps/gully-fame-admin && npm run dev",
+    "start:mobile": "cd apps/gully-fame-mobile && npm start",
     "lint": "turbo lint",
     "clean": "turbo clean"
   },

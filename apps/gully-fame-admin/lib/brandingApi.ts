@@ -25,7 +25,7 @@ export async function uploadLogo(file: File): Promise<ApiResponse<LogoResponse>>
   console.log('[Branding API] POST Upload Logo - FormData keys:', Array.from(formData.keys()));
   console.log('[Branding API] POST Upload Logo - FormData entries count:', Array.from(formData.entries()).length);
 
-  const headers = getAuthHeaders() as any;
+  const headers = getAuthHeaders();
   delete (headers as any)['Content-Type'];
   
   try {
@@ -109,7 +109,7 @@ export async function uploadSplash(files: File[]): Promise<ApiResponse<SplashRes
   console.log('[Branding API] POST Upload Splash - FormData keys:', Array.from(formData.keys()));
   console.log('[Branding API] POST Upload Splash - FormData entries count:', Array.from(formData.entries()).length);
 
-  const headers = getAuthHeaders() as any;
+  const headers = getAuthHeaders();
   delete (headers as any)['Content-Type'];
 
   try {
@@ -324,4 +324,3 @@ export async function getSplash(): Promise<ApiResponse<SplashResponse>> {
     };
   }
 }
-

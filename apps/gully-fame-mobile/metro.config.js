@@ -1,5 +1,10 @@
-const { getDefaultConfig } = require("expo/metro-config");
+// CommonJS metro config for Windows compatibility
 const path = require("path");
+
+// Explicitly require from local node_modules
+const getDefaultConfig = require(
+  path.resolve(__dirname, "node_modules/expo/metro-config")
+).getDefaultConfig;
 
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, "../..");
