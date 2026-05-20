@@ -1,24 +1,25 @@
-import React from 'react';
-import { View } from 'react-native';
-import { CameraScreen } from './camera';
+import React from "react";
+import { View } from "react-native";
+import CameraModule from "../../camera-module";
 
 /**
  * Root entry point for the video editor module.
  *
- * Currently this module only exposes the camera capture flow, but it is
- * designed so you can later add timelines, editing tools, etc, without
- * changing how consumers import it:
+ * This module exposes the full camera module with all features:
+ * - Home screen
+ * - Camera capture with all editing tools
+ * - Preview and editing
+ * - Export pipeline
  *
+ * Consumers can import it as:
  *   import { VideoEditorModule } from '@video-editor';
  */
 const VideoEditorModule: React.FC = () => {
   return (
     <View style={{ flex: 1 }}>
-      <CameraScreen />
+      <CameraModule />
     </View>
   );
 };
 
 export default VideoEditorModule;
-
-

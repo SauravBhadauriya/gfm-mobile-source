@@ -528,6 +528,48 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     console.log("Music pressed");
   }, []);
 
+  // Handle voice add
+  const handleVoiceAdd = useCallback((voice: any) => {
+    console.log("Voice added:", voice);
+    // TODO: Add voice to current clip
+  }, []);
+
+  // Handle sound FX add
+  const handleSoundFXAdd = useCallback((sound: any) => {
+    console.log("Sound FX added:", sound);
+    // TODO: Add sound effect to current clip
+  }, []);
+
+  // Handle caption add
+  const handleCaptionAdd = useCallback((caption: any) => {
+    console.log("Caption added:", caption);
+    // TODO: Add caption to current clip
+  }, []);
+
+  // Handle adjust change
+  const handleAdjustChange = useCallback((settings: any) => {
+    console.log("Adjust settings changed:", settings);
+    // TODO: Apply adjustments to current clip
+  }, []);
+
+  // Handle cutout add
+  const handleCutoutAdd = useCallback((cutout: any) => {
+    console.log("Cutout added:", cutout);
+    // TODO: Add cutout effect to current clip
+  }, []);
+
+  // Handle link add
+  const handleLinkAdd = useCallback((link: any) => {
+    console.log("Link added:", link);
+    // TODO: Add link to current clip
+  }, []);
+
+  // Handle paste
+  const handlePaste = useCallback((content: string) => {
+    console.log("Paste content:", content);
+    // TODO: Handle paste content
+  }, []);
+
   // Calculate playhead position
   const playheadLeft = duration > 0 ? (currentTime / duration) * totalWidth : 0;
 
@@ -1286,4 +1328,3 @@ const styles = StyleSheet.create({
 });
 
 export default ModernPreviewEditor;
-
