@@ -197,6 +197,14 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         onSticker={handleSticker}
         onMusic={openMusicModal}
         onTransition={openTransitionModal}
+        onVoiceAdd={(voice) => console.log("Voice added:", voice)}
+        onSoundFXAdd={(sound) => console.log("Sound FX added:", sound)}
+        onCaptionAdd={(caption) => console.log("Caption added:", caption)}
+        onAdjustChange={(settings) => console.log("Adjust changed:", settings)}
+        onCutoutAdd={(cutout) => console.log("Cutout added:", cutout)}
+        onLinkAdd={(link) => console.log("Link added:", link)}
+        onPaste={(content) => console.log("Paste content:", content)}
+        startTime={0}
       />
 
       {/* Scrollable panels for audio tracks and transitions */}

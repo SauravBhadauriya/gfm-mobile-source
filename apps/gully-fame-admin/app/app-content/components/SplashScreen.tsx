@@ -21,16 +21,13 @@ export default function SplashScreen() {
       setIsLoading(true);
       try {
         const result = await getSplash();
-        
-        console.log('[SplashScreen] Initial fetch result:', result);
+
+        console.log("[SplashScreen] Initial fetch result:", result);
 
         if (result.success && result.data) {
-          const images =
-            result.data.splashScreens ||
-            result.data.images ||
-            [];
+          const images = result.data.splashScreens || result.data.images || [];
 
-          console.log('[SplashScreen] Initial fetch - Images from API:', images);
+          console.log("[SplashScreen] Initial fetch - Images from API:", images);
 
           const baseImages = [
             { id: 1, url: null, file: null },
@@ -54,12 +51,7 @@ export default function SplashScreen() {
               ) => {
                 if (index < baseImages.length) {
                   const imageUrl =
-                    typeof img === "string"
-                      ? img
-                      : img.imageUrl ||
-                        img.url ||
-                        img.image ||
-                        null;
+                    typeof img === "string" ? img : img.imageUrl || img.url || img.image || null;
 
                   console.log(`[SplashScreen] Processing image ${index + 1}:`, imageUrl);
 
@@ -74,8 +66,8 @@ export default function SplashScreen() {
               }
             );
           }
-          
-          console.log('[SplashScreen] Setting splash images:', baseImages);
+
+          console.log("[SplashScreen] Setting splash images:", baseImages);
           setSplashImages(baseImages);
         }
       } catch (error) {
@@ -110,7 +102,8 @@ export default function SplashScreen() {
                 ];
                 images.forEach((img: any, index: number) => {
                   if (index < baseImages.length) {
-                    const imageUrl = typeof img === "string" ? img : (img.imageUrl || img.url || img.image || null);
+                    const imageUrl =
+                      typeof img === "string" ? img : img.imageUrl || img.url || img.image || null;
                     if (imageUrl) {
                       baseImages[index] = { ...baseImages[index], url: imageUrl, file: null };
                     }
@@ -133,16 +126,12 @@ export default function SplashScreen() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {splashImages.map((image, index) => (
           <div key={image.id} className="space-y-4">
-            <h3 className="text-base font-semibold text-gray-700">
-              Splash Image {index + 1}
-            </h3>
+            <h3 className="text-base font-semibold text-gray-700">Splash Image {index + 1}</h3>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center bg-gray-50">
               <div className="h-64 w-full rounded-lg border border-gray-300 flex items-center justify-center bg-white mb-4 overflow-hidden">
                 {isLoading ? (
                   <div className="text-center p-4">
-                    <div className="animate-pulse text-xs text-gray-400">
-                      Loading...
-                    </div>
+                    <div className="animate-pulse text-xs text-gray-400">Loading...</div>
                   </div>
                 ) : image.url ? (
                   <img
@@ -160,12 +149,8 @@ export default function SplashScreen() {
               <label className="block">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-primary-400 hover:bg-primary-50/50 transition-all cursor-pointer">
                   <Upload className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                  <p className="text-xs font-medium text-gray-700 mb-1">
-                    Upload Image
-                  </p>
-                  <p className="text-[10px] text-gray-500">
-                    1080x1920px, PNG/JPG
-                  </p>
+                  <p className="text-xs font-medium text-gray-700 mb-1">Upload Image</p>
+                  <p className="text-[10px] text-gray-500">1080x1920px, PNG/JPG</p>
                 </div>
                 <input
                   type="file"
@@ -205,11 +190,11 @@ export default function SplashScreen() {
       <div className="flex justify-end pt-4 border-t border-gray-200">
         <button
           className={`flex items-center justify-center space-x-2 rounded-lg px-6 py-3 transition-colors font-medium ${
-            splashImages.some((img) => img.url) && !isUploading
+            splashImages.some((img) => img.file !== null) && !isUploading
               ? "bg-primary-600 text-white hover:bg-primary-700"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
-          disabled={!splashImages.some((img) => img.url) || isUploading}
+          disabled={!splashImages.some((img) => img.file !== null) || isUploading}
           onClick={async () => {
             const filesToUpload = splashImages
               .filter((img) => img.file !== null)
@@ -222,34 +207,26 @@ export default function SplashScreen() {
 
               if (result.success) {
                 alert("Splash screen images updated successfully!");
-                
-                const originalBackendUrls = splashImages
-                  .filter(img => img.url && !img.url.startsWith('blob:'))
-                  .map(img => img.url as string);
-                
-                console.log('[SplashScreen] Original backend URLs before upload:', originalBackendUrls);
-                
-                const uploadedFileIndices = splashImages
-                  .map((img, index) => img.file ? index : -1)
-                  .filter(idx => idx !== -1);
-                
-                console.log('[SplashScreen] Uploaded file indices:', uploadedFileIndices);
-                
-                const updateImagesFromResponse = (images: any[]) => {
+
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+
+                const refreshResult = await getSplash();
+                if (refreshResult.success && refreshResult.data) {
+                  const images = refreshResult.data.images || [];
                   const baseImages = [
                     { id: 1, url: null, file: null },
                     { id: 2, url: null, file: null },
                     { id: 3, url: null, file: null },
                     { id: 4, url: null, file: null },
                   ];
-                  
-                  images.forEach((img, index) => {
+
+                  images.forEach((img: any, index: number) => {
                     if (index < baseImages.length) {
                       const imageUrl =
                         typeof img === "string"
                           ? img
                           : img.imageUrl || img.url || img.image || null;
-                      
+
                       if (imageUrl) {
                         baseImages[index] = {
                           ...baseImages[index],
@@ -259,89 +236,8 @@ export default function SplashScreen() {
                       }
                     }
                   });
-                  
-                  return baseImages;
-                };
 
-                const mergeWithUploadedPreviews = (
-                  backendImages: typeof splashImages,
-                  currentState: typeof splashImages
-                ) => {
-                  return backendImages.map((backendImg, index) => {
-                    const currentImg = currentState[index];
-                    const wasUploaded = uploadedFileIndices.includes(index);
-                    
-                    if (wasUploaded && currentImg && currentImg.url && currentImg.url.startsWith('blob:')) {
-                      const backendUrl = backendImg.url || '';
-                      const originalUrl = originalBackendUrls[index] || '';
-                      
-                      if (backendUrl && backendUrl !== originalUrl) {
-                        console.log(`[SplashScreen] Backend returned NEW URL for image ${index + 1}:`, backendUrl);
-                        return {
-                          ...backendImg,
-                          file: null,
-                        };
-                      } else {
-                        console.log(`[SplashScreen] Keeping blob preview for image ${index + 1} - backend still returns old URL`);
-                        return {
-                          ...currentImg,
-                          file: currentImg.file,
-                        };
-                      }
-                    }
-                    
-                    return backendImg;
-                  });
-                };
-
-                let foundNewImages = false;
-                for (let attempt = 0; attempt < 8; attempt++) {
-                  await new Promise(resolve => setTimeout(resolve, 1000 + attempt * 500));
-                  const refreshResult = await getSplash();
-                  
-                  console.log(`[SplashScreen] Retry attempt ${attempt + 1} - Result:`, refreshResult);
-
-                  if (refreshResult.success && refreshResult.data) {
-                    const images =
-                      refreshResult.data.splashScreens ||
-                      refreshResult.data.images ||
-                      [];
-
-                    console.log(`[SplashScreen] Retry attempt ${attempt + 1} - Images:`, images);
-
-                    if (Array.isArray(images) && images.length > 0) {
-                      const newBackendUrls = images.map((img: any) => 
-                        typeof img === "string" ? img : (img.imageUrl || img.url || img.image || '')
-                      ).filter(Boolean);
-                      
-                      console.log(`[SplashScreen] Retry attempt ${attempt + 1} - Backend URLs:`, newBackendUrls);
-                      console.log(`[SplashScreen] Retry attempt ${attempt + 1} - Original URLs:`, originalBackendUrls);
-                      
-                      const hasNewUrls = newBackendUrls.some((url: string, index: number) => {
-                        const originalUrl = originalBackendUrls[index] || '';
-                        return url && originalUrl && url !== originalUrl;
-                      });
-                      
-                      console.log(`[SplashScreen] Retry attempt ${attempt + 1} - Has new URLs:`, hasNewUrls);
-                      
-                      const updatedImages = updateImagesFromResponse(images);
-                      setSplashImages((prevState) => {
-                        const finalImages = mergeWithUploadedPreviews(updatedImages, prevState);
-                        console.log(`[SplashScreen] Setting merged images on attempt ${attempt + 1}:`, finalImages);
-                        return finalImages;
-                      });
-                      
-                      if (hasNewUrls) {
-                        foundNewImages = true;
-                        console.log('[SplashScreen] Backend returned new images - stopping retries');
-                        break;
-                      }
-                      
-                      if (attempt === 7) {
-                        console.warn('[SplashScreen] Backend did not return new images after 8 attempts - keeping uploaded previews');
-                      }
-                    }
-                  }
+                  setSplashImages(baseImages);
                 }
               } else {
                 alert(

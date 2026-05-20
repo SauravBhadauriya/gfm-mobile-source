@@ -18,7 +18,7 @@ import { useBranding } from "@contexts/BrandingContext";
 const { width, height } = Dimensions.get("window");
 
 // Default fallback image
-const DEFAULT_ONBOARDING4 = require("@assets/images/onboarding4.png");
+const DEFAULT_ONBOARDING4 = require("@assets/images/onboarding4.jpg");
 
 export default function Onboarding4() {
   const { splashImages } = useBranding();
@@ -44,11 +44,7 @@ export default function Onboarding4() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground
-        source={backgroundImage}
-        style={styles.fullScreen}
-        resizeMode="cover"
-      >
+      <ImageBackground source={backgroundImage} style={styles.fullScreen} resizeMode="cover">
         <ThemedView style={styles.overlay} />
         <View style={styles.container}>
           <Animated.View
@@ -61,9 +57,7 @@ export default function Onboarding4() {
             ]}
           >
             <ThemedText style={styles.title}>Har Gully Ka Star –</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Powered by Ranveer Singh
-            </ThemedText>
+            <ThemedText style={styles.subtitle}>Powered by Ranveer Singh</ThemedText>
           </Animated.View>
 
           <Animated.View
@@ -100,10 +94,7 @@ export default function Onboarding4() {
               style={styles.nextButton}
             >
               <Svg width={15} height={15} viewBox="0 0 8 12" fill="none">
-                <Path
-                  d="M0 10.59L4.58 6L0 1.41L1.41 0L7.41 6L1.41 12L0 10.59Z"
-                  fill="black"
-                />
+                <Path d="M0 10.59L4.58 6L0 1.41L1.41 0L7.41 6L1.41 12L0 10.59Z" fill="black" />
               </Svg>
             </TouchableOpacity>
           </Animated.View>
@@ -166,9 +157,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.045,
     marginBottom: height * -0.09,
     width: "100%",
-    marginLeft:width * 0.05,
+    marginLeft: width * 0.05,
   },
-  skip: { color: "white", fontSize: width * 0.035, fontWeight: "400", fontFamily: "Rubik_400Regular" },
+  skip: {
+    color: "white",
+    fontSize: width * 0.035,
+    fontWeight: "400",
+    fontFamily: "Rubik_400Regular",
+  },
   skipButton: {
     paddingVertical: 8,
   },
