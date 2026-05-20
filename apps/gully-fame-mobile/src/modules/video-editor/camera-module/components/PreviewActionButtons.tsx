@@ -20,6 +20,9 @@ interface PreviewActionButtonsProps {
 /**
  * Bottom action buttons bar for preview editor
  * Contains filter, overlay, text, sticker, and music buttons
+ *
+ * Note: Additional buttons (Voice, Sound FX, Captions, etc.) are available
+ * in the videoeditor app and can be imported here when needed
  */
 const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
   displayUri,
