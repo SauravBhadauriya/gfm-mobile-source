@@ -1,12 +1,12 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import FilterButton from './preview-actions/FilterButton';
-import MusicButton from './preview-actions/MusicButton';
-import OverlayButton from './preview-actions/OverlayButton';
-import StickerButton from './preview-actions/StickerButton';
-import TextButton from './preview-actions/TextButton';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import FilterButton from "./preview-actions/FilterButton";
+import MusicButton from "./preview-actions/MusicButton";
+import OverlayButton from "./preview-actions/OverlayButton";
+import StickerButton from "./preview-actions/StickerButton";
+import TextButton from "./preview-actions/TextButton";
 
-import type { FilterConfig } from '../types/filters';
+import type { FilterConfig } from "../types/filters";
 
 interface PreviewActionButtonsProps {
   displayUri?: string;
@@ -31,7 +31,7 @@ const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <FilterButton mediaUri={displayUri || ''} onFilterApply={onFilter || (() => {})} />
+      <FilterButton mediaUri={displayUri || ""} onFilterApply={onFilter || (() => {})} />
       <OverlayButton onPress={onOverlay} />
       <TextButton onPress={onText} />
       <StickerButton onPress={onSticker} onStickerSelect={onSticker} />
@@ -42,16 +42,15 @@ const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 8,
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: "rgba(255, 255, 255, 0.05)",
   },
 });
 
 export default PreviewActionButtons;
-

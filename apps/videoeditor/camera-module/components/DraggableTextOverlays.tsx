@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { PanResponder, View, StyleSheet, Dimensions } from 'react-native';
-import TextOverlayComponent from './TextOverlay';
-import type { TextOverlay } from '../types/textOverlay.types';
+import React, { useCallback, useRef, useState } from "react";
+import { PanResponder, View, StyleSheet, Dimensions } from "react-native";
+import TextOverlayComponent from "./TextOverlay";
+import type { TextOverlay } from "../types/textOverlay.types";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface DraggableTextOverlaysProps {
   overlays: TextOverlay[];
@@ -12,6 +12,9 @@ interface DraggableTextOverlaysProps {
   currentTime?: number;
   onOverlayUpdate: (overlay: TextOverlay) => void;
   onOverlayPress: (overlay: TextOverlay) => void;
+  onOverlayDone?: (overlayId: string) => void;
+  onOverlayEdit?: (overlay: TextOverlay) => void;
+  onOverlayDelete?: (overlayId: string) => void;
   selectedOverlayId?: string | null;
 }
 
@@ -25,6 +28,9 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
   currentTime = 0,
   onOverlayUpdate,
   onOverlayPress,
+  onOverlayDone,
+  onOverlayEdit,
+  onOverlayDelete,
   selectedOverlayId,
 }) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -57,7 +63,9 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
           onMoveShouldSetPanResponder: (_, gestureState) => {
             // Only start dragging if text is selected AND movement exceeds threshold
             if (selectedOverlayId !== overlay.id) return false;
-            return Math.abs(gestureState.dx) > dragThreshold || Math.abs(gestureState.dy) > dragThreshold;
+            return (
+              Math.abs(gestureState.dx) > dragThreshold || Math.abs(gestureState.dy) > dragThreshold
+            );
           },
           onPanResponderGrant: (evt) => {
             // Only allow dragging if text is selected
@@ -71,7 +79,7 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
           onPanResponderMove: (evt) => {
             // Only allow dragging if text is selected
             if (selectedOverlayId !== overlay.id) return;
-            
+
             const deltaX = evt.nativeEvent.pageX - dragStartPos.current.x;
             const deltaY = evt.nativeEvent.pageY - dragStartPos.current.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -117,7 +125,14 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
       }
       return panRespondersRef.current.get(overlay.id);
     },
-    [draggingId, containerWidth, containerHeight, onOverlayUpdate, onOverlayPress, selectedOverlayId]
+    [
+      draggingId,
+      containerWidth,
+      containerHeight,
+      onOverlayUpdate,
+      onOverlayPress,
+      selectedOverlayId,
+    ]
   );
 
   return (
@@ -145,6 +160,9 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
                   onOverlayPress(overlay);
                 }
               }}
+              onDone={() => onOverlayDone?.(overlay.id)}
+              onEdit={() => onOverlayEdit?.(overlay)}
+              onDelete={() => onOverlayDelete?.(overlay.id)}
             />
           </View>
         );
@@ -154,4 +172,3 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
 };
 
 export default DraggableTextOverlays;
-
