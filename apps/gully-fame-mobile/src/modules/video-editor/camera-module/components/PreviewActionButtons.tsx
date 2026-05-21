@@ -1,10 +1,13 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import FilterButton from "./preview-actions/FilterButton";
 import MusicButton from "./preview-actions/MusicButton";
 import OverlayButton from "./preview-actions/OverlayButton";
 import StickerButton from "./preview-actions/StickerButton";
 import TextButton from "./preview-actions/TextButton";
+import VoiceButton from "./preview-actions/VoiceButton";
+import CaptionsButton from "./preview-actions/CaptionsButton";
+import AdjustButton from "./preview-actions/AdjustButton";
 
 import type { FilterConfig } from "../types/filters";
 
@@ -15,14 +18,14 @@ interface PreviewActionButtonsProps {
   onText?: () => void;
   onSticker?: (sticker?: string | number) => void;
   onMusic?: () => void;
+  onVoice?: () => void;
+  onCaptions?: () => void;
+  onAdjust?: () => void;
 }
 
 /**
  * Bottom action buttons bar for preview editor
- * Contains filter, overlay, text, sticker, and music buttons
- *
- * Note: Additional buttons (Voice, Sound FX, Captions, etc.) are available
- * in the videoeditor app and can be imported here when needed
+ * Contains all editing tools: filter, overlay, text, sticker, music, voice, captions, and adjustments
  */
 const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
   displayUri,
@@ -31,28 +34,39 @@ const PreviewActionButtons: React.FC<PreviewActionButtonsProps> = ({
   onText,
   onSticker,
   onMusic,
+  onVoice,
+  onCaptions,
+  onAdjust,
 }) => {
   return (
     <View style={styles.container}>
-      <FilterButton mediaUri={displayUri || ""} onFilterApply={onFilter || (() => {})} />
-      <OverlayButton onPress={onOverlay} />
-      <TextButton onPress={onText} />
-      <StickerButton onPress={onSticker} onStickerSelect={onSticker} />
-      <MusicButton onPress={onMusic} />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <FilterButton mediaUri={displayUri || ""} onFilterApply={onFilter || (() => {})} />
+        <OverlayButton onPress={onOverlay} />
+        <TextButton onPress={onText} />
+        <StickerButton onPress={onSticker} onStickerSelect={onSticker} />
+        <MusicButton onPress={onMusic} />
+        <VoiceButton onPress={onVoice} />
+        <CaptionsButton onPress={onCaptions} />
+        <AdjustButton onPress={onAdjust} />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    paddingVertical: 16,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    gap: 24,
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    backgroundColor: "#000000",
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.05)",
   },
 });
 

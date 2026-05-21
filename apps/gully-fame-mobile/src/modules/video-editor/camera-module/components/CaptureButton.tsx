@@ -1,7 +1,7 @@
-import React from 'react';
-import { TouchableOpacity, View } from 'react-native';
-import { cameraStyles } from '../styles/cameraStyles';
-import { CameraModeEnum } from '../utils/mediaTypes';
+import React from "react";
+import { TouchableOpacity, View } from "react-native";
+import { cameraStyles } from "../styles/cameraStyles";
+import { CameraModeEnum } from "../utils/mediaTypes";
 
 interface CaptureButtonProps {
   mode: CameraModeEnum;
@@ -23,13 +23,7 @@ const CaptureButton: React.FC<CaptureButtonProps> = ({
   onPressIn,
   onPressOut,
 }) => {
-  const label =
-    mode === CameraModeEnum.Photo
-      ? 'Capture'
-      : isRecording
-      ? 'Stop'
-      : 'Record';
-
+  const label = mode === CameraModeEnum.Photo ? "Capture" : isRecording ? "Stop" : "Record";
 
   return (
     <TouchableOpacity
@@ -38,16 +32,26 @@ const CaptureButton: React.FC<CaptureButtonProps> = ({
       style={cameraStyles.captureButtonOuter}
       disabled={disabled}
       activeOpacity={0.8}
-      onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
+      onPress={() => {
+        console.log("=== CaptureButton PRESSED ===");
+        console.log("Mode:", mode);
+        console.log("Is recording:", isRecording);
+        console.log("Disabled:", disabled);
+        onPress();
+      }}
+      onPressIn={() => {
+        console.log("=== CaptureButton PRESS IN ===");
+        onPressIn?.();
+      }}
+      onPressOut={() => {
+        console.log("=== CaptureButton PRESS OUT ===");
+        onPressOut?.();
+      }}
     >
       <View
         style={[
           cameraStyles.captureButtonInner,
-          mode === CameraModeEnum.Video &&
-            isRecording &&
-            cameraStyles.captureButtonInnerRecording,
+          mode === CameraModeEnum.Video && isRecording && cameraStyles.captureButtonInnerRecording,
         ]}
       >
         {/* Inner white circle */}

@@ -1,17 +1,17 @@
-import React, { useCallback, useState } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
-import ExportScreen from '../components/ExportScreen';
-import ModernPreviewEditor from '../components/ModernPreviewEditor';
-import TimelineEditor from '../components/timeline/TimelineEditor';
-import { useUndoRedo } from '../hooks/useUndoRedo';
-import { cameraStyles } from '../styles/cameraStyles';
-import type { CameraClip, CameraClipArray } from '../types/camera.types';
+import React, { useCallback, useState } from "react";
+import { SafeAreaView, StyleSheet, View } from "react-native";
+import ExportScreen from "../components/ExportScreen";
+import ModernPreviewEditor from "../components/ModernPreviewEditor";
+import TimelineEditor from "../components/timeline/TimelineEditor";
+import { useUndoRedo } from "../hooks/useUndoRedo";
+import { cameraStyles } from "../styles/cameraStyles";
+import type { CameraClip, CameraClipArray } from "../types/camera.types";
 
 interface PreviewScreenProps {
   clips: CameraClipArray;
   onBack?: () => void;
   onClipUpdate?: (clips: CameraClipArray) => void;
-  onAddClip?: (source: 'camera' | 'gallery') => void;
+  onAddClip?: (source: "camera" | "gallery") => void;
 }
 
 /**
@@ -23,14 +23,19 @@ interface PreviewScreenProps {
  * - Timeline with thumbnails and playhead
  * - Speed timeline showing speed segments
  */
-const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpdate, onAddClip }) => {
+const PreviewScreen: React.FC<PreviewScreenProps> = ({
+  clips,
+  onBack,
+  onClipUpdate,
+  onAddClip,
+}) => {
   const [currentClipIndex, setCurrentClipIndex] = useState(0);
   const [updatedClips, setUpdatedClips] = useState<CameraClipArray>(clips);
   const [showExport, setShowExport] = useState(false);
-  
+
   // Undo/Redo functionality
   const undoRedo = useUndoRedo(clips);
-  
+
   // Use TimelineEditor when there are multiple clips for proper sequence display
   const useTimelineEditor = updatedClips.length > 1;
 
@@ -44,21 +49,21 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
   // All hooks must be called before any early returns
   const handleDelete = useCallback(() => {
     if (updatedClips.length === 0) return;
-    
+
     // Add to history before deleting
     undoRedo.addToHistory({ clips: updatedClips });
-    
+
     const newClips = updatedClips.filter((_, index) => index !== currentClipIndex);
-    
+
     // Recalculate timeline positions after deletion
-    const { calculateTimelinePositions } = require('../utils/timelineHelpers');
+    const { calculateTimelinePositions } = require("../utils/timelineHelpers");
     const positionedClips = calculateTimelinePositions(newClips);
-    
+
     setUpdatedClips(positionedClips);
-    
+
     // IMPORTANT: Update clips in parent component immediately for proper sync
     onClipUpdate?.(positionedClips);
-    
+
     if (positionedClips.length === 0) {
       // No clips left, go back
       onBack?.();
@@ -70,48 +75,57 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
     setCurrentClipIndex(newIndex);
   }, [currentClipIndex, updatedClips, onBack, onClipUpdate, undoRedo]);
 
-  const handleAddClip = useCallback((source: 'camera' | 'gallery') => {
-    onAddClip?.(source);
-  }, [onAddClip]);
+  const handleAddClip = useCallback(
+    (source: "camera" | "gallery") => {
+      onAddClip?.(source);
+    },
+    [onAddClip]
+  );
 
-  const handleAddClipFromGallery = useCallback((newClip: CameraClip) => {
-    // Add to history before adding
-    undoRedo.addToHistory({ clips: updatedClips });
-    
-    const newClips = [...updatedClips, newClip];
-    
-    // Recalculate timeline positions after adding
-    const { calculateTimelinePositions } = require('../utils/timelineHelpers');
-    const positionedClips = calculateTimelinePositions(newClips);
-    
-    setUpdatedClips(positionedClips);
-    setCurrentClipIndex(positionedClips.length - 1);
-    onClipUpdate?.(positionedClips);
-  }, [updatedClips, onClipUpdate, undoRedo]);
+  const handleAddClipFromGallery = useCallback(
+    (newClip: CameraClip) => {
+      // Add to history before adding
+      undoRedo.addToHistory({ clips: updatedClips });
+
+      const newClips = [...updatedClips, newClip];
+
+      // Recalculate timeline positions after adding
+      const { calculateTimelinePositions } = require("../utils/timelineHelpers");
+      const positionedClips = calculateTimelinePositions(newClips);
+
+      setUpdatedClips(positionedClips);
+      setCurrentClipIndex(positionedClips.length - 1);
+      onClipUpdate?.(positionedClips);
+    },
+    [updatedClips, onClipUpdate, undoRedo]
+  );
 
   const handlePreset = useCallback(() => {
     // Preset functionality - can be extended to apply presets
-    console.log('Preset button pressed');
+    console.log("Preset button pressed");
   }, []);
 
-  const handleSpeedChange = useCallback((speed: number) => {
-    // Add to history before changing speed
-    undoRedo.addToHistory({ clips: updatedClips });
-    
-    const newClips = updatedClips.map((clip, index) =>
-      index === currentClipIndex ? { ...clip, speed } : clip
-    );
-    setUpdatedClips(newClips);
-    onClipUpdate?.(newClips);
-  }, [currentClipIndex, updatedClips, onClipUpdate, undoRedo]);
+  const handleSpeedChange = useCallback(
+    (speed: number) => {
+      // Add to history before changing speed
+      undoRedo.addToHistory({ clips: updatedClips });
+
+      const newClips = updatedClips.map((clip, index) =>
+        index === currentClipIndex ? { ...clip, speed } : clip
+      );
+      setUpdatedClips(newClips);
+      onClipUpdate?.(newClips);
+    },
+    [currentClipIndex, updatedClips, onClipUpdate, undoRedo]
+  );
 
   const handleUndo = useCallback(() => {
     const previousState = undoRedo.undo();
     if (previousState) {
       // Recalculate timeline positions after undo
-      const { calculateTimelinePositions } = require('../utils/timelineHelpers');
+      const { calculateTimelinePositions } = require("../utils/timelineHelpers");
       const positionedClips = calculateTimelinePositions(previousState.clips);
-      
+
       setUpdatedClips(positionedClips);
       onClipUpdate?.(positionedClips);
       // Adjust current clip index if needed
@@ -125,9 +139,9 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
     const nextState = undoRedo.redo();
     if (nextState) {
       // Recalculate timeline positions after redo
-      const { calculateTimelinePositions } = require('../utils/timelineHelpers');
+      const { calculateTimelinePositions } = require("../utils/timelineHelpers");
       const positionedClips = calculateTimelinePositions(nextState.clips);
-      
+
       setUpdatedClips(positionedClips);
       onClipUpdate?.(positionedClips);
       // Adjust current clip index if needed
@@ -138,22 +152,33 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
   }, [undoRedo, onClipUpdate, currentClipIndex]);
 
   const handleNext = useCallback(() => {
-    // Navigate to export screen
-    setShowExport(true);
-  }, []);
+    console.log("=== handleNext CALLED (Preview to Export) ===");
+    console.log("Updated clips count:", updatedClips.length);
+    try {
+      // Navigate to export screen
+      setShowExport(true);
+      console.log("✅ Successfully opened export screen");
+    } catch (error) {
+      console.error("❌ Error opening export screen:", error);
+    }
+  }, [updatedClips.length]);
 
   const handleExportComplete = useCallback(() => {
-    setShowExport(false);
-    onBack?.();
+    console.log("=== handleExportComplete CALLED ===");
+    try {
+      setShowExport(false);
+      onBack?.();
+      console.log("✅ Successfully completed export and navigated back");
+    } catch (error) {
+      console.error("❌ Error in export complete handler:", error);
+    }
   }, [onBack]);
 
   // Early returns AFTER all hooks
   if (!clips || clips.length === 0) {
     return (
       <SafeAreaView style={[cameraStyles.previewContainer, styles.emptyContainer]}>
-        <View style={styles.emptyMessage}>
-          {/* Empty state can be customized */}
-        </View>
+        <View style={styles.emptyMessage}>{/* Empty state can be customized */}</View>
       </SafeAreaView>
     );
   }
@@ -163,9 +188,7 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
   if (!currentClip) {
     return (
       <SafeAreaView style={[cameraStyles.previewContainer, styles.emptyContainer]}>
-        <View style={styles.emptyMessage}>
-          {/* Empty state */}
-        </View>
+        <View style={styles.emptyMessage}>{/* Empty state */}</View>
       </SafeAreaView>
     );
   }
@@ -240,11 +263,11 @@ const PreviewScreen: React.FC<PreviewScreenProps> = ({ clips, onBack, onClipUpda
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
   },
   emptyContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyMessage: {
     // Empty state styling can be added here

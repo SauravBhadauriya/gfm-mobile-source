@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { Camera } from "expo-camera";
+import { Audio } from "expo-av";
 import type { PermissionStatus } from "../types/camera.types";
 
 export interface UsePermissionsResult {
@@ -11,8 +13,7 @@ export interface UsePermissionsResult {
 
 /**
  * Hook that manages camera & microphone permissions.
- * For expo-camera, permissions are automatically handled by CameraView component.
- * This hook provides a simple interface for permission status.
+ * Properly checks and requests permissions for video recording.
  */
 export const usePermissions = (): UsePermissionsResult => {
   const [cameraPermission, setCameraPermission] = useState<PermissionStatus | null>(null);
@@ -23,29 +24,47 @@ export const usePermissions = (): UsePermissionsResult => {
 
   const loadCurrentStatus = useCallback(async () => {
     try {
-      // For Expo Go and development, assume permissions are granted
-      // CameraView component will handle permission requests automatically
-      setCameraPermission("granted");
-      setMicrophonePermission("granted");
+      console.log("=== Checking current permissions ===");
+
+      // Check camera permission
+      const cameraStatus = await Camera.getCameraPermissionsAsync();
+      console.log("Camera permission status:", cameraStatus.status);
+      setCameraPermission(cameraStatus.status);
+
+      // Check microphone permission (needed for video recording)
+      const audioStatus = await Audio.getPermissionsAsync();
+      console.log("Microphone permission status:", audioStatus.status);
+      setMicrophonePermission(audioStatus.status);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to read permissions", error);
+      console.error("Failed to read permissions", error);
       setCameraPermission("denied");
       setMicrophonePermission("denied");
     }
   }, []);
 
   const requestPermissions = useCallback(async (): Promise<boolean> => {
+    console.log("=== Requesting permissions ===");
     setIsRequesting(true);
+
     try {
-      // CameraView component automatically requests permissions when needed
-      // We just need to return true to indicate permissions are available
-      setCameraPermission("granted");
-      setMicrophonePermission("granted");
-      return true;
+      // Request camera permission
+      console.log("Requesting camera permission...");
+      const cameraResult = await Camera.requestCameraPermissionsAsync();
+      console.log("Camera permission result:", cameraResult.status);
+      setCameraPermission(cameraResult.status);
+
+      // Request microphone permission (essential for video recording)
+      console.log("Requesting microphone permission...");
+      const audioResult = await Audio.requestPermissionsAsync();
+      console.log("Microphone permission result:", audioResult.status);
+      setMicrophonePermission(audioResult.status);
+
+      const success = cameraResult.status === "granted" && audioResult.status === "granted";
+      console.log("All permissions granted:", success);
+
+      return success;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to request permissions", error);
+      console.error("Failed to request permissions", error);
       setCameraPermission("denied");
       setMicrophonePermission("denied");
       return false;

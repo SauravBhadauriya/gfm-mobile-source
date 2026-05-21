@@ -1,4 +1,4 @@
-import { ResizeMode, Video } from "expo-av";
+import { ResizeMode, Video, Audio } from "expo-av";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { CameraClip } from "../types/camera.types";
@@ -21,6 +22,12 @@ import FilteredImage from "./FilteredImage";
 import FilteredVideo from "./FilteredVideo";
 import PreviewActionButtons from "./PreviewActionButtons";
 import TextEditorModal from "./TextEditorModal";
+import MusicPickerModal from "./MusicPickerModal";
+import OverlayPickerModal from "./OverlayPickerModal";
+import VoiceRecorderModal from "./VoiceRecorderModal";
+import CaptionsModal from "./CaptionsModal";
+import AdjustmentModal from "./AdjustmentModal";
+import DraggableOverlays from "./DraggableOverlays";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const FRAME_WIDTH = 40;
@@ -81,6 +88,13 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   const [showAddClipOverlay, setShowAddClipOverlay] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTextEditor, setShowTextEditor] = useState(false);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [showOverlayPicker, setShowOverlayPicker] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showCaptions, setShowCaptions] = useState(false);
+  const [showAdjustments, setShowAdjustments] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const musicSoundRef = useRef<any>(null);
   const [selectedTextOverlay, setSelectedTextOverlay] = useState<TextOverlay | null>(null);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [previewDimensions, setPreviewDimensions] = useState({
@@ -436,10 +450,12 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
   );
 
   const handleOverlay = useCallback(() => {
-    console.log("Overlay pressed");
+    console.log("Opening overlay picker");
+    setShowOverlayPicker(true);
   }, []);
 
   const handleText = useCallback(() => {
+    console.log("Text button pressed - opening text editor");
     setSelectedTextOverlay(null);
     setShowTextEditor(true);
   }, []);
@@ -452,6 +468,7 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
 
   const handleTextOverlaySave = useCallback(
     (overlay: TextOverlay) => {
+      console.log("handleTextOverlaySave called with overlay:", overlay);
       const existingOverlays = clip.textOverlays || [];
       const existingIndex = existingOverlays.findIndex((o) => o.id === overlay.id);
 
@@ -460,12 +477,15 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         // Update existing
         updatedOverlays = [...existingOverlays];
         updatedOverlays[existingIndex] = overlay;
+        console.log("Updated existing overlay");
       } else {
         // Add new
         updatedOverlays = [...existingOverlays, overlay];
+        console.log("Added new overlay, total overlays:", updatedOverlays.length);
       }
 
       const updatedClip = { ...clip, textOverlays: updatedOverlays };
+      console.log("Calling onClipUpdate with updated clip:", updatedClip);
       onClipUpdate?.(updatedClip);
       setSelectedOverlayId(null);
     },
@@ -505,6 +525,198 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     setSelectedOverlayId(null);
   }, []);
 
+  const handleMusicSelect = useCallback(
+    (track: {
+      id: string;
+      name: string;
+      uri: string;
+      duration?: number;
+      startTime?: number;
+      endTime?: number;
+    }) => {
+      console.log("=== handleMusicSelect CALLED ===");
+      console.log("Music track selected:", track);
+      // Store music track in clip metadata
+      if (onClipUpdate) {
+        const updatedClip = { ...clip, musicTrack: track };
+        console.log("Updating clip with music track");
+        onClipUpdate(updatedClip as any);
+      }
+      setShowMusicPicker(false);
+
+      // Auto-play the selected music
+      console.log("Auto-playing selected music");
+      playMusic(track);
+    },
+    [clip, onClipUpdate, playMusic]
+  );
+
+  const playMusic = useCallback(async (track: any) => {
+    console.log("=== playMusic CALLED ===");
+    console.log("Track:", track);
+    try {
+      // Stop any existing music
+      if (musicSoundRef.current) {
+        console.log("Stopping existing music");
+        await musicSoundRef.current.stopAsync();
+        await musicSoundRef.current.unloadAsync();
+        musicSoundRef.current = null;
+      }
+
+      console.log("Loading new music from URI:", track.uri);
+      // Load and play new music
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: track.uri },
+        {
+          shouldPlay: true,
+          volume: 0.5,
+          positionMillis: (track.startTime || 0) * 1000,
+        }
+      );
+
+      console.log("Music loaded successfully");
+      musicSoundRef.current = sound;
+      setIsMusicPlaying(true);
+
+      sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (status.isLoaded) {
+          // Stop at end time if specified
+          if (track.endTime && status.positionMillis >= track.endTime * 1000) {
+            sound.pauseAsync();
+            setIsMusicPlaying(false);
+          }
+          if (status.didJustFinish) {
+            setIsMusicPlaying(false);
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error playing music:", error);
+    }
+  }, []);
+
+  const toggleMusicPlayback = useCallback(async () => {
+    if (!musicSoundRef.current) {
+      // Play music if not loaded
+      const track = (clip as any).musicTrack;
+      if (track) {
+        await playMusic(track);
+      }
+      return;
+    }
+
+    try {
+      const status = await musicSoundRef.current.getStatusAsync();
+      if (status.isLoaded) {
+        if (status.isPlaying) {
+          await musicSoundRef.current.pauseAsync();
+          setIsMusicPlaying(false);
+        } else {
+          await musicSoundRef.current.playAsync();
+          setIsMusicPlaying(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling music:", error);
+    }
+  }, [clip, playMusic]);
+
+  const handleMusicPickerClose = useCallback(() => {
+    setShowMusicPicker(false);
+  }, []);
+
+  const handleOverlaySelect = useCallback(
+    (overlay: { id: string; type: string; uri: string; name?: string }) => {
+      console.log("Overlay selected:", overlay);
+      // Store overlay in clip metadata
+      if (onClipUpdate) {
+        const overlays = (clip as any).overlays || [];
+        const updatedOverlays = [...overlays, overlay];
+        const updatedClip = { ...clip, overlays: updatedOverlays };
+        onClipUpdate(updatedClip as any);
+      }
+      setShowOverlayPicker(false);
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleOverlayPickerClose = useCallback(() => {
+    setShowOverlayPicker(false);
+  }, []);
+
+  const handleStickerUpdate = useCallback(
+    (overlay: any) => {
+      console.log("Updating sticker position:", overlay);
+      if (onClipUpdate) {
+        const stickers = (clip as any).stickers || [];
+        const updatedStickers = stickers.map((s: any) => (s.id === overlay.id ? overlay : s));
+        const updatedClip = { ...clip, stickers: updatedStickers };
+        onClipUpdate(updatedClip as any);
+      }
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleOverlayUpdate = useCallback(
+    (overlay: any) => {
+      console.log("Updating overlay position:", overlay);
+      if (onClipUpdate) {
+        const overlays = (clip as any).overlays || [];
+        const updatedOverlays = overlays.map((o: any) => (o.id === overlay.id ? overlay : o));
+        const updatedClip = { ...clip, overlays: updatedOverlays };
+        onClipUpdate(updatedClip as any);
+      }
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleStickerDelete = useCallback(
+    (stickerId: string) => {
+      console.log("Deleting sticker:", stickerId);
+      if (onClipUpdate) {
+        const stickers = (clip as any).stickers || [];
+        const updatedStickers = stickers.filter((s: any) => s.id !== stickerId);
+        const updatedClip = { ...clip, stickers: updatedStickers };
+        onClipUpdate(updatedClip as any);
+      }
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleOverlayDelete = useCallback(
+    (overlayId: string) => {
+      console.log("Deleting overlay:", overlayId);
+      if (onClipUpdate) {
+        const overlays = (clip as any).overlays || [];
+        const updatedOverlays = overlays.filter((o: any) => o.id !== overlayId);
+        const updatedClip = { ...clip, overlays: updatedOverlays };
+        onClipUpdate(updatedClip as any);
+      }
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleMusicDelete = useCallback(async () => {
+    console.log("Deleting music track");
+
+    // Stop and unload music
+    if (musicSoundRef.current) {
+      try {
+        await musicSoundRef.current.stopAsync();
+        await musicSoundRef.current.unloadAsync();
+        musicSoundRef.current = null;
+        setIsMusicPlaying(false);
+      } catch (error) {
+        console.warn("Error stopping music:", error);
+      }
+    }
+
+    if (onClipUpdate) {
+      const { musicTrack, ...clipWithoutMusic } = clip as any;
+      onClipUpdate(clipWithoutMusic);
+    }
+  }, [clip, onClipUpdate]);
+
   const handleTrim = useCallback(() => {
     // Toggle trim handles visibility
     // When enabled, user can use timeline to set trim points
@@ -516,17 +728,84 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
     }
   }, [showTrimHandles, isVideo]);
 
-  const handleSticker = useCallback((sticker?: string | number) => {
-    if (sticker !== undefined) {
-      console.log("Sticker selected:", sticker);
-      // TODO: Add sticker to the preview/export
-      // You can store stickers in clip metadata or manage them separately
-    }
-  }, []);
+  const handleSticker = useCallback(
+    (sticker?: string | number) => {
+      if (sticker !== undefined) {
+        console.log("Sticker selected:", sticker);
+        // Store sticker in clip metadata for export
+        if (onClipUpdate) {
+          const stickers = (clip as any).stickers || [];
+          const updatedStickers = [...stickers, { id: `sticker-${Date.now()}`, uri: sticker }];
+          onClipUpdate({ ...clip, stickers: updatedStickers } as any);
+        }
+      }
+    },
+    [clip, onClipUpdate]
+  );
 
   const handleMusic = useCallback(() => {
-    console.log("Music pressed");
+    console.log("Opening music picker");
+    setShowMusicPicker(true);
   }, []);
+
+  const handleVoice = useCallback(() => {
+    console.log("Opening voice recorder");
+    setShowVoiceRecorder(true);
+  }, []);
+
+  const handleCaptions = useCallback(() => {
+    console.log("Opening captions editor");
+    setShowCaptions(true);
+  }, []);
+
+  const handleAdjustments = useCallback(() => {
+    console.log("=== handleAdjustments CALLED ===");
+    console.log("showAdjustments current state:", showAdjustments);
+    Alert.alert("Debug", "handleAdjustments called, opening modal"); // Temporary alert
+    console.log("Setting showAdjustments to true");
+    setShowAdjustments(true);
+
+    // Force a re-render to ensure state change is applied
+    setTimeout(() => {
+      console.log("showAdjustments after timeout:", showAdjustments);
+    }, 100);
+  }, [showAdjustments]);
+
+  const handleVoiceSelect = useCallback(
+    (recording: { id: string; name: string; uri: string; duration: number }) => {
+      console.log("Voice recording selected:", recording);
+      if (onClipUpdate) {
+        const updatedClip = { ...clip, voiceRecording: recording };
+        onClipUpdate(updatedClip as any);
+      }
+      setShowVoiceRecorder(false);
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleCaptionsSave = useCallback(
+    (captions: any[]) => {
+      console.log("Captions saved:", captions);
+      if (onClipUpdate) {
+        const updatedClip = { ...clip, captions };
+        onClipUpdate(updatedClip as any);
+      }
+      setShowCaptions(false);
+    },
+    [clip, onClipUpdate]
+  );
+
+  const handleAdjustmentsSave = useCallback(
+    (settings: any) => {
+      console.log("Adjustment settings saved:", settings);
+      if (onClipUpdate) {
+        const updatedClip = { ...clip, adjustmentSettings: settings };
+        onClipUpdate(updatedClip as any);
+      }
+      setShowAdjustments(false);
+    },
+    [clip, onClipUpdate]
+  );
 
   // Handle voice add
   const handleVoiceAdd = useCallback((voice: any) => {
@@ -697,6 +976,76 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
             onOverlayPress={handleTextOverlayPress}
             selectedOverlayId={selectedOverlayId}
           />
+        )}
+
+        {/* Stickers with Delete Button */}
+        {isReady && (clip as any).stickers && (clip as any).stickers.length > 0 && (
+          <DraggableOverlays
+            overlays={(clip as any).stickers}
+            containerWidth={previewDimensions.width}
+            containerHeight={previewDimensions.height}
+            onDelete={handleStickerDelete}
+            onUpdate={handleStickerUpdate}
+          />
+        )}
+
+        {/* Overlays (Shapes/Effects) with Delete Button */}
+        {isReady && (clip as any).overlays && (clip as any).overlays.length > 0 && (
+          <DraggableOverlays
+            overlays={(clip as any).overlays}
+            containerWidth={previewDimensions.width}
+            containerHeight={previewDimensions.height}
+            onDelete={handleOverlayDelete}
+            onUpdate={handleOverlayUpdate}
+          />
+        )}
+
+        {/* Music Indicator with Delete Button and Playback */}
+        {isReady && (clip as any).musicTrack && (
+          <View
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <TouchableOpacity onPress={toggleMusicPlayback} activeOpacity={0.7}>
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                {isMusicPlaying ? (
+                  <Path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="#ec9a15" />
+                ) : (
+                  <Path
+                    d="M9 18V5l12-2v13M9 18c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3zm12-2c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"
+                    stroke="#ec9a15"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </Svg>
+            </TouchableOpacity>
+            <Text style={{ color: "#ffffff", fontSize: 12, fontWeight: "600" }}>
+              {(clip as any).musicTrack.name?.substring(0, 15) || "Music"}
+            </Text>
+            <TouchableOpacity onPress={handleMusicDelete} activeOpacity={0.7}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </TouchableOpacity>
+          </View>
         )}
       </TouchableOpacity>
 
@@ -890,7 +1239,7 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         </View>
       )}
 
-      {/* Preview Action Buttons (Filter, Overlay, Text, Sticker, Music) */}
+      {/* Preview Action Buttons (Filter, Overlay, Text, Sticker, Music, Voice, Captions, Adjust) */}
       {isReady && (
         <PreviewActionButtons
           displayUri={clip.uri}
@@ -899,6 +1248,9 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
           onText={handleText}
           onSticker={handleSticker}
           onMusic={handleMusic}
+          onVoice={handleVoice}
+          onCaptions={handleCaptions}
+          onAdjust={handleAdjustments}
         />
       )}
 
@@ -927,6 +1279,45 @@ const ModernPreviewEditor: React.FC<ModernPreviewEditorProps> = ({
         onClose={handleTextEditorClose}
         containerWidth={previewDimensions.width}
         containerHeight={previewDimensions.height}
+      />
+
+      {/* Music Picker Modal */}
+      <MusicPickerModal
+        visible={showMusicPicker}
+        onSelect={handleMusicSelect}
+        onClose={handleMusicPickerClose}
+      />
+
+      {/* Overlay Picker Modal */}
+      <OverlayPickerModal
+        visible={showOverlayPicker}
+        onSelect={handleOverlaySelect}
+        onClose={handleOverlayPickerClose}
+      />
+
+      {/* Voice Recorder Modal */}
+      <VoiceRecorderModal
+        visible={showVoiceRecorder}
+        onSelect={handleVoiceSelect}
+        onClose={() => setShowVoiceRecorder(false)}
+      />
+
+      {/* Captions Modal */}
+      <CaptionsModal
+        visible={showCaptions}
+        onSave={handleCaptionsSave}
+        onClose={() => setShowCaptions(false)}
+        videoDuration={duration}
+      />
+
+      {/* Adjustment Modal */}
+      <AdjustmentModal
+        visible={showAdjustments}
+        initialSettings={(clip as any).adjustmentSettings}
+        onSave={handleAdjustmentsSave}
+        onClose={() => setShowAdjustments(false)}
+        previewUri={clip.uri}
+        previewType={clip.type}
       />
     </View>
   );
@@ -969,8 +1360,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   nextButtonText: {
-    color: "#000000",
-    fontSize: 14,
+    color: "#ffffff",
+    fontSize: 16,
     fontWeight: "700",
   },
   mediaInfo: {
@@ -1132,6 +1523,7 @@ const styles = StyleSheet.create({
   },
   actionButtonPrimary: {
     alignItems: "center",
+    gap: 6,
   },
   addIcon: {
     width: 44,
@@ -1142,14 +1534,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionButtonText: {
-    color: "#888888",
-    fontSize: 10,
-    fontWeight: "500",
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
   },
   actionButtonTextPrimary: {
-    color: "#7C3AED",
-    fontSize: 10,
-    fontWeight: "600",
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 4,
   },
   trimIconContainer: {
     width: 36,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   Modal,
   View,
@@ -9,11 +9,11 @@ import {
   ScrollView,
   Dimensions,
   SafeAreaView,
-} from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import type { TextOverlay, TextAlign, FontWeight } from '../types/textOverlay.types';
+} from "react-native";
+import Svg, { Path } from "react-native-svg";
+import type { TextOverlay, TextAlign, FontWeight } from "../types/textOverlay.types";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface TextEditorModalProps {
   visible: boolean;
@@ -26,9 +26,22 @@ interface TextEditorModalProps {
 }
 
 const COLORS = [
-  '#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF',
-  '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080',
-  '#FFC0CB', '#A52A2A', '#FFD700', '#808080', '#FF1493', '#00CED1'
+  "#FFFFFF",
+  "#000000",
+  "#FF0000",
+  "#00FF00",
+  "#0000FF",
+  "#FFFF00",
+  "#FF00FF",
+  "#00FFFF",
+  "#FFA500",
+  "#800080",
+  "#FFC0CB",
+  "#A52A2A",
+  "#FFD700",
+  "#808080",
+  "#FF1493",
+  "#00CED1",
 ];
 
 const FONT_SIZES = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
@@ -45,80 +58,55 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
   containerWidth,
   containerHeight,
 }) => {
-  const [text, setText] = useState(overlay?.text || '');
+  const [text, setText] = useState(overlay?.text || "");
   const [fontSize, setFontSize] = useState(overlay?.fontSize || 24);
-  const [fontWeight, setFontWeight] = useState<FontWeight>(overlay?.fontWeight || 'normal');
-  const [color, setColor] = useState(overlay?.color || '#FFFFFF');
-  const [backgroundColor, setBackgroundColor] = useState(overlay?.backgroundColor || '');
-  const [textAlign, setTextAlign] = useState<TextAlign>(overlay?.textAlign || 'center');
+  const [fontWeight, setFontWeight] = useState<FontWeight>(overlay?.fontWeight || "normal");
+  const [color, setColor] = useState(overlay?.color || "#FFFFFF");
+  const [backgroundColor, setBackgroundColor] = useState(overlay?.backgroundColor || "");
+  const [textAlign, setTextAlign] = useState<TextAlign>(overlay?.textAlign || "center");
   const [rotation, setRotation] = useState(overlay?.rotation || 0);
   const [opacity, setOpacity] = useState(overlay?.opacity ?? 1);
-  const [strokeColor, setStrokeColor] = useState(overlay?.strokeColor || '');
+  const [strokeColor, setStrokeColor] = useState(overlay?.strokeColor || "");
   const [strokeWidth, setStrokeWidth] = useState(overlay?.strokeWidth || 0);
   const [x, setX] = useState(overlay?.x ?? 0.5);
   const [y, setY] = useState(overlay?.y ?? 0.5);
 
-  // Reset state when overlay changes
-  React.useEffect(() => {
-    if (overlay) {
-      setText(overlay.text || '');
-      setFontSize(overlay.fontSize || 24);
-      setFontWeight(overlay.fontWeight || 'normal');
-      setColor(overlay.color || '#FFFFFF');
-      setBackgroundColor(overlay.backgroundColor || '');
-      setTextAlign(overlay.textAlign || 'center');
-      setRotation(overlay.rotation || 0);
-      setOpacity(overlay.opacity ?? 1);
-      setStrokeColor(overlay.strokeColor || '');
-      setStrokeWidth(overlay.strokeWidth || 0);
-      setX(overlay.x ?? 0.5);
-      setY(overlay.y ?? 0.5);
-    } else {
-      // Reset to defaults for new overlay
-      setText('');
-      setFontSize(24);
-      setFontWeight('normal');
-      setColor('#FFFFFF');
-      setBackgroundColor('');
-      setTextAlign('center');
-      setRotation(0);
-      setOpacity(1);
-      setStrokeColor('');
-      setStrokeWidth(0);
-      setX(0.5);
-      setY(0.5);
-    }
-  }, [overlay]);
+  // Use refs to store latest values for callbacks
+  const textRef = useRef(text);
+  const fontSizeRef = useRef(fontSize);
+  const fontWeightRef = useRef(fontWeight);
+  const colorRef = useRef(color);
+  const backgroundColorRef = useRef(backgroundColor);
+  const textAlignRef = useRef(textAlign);
+  const rotationRef = useRef(rotation);
+  const opacityRef = useRef(opacity);
+  const strokeColorRef = useRef(strokeColor);
+  const strokeWidthRef = useRef(strokeWidth);
+  const xRef = useRef(x);
+  const yRef = useRef(y);
+  const overlayRef = useRef(overlay);
+  const onSaveRef = useRef(onSave);
+  const onCloseRef = useRef(onClose);
 
-  const handleSave = useCallback(() => {
-    if (!text.trim()) {
-      onClose();
-      return;
-    }
-
-    const updatedOverlay: TextOverlay = {
-      id: overlay?.id || `text-${Date.now()}`,
-      text: text.trim(),
-      x,
-      y,
-      fontSize,
-      fontWeight,
-      color,
-      textAlign,
-      rotation,
-      opacity,
-      startTime: overlay?.startTime,
-      endTime: overlay?.endTime,
-      ...(backgroundColor ? { backgroundColor } : {}),
-      ...(strokeColor && strokeWidth > 0 ? { strokeColor, strokeWidth } : {}),
-    };
-
-    onSave(updatedOverlay);
-    onClose();
+  // Update refs whenever values change
+  useEffect(() => {
+    textRef.current = text;
+    fontSizeRef.current = fontSize;
+    fontWeightRef.current = fontWeight;
+    colorRef.current = color;
+    backgroundColorRef.current = backgroundColor;
+    textAlignRef.current = textAlign;
+    rotationRef.current = rotation;
+    opacityRef.current = opacity;
+    strokeColorRef.current = strokeColor;
+    strokeWidthRef.current = strokeWidth;
+    xRef.current = x;
+    yRef.current = y;
+    overlayRef.current = overlay;
+    onSaveRef.current = onSave;
+    onCloseRef.current = onClose;
   }, [
     text,
-    x,
-    y,
     fontSize,
     fontWeight,
     color,
@@ -128,10 +116,81 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
     opacity,
     strokeColor,
     strokeWidth,
+    x,
+    y,
     overlay,
     onSave,
     onClose,
   ]);
+
+  // Reset state when overlay changes
+  React.useEffect(() => {
+    if (overlay) {
+      setText(overlay.text || "");
+      setFontSize(overlay.fontSize || 24);
+      setFontWeight(overlay.fontWeight || "normal");
+      setColor(overlay.color || "#FFFFFF");
+      setBackgroundColor(overlay.backgroundColor || "");
+      setTextAlign(overlay.textAlign || "center");
+      setRotation(overlay.rotation || 0);
+      setOpacity(overlay.opacity ?? 1);
+      setStrokeColor(overlay.strokeColor || "");
+      setStrokeWidth(overlay.strokeWidth || 0);
+      setX(overlay.x ?? 0.5);
+      setY(overlay.y ?? 0.5);
+    } else {
+      // Reset to defaults for new overlay
+      setText("");
+      setFontSize(24);
+      setFontWeight("normal");
+      setColor("#FFFFFF");
+      setBackgroundColor("");
+      setTextAlign("center");
+      setRotation(0);
+      setOpacity(1);
+      setStrokeColor("");
+      setStrokeWidth(0);
+      setX(0.5);
+      setY(0.5);
+    }
+  }, [overlay]);
+
+  const handleSave = useCallback(() => {
+    console.log("=== TextEditorModal handleSave CALLED ===");
+    console.log("Text value:", textRef.current);
+    console.log("onSave callback exists:", !!onSaveRef.current);
+    console.log("onClose callback exists:", !!onCloseRef.current);
+
+    if (!textRef.current.trim()) {
+      console.log("Text is empty, closing modal");
+      onCloseRef.current();
+      return;
+    }
+
+    const updatedOverlay: TextOverlay = {
+      id: overlayRef.current?.id || `text-${Date.now()}`,
+      text: textRef.current.trim(),
+      x: xRef.current,
+      y: yRef.current,
+      fontSize: fontSizeRef.current,
+      fontWeight: fontWeightRef.current,
+      color: colorRef.current,
+      textAlign: textAlignRef.current,
+      rotation: rotationRef.current,
+      opacity: opacityRef.current,
+      startTime: overlayRef.current?.startTime,
+      endTime: overlayRef.current?.endTime,
+      ...(backgroundColorRef.current ? { backgroundColor: backgroundColorRef.current } : {}),
+      ...(strokeColorRef.current && strokeWidthRef.current > 0
+        ? { strokeColor: strokeColorRef.current, strokeWidth: strokeWidthRef.current }
+        : {}),
+    };
+
+    console.log("=== Calling onSave with overlay ===", updatedOverlay);
+    onSaveRef.current(updatedOverlay);
+    console.log("=== onSave completed, calling onClose ===");
+    onCloseRef.current();
+  }, []);
 
   const handleDelete = useCallback(() => {
     if (overlay?.id && onDelete) {
@@ -141,8 +200,8 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
   }, [overlay, onDelete, onClose]);
 
   const previewOverlay: TextOverlay = {
-    id: 'preview',
-    text: text || 'Enter text',
+    id: "preview",
+    text: text || "Enter text",
     x,
     y,
     fontSize,
@@ -157,23 +216,26 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={false}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.headerButton}>
             <Text style={styles.headerButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Text</Text>
-          <TouchableOpacity onPress={handleSave} style={styles.headerButton}>
-            <Text style={[styles.headerButtonText, styles.headerButtonTextPrimary]}>
-              Done
-            </Text>
+          <Text style={styles.headerTitle}>Add Text</Text>
+          <TouchableOpacity
+            onPress={() => {
+              console.log("=== Done button PRESSED ===");
+              console.log("Current text:", textRef.current);
+              handleSave();
+            }}
+            style={[styles.headerButton, styles.doneButton]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.doneButtonContent}>
+              <Text style={styles.doneButtonText}>✓ Done</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -186,7 +248,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
             {text && (
               <View
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: x * containerWidth,
                   top: y * containerHeight,
                   opacity,
@@ -194,12 +256,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
                 }}
               >
                 {backgroundColor && (
-                  <View
-                    style={[
-                      styles.previewBackgroundBox,
-                      { backgroundColor },
-                    ]}
-                  />
+                  <View style={[styles.previewBackgroundBox, { backgroundColor }]} />
                 )}
                 <Text
                   style={{
@@ -245,10 +302,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
               {FONT_SIZES.map((size) => (
                 <TouchableOpacity
                   key={size}
-                  style={[
-                    styles.optionButton,
-                    fontSize === size && styles.optionButtonActive,
-                  ]}
+                  style={[styles.optionButton, fontSize === size && styles.optionButtonActive]}
                   onPress={() => setFontSize(size)}
                 >
                   <Text
@@ -268,23 +322,20 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Style</Text>
             <View style={styles.optionsRow}>
-              {(['normal', 'bold'] as FontWeight[]).map((weight) => (
+              {(["normal", "bold"] as FontWeight[]).map((weight) => (
                 <TouchableOpacity
                   key={weight}
-                  style={[
-                    styles.styleButton,
-                    fontWeight === weight && styles.styleButtonActive,
-                  ]}
+                  style={[styles.styleButton, fontWeight === weight && styles.styleButtonActive]}
                   onPress={() => setFontWeight(weight)}
                 >
                   <Text
                     style={[
                       styles.styleButtonText,
                       fontWeight === weight && styles.styleButtonTextActive,
-                      weight === 'bold' && { fontWeight: 'bold' },
+                      weight === "bold" && { fontWeight: "bold" },
                     ]}
                   >
-                    {weight === 'normal' ? 'Regular' : 'Bold'}
+                    {weight === "normal" ? "Regular" : "Bold"}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -310,7 +361,14 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
                       <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                         <Path
                           d="M20 6L9 17l-5-5"
-                          stroke={col === '#FFFFFF' || col === '#FFFF00' || col === '#FFC0CB' || col === '#FFD700' ? '#000000' : '#FFFFFF'}
+                          stroke={
+                            col === "#FFFFFF" ||
+                            col === "#FFFF00" ||
+                            col === "#FFC0CB" ||
+                            col === "#FFD700"
+                              ? "#000000"
+                              : "#FFFFFF"
+                          }
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -327,10 +385,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Background</Text>
-              <TouchableOpacity
-                onPress={() => setBackgroundColor('')}
-                style={styles.clearButton}
-              >
+              <TouchableOpacity onPress={() => setBackgroundColor("")} style={styles.clearButton}>
                 <Text style={styles.clearButtonText}>Clear</Text>
               </TouchableOpacity>
             </View>
@@ -341,7 +396,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
                   !backgroundColor && styles.colorButtonActive,
                   styles.transparentButton,
                 ]}
-                onPress={() => setBackgroundColor('')}
+                onPress={() => setBackgroundColor("")}
               >
                 {!backgroundColor && (
                   <View style={styles.colorCheck}>
@@ -373,7 +428,14 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
                       <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                         <Path
                           d="M20 6L9 17l-5-5"
-                          stroke={col === '#FFFFFF' || col === '#FFFF00' || col === '#FFC0CB' || col === '#FFD700' ? '#000000' : '#FFFFFF'}
+                          stroke={
+                            col === "#FFFFFF" ||
+                            col === "#FFFF00" ||
+                            col === "#FFC0CB" ||
+                            col === "#FFD700"
+                              ? "#000000"
+                              : "#FFFFFF"
+                          }
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -390,36 +452,33 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Alignment</Text>
             <View style={styles.optionsRow}>
-              {(['left', 'center', 'right'] as TextAlign[]).map((align) => (
+              {(["left", "center", "right"] as TextAlign[]).map((align) => (
                 <TouchableOpacity
                   key={align}
-                  style={[
-                    styles.alignButton,
-                    textAlign === align && styles.alignButtonActive,
-                  ]}
+                  style={[styles.alignButton, textAlign === align && styles.alignButtonActive]}
                   onPress={() => setTextAlign(align)}
                 >
                   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                    {align === 'left' && (
+                    {align === "left" && (
                       <Path
                         d="M3 6h18M3 12h12M3 18h18"
-                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        stroke={textAlign === align ? "#ec9a15" : "#888888"}
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
                     )}
-                    {align === 'center' && (
+                    {align === "center" && (
                       <Path
                         d="M3 6h18M7 12h10M3 18h18"
-                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        stroke={textAlign === align ? "#ec9a15" : "#888888"}
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
                     )}
-                    {align === 'right' && (
+                    {align === "right" && (
                       <Path
                         d="M3 6h18M9 12h12M3 18h18"
-                        stroke={textAlign === align ? '#ec9a15' : '#888888'}
+                        stroke={textAlign === align ? "#ec9a15" : "#888888"}
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
@@ -440,10 +499,7 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
               {[0, 0.25, 0.5, 0.75, 1].map((value) => (
                 <TouchableOpacity
                   key={value}
-                  style={[
-                    styles.sliderDot,
-                    opacity >= value && styles.sliderDotActive,
-                  ]}
+                  style={[styles.sliderDot, opacity >= value && styles.sliderDotActive]}
                   onPress={() => setOpacity(value)}
                 />
               ))}
@@ -465,60 +521,86 @@ const TextEditorModal: React.FC<TextEditorModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   headerButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   headerButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   headerButtonTextPrimary: {
-    color: '#ec9a15',
+    color: "#ec9a15",
+  },
+  doneButton: {
+    backgroundColor: "#ec9a15",
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minWidth: 90,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ec9a15",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  doneButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneButtonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   headerTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   previewContainer: {
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0a',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0a0a0a",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   previewFrame: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   previewBackground: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   previewLabel: {
-    color: 'rgba(255, 255, 255, 0.3)',
+    color: "rgba(255, 255, 255, 0.3)",
     fontSize: 14,
   },
   previewBackgroundBox: {
-    position: 'absolute',
+    position: "absolute",
     top: -4,
     left: -8,
     right: -8,
@@ -533,79 +615,79 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   textInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 12,
     padding: 16,
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
     minHeight: 60,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   optionsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   optionButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
     minWidth: 60,
-    alignItems: 'center',
+    alignItems: "center",
   },
   optionButtonActive: {
-    backgroundColor: '#ec9a15',
-    borderColor: '#ec9a15',
+    backgroundColor: "#ec9a15",
+    borderColor: "#ec9a15",
   },
   optionButtonText: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   optionButtonTextActive: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   styleButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
   },
   styleButtonActive: {
-    backgroundColor: '#ec9a15',
-    borderColor: '#ec9a15',
+    backgroundColor: "#ec9a15",
+    borderColor: "#ec9a15",
   },
   styleButtonText: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   styleButtonTextActive: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   colorRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     paddingVertical: 4,
   },
@@ -614,76 +696,76 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
   },
   colorButtonActive: {
-    borderColor: '#ec9a15',
+    borderColor: "#ec9a15",
     transform: [{ scale: 1.1 }],
   },
   transparentButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   transparentLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 10,
   },
   colorCheck: {
-    position: 'absolute',
+    position: "absolute",
   },
   clearButton: {
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
   clearButtonText: {
-    color: '#ec9a15',
+    color: "#ec9a15",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   alignButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   alignButtonActive: {
-    backgroundColor: '#ec9a15',
-    borderColor: '#ec9a15',
+    backgroundColor: "#ec9a15",
+    borderColor: "#ec9a15",
   },
   sliderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sliderValue: {
-    color: '#ec9a15',
+    color: "#ec9a15",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   sliderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 8,
   },
   sliderDot: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   sliderDotActive: {
-    backgroundColor: '#ec9a15',
-    borderColor: '#ec9a15',
+    backgroundColor: "#ec9a15",
+    borderColor: "#ec9a15",
     transform: [{ scale: 1.2 }],
   },
   deleteButton: {
@@ -691,17 +773,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 68, 68, 0.2)',
+    backgroundColor: "rgba(255, 68, 68, 0.2)",
     borderWidth: 1.5,
-    borderColor: '#ff4444',
-    alignItems: 'center',
+    borderColor: "#ff4444",
+    alignItems: "center",
   },
   deleteButtonText: {
-    color: '#ff4444',
+    color: "#ff4444",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
 
 export default TextEditorModal;
-

@@ -1,9 +1,9 @@
-import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
-import HomeScreen from './screens/HomeScreen';
-import CameraScreen from './screens/CameraScreen';
-import PreviewScreen from './screens/PreviewScreen';
-import type { CameraClipArray, CameraModuleScreenName } from './types/camera.types';
+import React, { useCallback, useState } from "react";
+import { View } from "react-native";
+import HomeScreen from "./screens/HomeScreen";
+import CameraScreen from "./screens/CameraScreen";
+import PreviewScreen from "./screens/PreviewScreen";
+import type { CameraClipArray, CameraModuleScreenName } from "./types/camera.types";
 
 /**
  * Root entry point for the self-contained camera module.
@@ -15,32 +15,45 @@ import type { CameraClipArray, CameraModuleScreenName } from './types/camera.typ
  * PreviewScreen receives a snapshot of clips when the user presses Next.
  */
 const CameraModule: React.FC = () => {
-  const [screen, setScreen] = useState<CameraModuleScreenName>('Home');
+  const [screen, setScreen] = useState<CameraModuleScreenName>("Home");
   const [previewClips, setPreviewClips] = useState<CameraClipArray>([]);
   const [cameraClips, setCameraClips] = useState<CameraClipArray>([]);
 
   const handleOpenCamera = useCallback(() => {
     setCameraClips([]);
-    setScreen('Camera');
+    setScreen("Camera");
   }, []);
 
   const handleBackToHome = useCallback(() => {
-    setScreen('Home');
-    setCameraClips([]);
-    setPreviewClips([]);
+    console.log("=== handleBackToHome CALLED ===");
+    try {
+      setScreen("Home");
+      setCameraClips([]);
+      setPreviewClips([]);
+      console.log("✅ Successfully navigated back to home");
+    } catch (error) {
+      console.error("❌ Error navigating back to home:", error);
+    }
   }, []);
 
   const handleNextFromCamera = useCallback((clips: CameraClipArray) => {
-    setCameraClips(clips);
-    setPreviewClips(clips);
-    setScreen('Preview');
+    console.log("=== handleNextFromCamera CALLED ===");
+    console.log("Clips received:", clips.length);
+    try {
+      setCameraClips(clips);
+      setPreviewClips(clips);
+      setScreen("Preview");
+      console.log("✅ Successfully navigated to preview with", clips.length, "clips");
+    } catch (error) {
+      console.error("❌ Error navigating to preview:", error);
+    }
   }, []);
 
-  const handleAddClipFromPreview = useCallback((source: 'camera' | 'gallery') => {
-    if (source === 'camera') {
+  const handleAddClipFromPreview = useCallback((source: "camera" | "gallery") => {
+    if (source === "camera") {
       // Navigate back to camera screen to record new clip
       // Pass existing clips so they're preserved
-      setScreen('Camera');
+      setScreen("Camera");
     }
     // Gallery is handled in PreviewScreen via onAddClipFromGallery
   }, []);
@@ -48,7 +61,7 @@ const CameraModule: React.FC = () => {
   const handleBackFromPreview = useCallback(() => {
     // Go back to camera screen (not home) so user can continue adding clips
     // Pass existing clips so they're preserved (use cameraClips which should be synced)
-    setScreen('Camera');
+    setScreen("Camera");
   }, []);
 
   const handleClipUpdateFromPreview = useCallback((clips: CameraClipArray) => {
@@ -58,15 +71,15 @@ const CameraModule: React.FC = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {screen === 'Home' && <HomeScreen onOpenCamera={handleOpenCamera} />}
-      {screen === 'Camera' && (
+      {screen === "Home" && <HomeScreen onOpenCamera={handleOpenCamera} />}
+      {screen === "Camera" && (
         <CameraScreen
           onBack={handleBackToHome}
           onNext={handleNextFromCamera}
           initialClips={cameraClips}
         />
       )}
-      {screen === 'Preview' && (
+      {screen === "Preview" && (
         <PreviewScreen
           clips={previewClips}
           onBack={handleBackFromPreview}
@@ -79,5 +92,3 @@ const CameraModule: React.FC = () => {
 };
 
 export default CameraModule;
-
-

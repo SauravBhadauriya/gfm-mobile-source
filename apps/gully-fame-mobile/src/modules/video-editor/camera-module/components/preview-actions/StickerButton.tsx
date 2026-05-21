@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Image,
   Modal,
@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
-} from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { STICKERS } from '../../utils/stickerLoader';
+} from "react-native";
+import Svg, { Path } from "react-native-svg";
+import { STICKERS } from "../../utils/stickerLoader";
 
 interface StickerButtonProps {
   onPress?: () => void;
@@ -30,21 +30,22 @@ const StickerButton: React.FC<StickerButtonProps> = ({ onPress, onStickerSelect 
   }, []);
 
   const handleStickerPress = (sticker: string | number) => {
+    console.log("Sticker selected:", sticker);
     onStickerSelect?.(sticker);
     setVisible(false);
     onPress?.();
   };
 
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
   const panelPadding = 40;
   const itemSpacing = 12;
   const columnsPerView = 4.5;
   const rows = 3;
-  
+
   const availableWidth = screenWidth - panelPadding;
-  const itemWidth = (availableWidth - (columnsPerView * itemSpacing)) / columnsPerView;
+  const itemWidth = (availableWidth - columnsPerView * itemSpacing) / columnsPerView;
   const totalColumns = Math.ceil(stickers.length / rows);
-  const totalWidth = (totalColumns * itemWidth) + ((totalColumns + 1) * itemSpacing);
+  const totalWidth = totalColumns * itemWidth + (totalColumns + 1) * itemSpacing;
 
   // Organize stickers into columns
   const columns: (string | number)[][] = [];
@@ -61,11 +62,7 @@ const StickerButton: React.FC<StickerButtonProps> = ({ onPress, onStickerSelect 
 
   return (
     <>
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={() => setVisible(true)} 
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.button} onPress={() => setVisible(true)} activeOpacity={0.7}>
         <View style={styles.iconContainer}>
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
             <Path
@@ -87,51 +84,28 @@ const StickerButton: React.FC<StickerButtonProps> = ({ onPress, onStickerSelect 
 
             {stickers.length > 0 ? (
               <View style={styles.scrollContainer}>
-                <ScrollView 
+                <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   pagingEnabled={false}
                   decelerationRate="fast"
-                  contentContainerStyle={[
-                    styles.stickersContainer,
-                    { width: totalWidth }
-                  ]}
+                  contentContainerStyle={styles.stickersContainer}
                 >
-                  {columns.map((columnStickers, colIndex) => (
-                    <View 
-                      key={colIndex} 
-                      style={[
-                        styles.column,
-                        { 
-                          width: itemWidth,
-                          marginRight: colIndex < totalColumns - 1 ? itemSpacing : 0,
-                        }
-                      ]}
+                  {stickers.map((sticker, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => handleStickerPress(sticker)}
+                      style={styles.stickerItem}
                     >
-                      {columnStickers.map((sticker, rowIndex) => (
-                        <TouchableOpacity
-                          key={`${colIndex}-${rowIndex}`}
-                          onPress={() => handleStickerPress(sticker)}
-                          style={[
-                            styles.item,
-                            { marginBottom: rowIndex < rows - 1 ? 12 : 0 },
-                          ]}
-                        >
-                          <Image
-                            source={typeof sticker === 'string' ? { uri: sticker } : sticker}
-                            style={[styles.sticker, { width: itemWidth - 8, height: itemWidth - 8 }]}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                      <Text style={styles.stickerEmoji}>{sticker}</Text>
+                    </TouchableOpacity>
                   ))}
                 </ScrollView>
               </View>
             ) : (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>
-                  No stickers found.{'\n'}
+                  No stickers found.{"\n"}
                   Please add stickers to src/assets/stickers folder
                 </Text>
               </View>
@@ -149,38 +123,38 @@ const StickerButton: React.FC<StickerButtonProps> = ({ onPress, onStickerSelect 
 
 const styles = StyleSheet.create({
   button: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 6,
   },
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   label: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "flex-end",
   },
   panel: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   title: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   scrollContainer: {
@@ -188,41 +162,45 @@ const styles = StyleSheet.create({
   },
   stickersContainer: {
     paddingVertical: 8,
-    flexDirection: 'row',
-    paddingLeft: 4,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
   },
-  column: {
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  item: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sticker: {
+  stickerItem: {
+    width: 60,
+    height: 60,
+    margin: 8,
     borderRadius: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  stickerEmoji: {
+    fontSize: 32,
   },
   emptyContainer: {
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.6,
   },
   close: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 20,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
 });

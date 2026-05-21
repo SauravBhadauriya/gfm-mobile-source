@@ -1,9 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { PanResponder, View, StyleSheet, Dimensions } from 'react-native';
-import TextOverlayComponent from './TextOverlay';
-import type { TextOverlay } from '../types/textOverlay.types';
+import React, { useCallback, useRef, useState } from "react";
+import { PanResponder, View, StyleSheet, Dimensions } from "react-native";
+import TextOverlayComponent from "./TextOverlay";
+import type { TextOverlay } from "../types/textOverlay.types";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface DraggableTextOverlaysProps {
   overlays: TextOverlay[];
@@ -34,12 +34,49 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
 
   // Check if text should be visible (for video timing)
   const getVisibleOverlays = useCallback(() => {
-    return overlays.filter(
-      (overlay) =>
-        overlay.startTime === undefined ||
-        overlay.endTime === undefined ||
-        (currentTime >= overlay.startTime && currentTime <= overlay.endTime)
-    );
+    console.log("=== Checking visible overlays ===");
+    console.log("Total overlays:", overlays.length);
+    console.log("Current time:", currentTime);
+
+    return overlays.filter((overlay) => {
+      console.log(`Overlay ${overlay.id}:`, {
+        startTime: overlay.startTime,
+        endTime: overlay.endTime,
+        text: overlay.text,
+      });
+
+      // If no timing is set, show overlay always (for photos and default video behavior)
+      if (overlay.startTime === undefined && overlay.endTime === undefined) {
+        console.log(`Overlay ${overlay.id}: Always visible (no timing)`);
+        return true;
+      }
+
+      // If only startTime is set, show from that time onwards
+      if (overlay.startTime !== undefined && overlay.endTime === undefined) {
+        const visible = currentTime >= overlay.startTime;
+        console.log(`Overlay ${overlay.id}: Visible from ${overlay.startTime}:`, visible);
+        return visible;
+      }
+
+      // If only endTime is set, show until that time
+      if (overlay.startTime === undefined && overlay.endTime !== undefined) {
+        const visible = currentTime <= overlay.endTime;
+        console.log(`Overlay ${overlay.id}: Visible until ${overlay.endTime}:`, visible);
+        return visible;
+      }
+
+      // If both times are set, show within the range
+      if (overlay.startTime !== undefined && overlay.endTime !== undefined) {
+        const visible = currentTime >= overlay.startTime && currentTime <= overlay.endTime;
+        console.log(
+          `Overlay ${overlay.id}: Visible ${overlay.startTime}-${overlay.endTime}:`,
+          visible
+        );
+        return visible;
+      }
+
+      return true; // Default to visible
+    });
   }, [overlays, currentTime]);
 
   const visibleOverlays = getVisibleOverlays();
@@ -57,7 +94,9 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
           onMoveShouldSetPanResponder: (_, gestureState) => {
             // Only start dragging if text is selected AND movement exceeds threshold
             if (selectedOverlayId !== overlay.id) return false;
-            return Math.abs(gestureState.dx) > dragThreshold || Math.abs(gestureState.dy) > dragThreshold;
+            return (
+              Math.abs(gestureState.dx) > dragThreshold || Math.abs(gestureState.dy) > dragThreshold
+            );
           },
           onPanResponderGrant: (evt) => {
             // Only allow dragging if text is selected
@@ -71,7 +110,7 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
           onPanResponderMove: (evt) => {
             // Only allow dragging if text is selected
             if (selectedOverlayId !== overlay.id) return;
-            
+
             const deltaX = evt.nativeEvent.pageX - dragStartPos.current.x;
             const deltaY = evt.nativeEvent.pageY - dragStartPos.current.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -117,7 +156,14 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
       }
       return panRespondersRef.current.get(overlay.id);
     },
-    [draggingId, containerWidth, containerHeight, onOverlayUpdate, onOverlayPress, selectedOverlayId]
+    [
+      draggingId,
+      containerWidth,
+      containerHeight,
+      onOverlayUpdate,
+      onOverlayPress,
+      selectedOverlayId,
+    ]
   );
 
   return (
@@ -154,4 +200,3 @@ const DraggableTextOverlays: React.FC<DraggableTextOverlaysProps> = ({
 };
 
 export default DraggableTextOverlays;
-
